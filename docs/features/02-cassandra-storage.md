@@ -13,10 +13,10 @@ Implementierung eines Entity-Centric Cassandra Storage Layers mit einem 2-Table-
 Single-Partition-Reads abdeckt und Label-Resolution als kostenlosen Nebeneffekt bietet.
 
 1. **Entity-Centric 2-Table Design** -- `quads_by_entity` und `quads_by_collection` fuer optimale Query-Performance
-2. **QuadStore Interface** -- Typsichere API fuer CRUD-Operationen auf RDF-Quads
+2. **QuadStoreService** -- `@Service`-Klasse mit typsicherer API fuer CRUD-Operationen auf RDF-Quads
 3. **Alle 16 Query-Patterns** -- Jede Kombination aus D/S/P/O wird ueber Single-Partition-Reads bedient
-4. **Connection Pooling & Keyspace Management** -- Konfigurierbare Verbindungspools und automatische Keyspace-Erstellung
-5. **Spring Boot Auto-Configuration** -- Integration mit Spring Data Cassandra
+4. **Schema-Initialisierung** -- Automatische Keyspace- und Tabellen-Erstellung via `CassandraSchemaInitializer`
+5. **Spring Modulith Integration** -- Package-basiertes Modul unter `com.agentwork.graphmesh.storage`
 
 ## Voraussetzungen
 
@@ -82,39 +82,43 @@ CREATE TABLE quads_by_collection (
 | 15 | ?,?,?,O | entity=O, role='O'                 | **Perfect Prefix**      |
 | 16 | ?,?,?,? | quads_by_collection (Full Scan)    | Exploration Only        |
 
-### Core Interfaces
+### QuadStoreService
 
 ```kotlin
-package com.graphmesh.storage.cassandra
+package com.agentwork.graphmesh.storage
+
+import org.springframework.stereotype.Service
 
 /**
- * Zentrale Schnittstelle fuer RDF-Quad-Operationen.
+ * Zentrale Service-Klasse fuer RDF-Quad-Operationen.
+ * Verwendet direkt CqlSession fuer alle Cassandra-Zugriffe.
  */
-interface QuadStore {
+@Service
+class QuadStoreService(private val session: CqlSession) {
     /**
      * Schreibt ein Quad (4 Zeilen in quads_by_entity + 1 in quads_by_collection).
      */
-    suspend fun insert(collection: String, quad: StoredQuad)
+    fun insert(collection: String, quad: StoredQuad)
 
     /**
      * Schreibt mehrere Quads als Batch.
      */
-    suspend fun insertBatch(collection: String, quads: List<StoredQuad>)
+    fun insertBatch(collection: String, quads: List<StoredQuad>)
 
     /**
      * Loescht ein einzelnes Quad aus allen Tabellen.
      */
-    suspend fun delete(collection: String, quad: StoredQuad)
+    fun delete(collection: String, quad: StoredQuad)
 
     /**
      * Loescht alle Quads einer Collection.
      */
-    suspend fun deleteCollection(collection: String)
+    fun deleteCollection(collection: String)
 
     /**
      * Fuehrt eine Quad-Query aus.
      */
-    suspend fun query(collection: String, query: QuadQuery): List<StoredQuad>
+    fun query(collection: String, query: QuadQuery): List<StoredQuad>
 }
 
 /**
@@ -140,7 +144,7 @@ enum class ObjectType(val code: String) {
 ### QuadQuery DSL
 
 ```kotlin
-package com.graphmesh.storage.cassandra
+package com.agentwork.graphmesh.storage
 
 /**
  * Repraesentiert eine Query ueber Quads.
@@ -184,86 +188,58 @@ data class QueryStrategy(
 )
 ```
 
-### CassandraClient
+### CassandraSchemaInitializer
 
 ```kotlin
-package com.graphmesh.storage.cassandra
+package com.agentwork.graphmesh.storage
 
 import com.datastax.oss.driver.api.core.CqlSession
+import org.springframework.stereotype.Component
 
 /**
- * Low-Level Cassandra-Client mit Connection Pooling und Keyspace Management.
+ * Erstellt Keyspace und Tabellen beim Anwendungsstart.
+ * Verwendet direkt CqlSession (kein Wrapper).
  */
-interface CassandraClient {
-    val session: CqlSession
-
-    fun ensureKeyspace(keyspace: String, replicationFactor: Int = 1)
-    fun ensureTables(keyspace: String)
-    fun close()
+@Component
+class CassandraSchemaInitializer(
+    private val session: CqlSession,
+    private val keyspace: String
+) {
+    fun initialize() { /* ensureKeyspace + ensureTables */ }
 }
 ```
 
-### Spring Boot Auto-Configuration
+### Konfiguration
 
-```kotlin
-package com.graphmesh.storage.cassandra.autoconfigure
-
-import org.springframework.boot.context.properties.ConfigurationProperties
-
-@ConfigurationProperties(prefix = "graphmesh.storage.cassandra")
-data class GraphMeshCassandraProperties(
-    val contactPoints: List<String> = listOf("localhost"),
-    val port: Int = 9042,
-    val keyspace: String = "graphmesh",
-    val datacenter: String = "datacenter1",
-    val replicationFactor: Int = 1,
-    val username: String? = null,
-    val password: String? = null,
-    val pool: PoolProperties = PoolProperties()
-)
-
-data class PoolProperties(
-    val localSize: Int = 2,
-    val remoteSize: Int = 1
-)
-```
-
-### application.yml Beispiel
+Cassandra-Verbindung wird ueber die Standard-Spring-Properties (`spring.cassandra.*`) konfiguriert.
+Fuer den Keyspace-Namen wird eine einzelne Custom-Property verwendet:
 
 ```yaml
+spring:
+  cassandra:
+    contact-points: cassandra-node1,cassandra-node2
+    port: 9042
+    local-datacenter: datacenter1
+    username: graphmesh
+    password: secret
+
 graphmesh:
-  storage:
-    cassandra:
-      contact-points:
-        - cassandra-node1
-        - cassandra-node2
-      port: 9042
-      keyspace: graphmesh
-      datacenter: datacenter1
-      replication-factor: 3
-      username: graphmesh
-      password: secret
-      pool:
-        local-size: 4
-        remote-size: 1
+  cassandra:
+    keyspace: graphmesh
 ```
+
+Kein separates `GraphMeshCassandraProperties`-Objekt noetig -- `CqlSession` wird automatisch durch
+Spring Boot Auto-Configuration bereitgestellt, der Keyspace-Name per `@Value("${graphmesh.cassandra.keyspace}")` injiziert.
 
 ## Betroffene Dateien
 
-### Backend
+### Backend (Spring Modulith Package: `com.agentwork.graphmesh.storage`)
 
-| Datei                                                                                                                    | Aenderung                             |
-|--------------------------------------------------------------------------------------------------------------------------|---------------------------------------|
-| `storage-cassandra/src/main/kotlin/com/graphmesh/storage/cassandra/QuadStore.kt`                                         | NEU - QuadStore-Interface             |
-| `storage-cassandra/src/main/kotlin/com/graphmesh/storage/cassandra/StoredQuad.kt`                                        | NEU - Quad-Datenmodell                |
-| `storage-cassandra/src/main/kotlin/com/graphmesh/storage/cassandra/QuadQuery.kt`                                         | NEU - Query-DSL                       |
-| `storage-cassandra/src/main/kotlin/com/graphmesh/storage/cassandra/CassandraClient.kt`                                   | NEU - Client-Interface                |
-| `storage-cassandra/src/main/kotlin/com/graphmesh/storage/cassandra/impl/EntityCentricQuadStore.kt`                       | NEU - QuadStore-Implementierung       |
-| `storage-cassandra/src/main/kotlin/com/graphmesh/storage/cassandra/impl/DefaultCassandraClient.kt`                       | NEU - Client-Implementierung          |
-| `storage-cassandra/src/main/kotlin/com/graphmesh/storage/cassandra/autoconfigure/GraphMeshCassandraAutoConfiguration.kt` | NEU - Auto-Configuration              |
-| `storage-cassandra/src/main/kotlin/com/graphmesh/storage/cassandra/autoconfigure/GraphMeshCassandraProperties.kt`        | NEU - Properties                      |
-| `storage-cassandra/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`  | NEU - Auto-Configuration-Registration |
-| `storage-cassandra/build.gradle.kts`                                                                                     | NEU - Gradle-Modul                    |
+| Datei                                                                                        | Aenderung                              |
+|----------------------------------------------------------------------------------------------|----------------------------------------|
+| `src/main/kotlin/com/agentwork/graphmesh/storage/StoredQuad.kt`                              | NEU - Quad-Datenmodell + QuadQuery DSL |
+| `src/main/kotlin/com/agentwork/graphmesh/storage/QuadStoreService.kt`                        | NEU - `@Service` fuer CRUD-Operationen |
+| `src/main/kotlin/com/agentwork/graphmesh/storage/CassandraSchemaInitializer.kt`              | NEU - Keyspace/Tabellen-Erstellung     |
 
 ### Frontend
 
@@ -271,12 +247,12 @@ Nicht betroffen.
 
 ### Tests
 
-| Datei                                                                                                       | Aenderung                                  |
-|-------------------------------------------------------------------------------------------------------------|--------------------------------------------|
-| `storage-cassandra/src/test/kotlin/com/graphmesh/storage/cassandra/EntityCentricQuadStoreTest.kt`           | NEU - QuadStore-Unit-Tests                 |
-| `storage-cassandra/src/test/kotlin/com/graphmesh/storage/cassandra/QuadQueryTest.kt`                        | NEU - Query-Strategy-Tests                 |
-| `storage-cassandra/src/test/kotlin/com/graphmesh/storage/cassandra/integration/CassandraIntegrationTest.kt` | NEU - Integrationstests mit Testcontainers |
-| `storage-cassandra/src/test/kotlin/com/graphmesh/storage/cassandra/integration/QueryPatternTest.kt`         | NEU - Alle 16 Query-Patterns testen        |
+| Datei                                                                                            | Aenderung                                    |
+|--------------------------------------------------------------------------------------------------|----------------------------------------------|
+| `src/test/kotlin/com/agentwork/graphmesh/storage/QuadStoreServiceTest.kt`                        | NEU - QuadStoreService-Tests                 |
+| `src/test/kotlin/com/agentwork/graphmesh/storage/QuadQueryTest.kt`                               | NEU - Query-Strategy-Tests + 16 Patterns     |
+
+Tests verwenden docker-compose (`compose.yaml`) statt Testcontainers fuer die Cassandra-Instanz.
 
 ## Platform-Einschraenkungen
 
@@ -288,15 +264,16 @@ Nicht betroffen.
 
 ## Akzeptanzkriterien
 
-- [ ] `quads_by_entity` und `quads_by_collection` Tabellen werden automatisch erstellt
+- [ ] `quads_by_entity` und `quads_by_collection` Tabellen werden automatisch via `CassandraSchemaInitializer` erstellt
 - [ ] Insert schreibt korrekt 4 Zeilen in `quads_by_entity` + 1 Zeile in `quads_by_collection`
-- [ ] Alle 16 Query-Patterns liefern korrekte Ergebnisse (verifiziert durch Integrationstests)
+- [ ] Alle 16 Query-Patterns liefern korrekte Ergebnisse (verifiziert durch Tests)
 - [ ] Kein Query verwendet `ALLOW FILTERING`
 - [ ] Batch-Insert fuer mehrere Quads funktioniert atomar
 - [ ] Collection-Delete entfernt alle zugehoerigen Daten aus beiden Tabellen
 - [ ] Literal-Objekte mit Datentyp und Sprach-Tag werden korrekt gespeichert und abgefragt
-- [ ] Connection Pooling ist konfigurierbar ueber `application.yml`
 - [ ] Keyspace wird automatisch erstellt falls nicht vorhanden
-- [ ] Spring Boot Auto-Configuration funktioniert ohne manuelle Bean-Definition
-- [ ] Integrationstests mit Testcontainers (Cassandra) laufen erfolgreich
+- [ ] `QuadStoreService` wird per Spring Modulith Package-Scanning als `@Service` erkannt
+- [ ] Konfiguration erfolgt ueber `spring.cassandra.*` + `graphmesh.cassandra.keyspace`
+- [ ] Alle Methoden sind synchron (kein `suspend fun` / keine Coroutines)
+- [ ] Tests laufen mit docker-compose-basierter Cassandra-Instanz
 - [ ] Bestehende Funktionalitaet bleibt unberuehrt
