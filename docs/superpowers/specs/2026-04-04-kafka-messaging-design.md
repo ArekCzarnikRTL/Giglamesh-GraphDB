@@ -1,212 +1,262 @@
-# Feature 01: Kafka Messaging Infrastructure — Design Spec
+# Feature 01: Kafka Messaging Infrastructure — Design Spec (v2)
+
+Vereinfachte Neuimplementierung: Direkte Spring Boot Kafka Integration mit Avro + Confluent Schema Registry + CloudEvents Envelope.
 
 ## Entscheidungen
 
 | Entscheidung | Wahl | Begruendung |
 |---|---|---|
-| Modul-Struktur | Spring Modulith Package (kein separates Gradle-Modul) | Passt zum bestehenden Single-Module-Setup mit Spring Modulith |
-| Ansatz | Thin Wrapper ueber Spring Kafka | KafkaTemplate/Container sind bereits da, wenig Boilerplate |
-| API-Stil | Kotlin Coroutines (`suspend fun`) | Non-blocking, passt zu async Kafka-Operationen |
-| Tests | Testcontainers (echtes Kafka) | Naeher an Produktion als EmbeddedKafkaBroker |
-| Request/Reply | Ausgeschlossen (spaeter bei Bedarf) | YAGNI — wird erst ab Feature 05 gebraucht |
+| Ansatz | Direkte Spring Boot Auto-Config | Kein Wrapper, `KafkaTemplate` + `@KafkaListener` direkt nutzen |
+| Serialisierung | Avro `GenericRecord` + Confluent Schema Registry | Schema-Evolution, binaeRes Format, Registry als zentrale Schema-Verwaltung |
+| Envelope | CloudEvents (Binary Content Mode) | `ce_`-prefixed Kafka Headers gemaess Envelope-Spec |
+| Konfiguration | `spring.kafka.*` Properties | Standard Spring Boot, keine eigenen Property-Klassen |
+| Infrastruktur | docker-compose (Kafka + Schema Registry) | Lokale Entwicklung und Tests gegen echte Instanzen |
+| Tests | Integration gegen docker-compose | Kein Testcontainers — Tests laufen gegen laufende Docker-Instanzen |
+| Modul-Struktur | Spring Modulith Package | Passt zum bestehenden Single-Module-Setup |
 
-## Package-Struktur
+## Was wird entfernt
 
-```
-com.agentwork.graphmesh.messaging/
-├── Message.kt                          # Data class mit Payload + Metadaten
-├── MessageHeaders.kt                   # Header-Konstanten
-├── MessageProducer.kt                  # Interface<T : Any>
-├── MessageConsumer.kt                  # Interface<T : Any>
-├── MessageProducerFactory.kt           # Factory fuer typsichere Producer
-├── MessageConsumerFactory.kt           # Factory fuer typsichere Consumer
-├── TopicRegistry.kt                    # Interface: allTopics(), ensureTopicsExist()
-├── KafkaTopicConfig.kt                 # Data class: name, partitions, replicationFactor
-├── GracefulShutdownCoordinator.kt      # ContextClosedEvent-basierter Shutdown
-├── internal/                           # Spring Modulith: modul-intern
-│   ├── KafkaMessageProducer.kt         # KafkaTemplate-basiert, Coroutine-Bridge
-│   ├── KafkaMessageConsumer.kt         # ConcurrentMessageListenerContainer + CoroutineScope
-│   └── DefaultTopicRegistry.kt         # AdminClient-basiert, Topic-Erstellung
-└── autoconfigure/
-    ├── GraphMeshKafkaProperties.kt     # @ConfigurationProperties
-    └── GraphMeshKafkaAutoConfiguration.kt  # Bean-Definitionen
-```
+Die gesamte bestehende Abstraktionsschicht:
 
-`internal/` ist durch Spring Modulith vor Zugriff aus anderen Packages geschuetzt.
+- Interfaces: `MessageProducer`, `MessageConsumer`, `MessageProducerFactory`, `MessageConsumerFactory`, `TopicRegistry`
+- Data Classes: `Message`, `KafkaTopicConfig`
+- Object: `MessageHeaders`
+- Implementierungen: `KafkaMessageProducer`, `KafkaMessageConsumer`, `DefaultTopicRegistry`
+- Config: `GraphMeshKafkaProperties`, `GracefulShutdownCoordinator`
+- Tests: Alle 5 bestehenden Test-Dateien + `AbstractKafkaIntegrationTest`
+- Dependencies: `kotlinx-coroutines-*`, `testcontainers:kafka`, `testcontainers:junit-jupiter`
 
-## Core Interfaces
-
-### MessageProducer
-
-```kotlin
-interface MessageProducer<T : Any> {
-    val topic: String
-    suspend fun send(message: T, headers: Map<String, String> = emptyMap())
-    suspend fun sendWithKey(key: String, message: T, headers: Map<String, String> = emptyMap())
-    fun close()
-}
-```
-
-### MessageConsumer
-
-```kotlin
-interface MessageConsumer<T : Any> {
-    val topic: String
-    val groupId: String
-    fun subscribe(handler: suspend (Message<T>) -> Unit)
-    fun close()
-}
-```
-
-### Message
-
-```kotlin
-data class Message<T>(
-    val payload: T,
-    val key: String?,
-    val headers: Map<String, String>,
-    val topic: String,
-    val partition: Int,
-    val offset: Long,
-    val timestamp: Long
-)
-```
-
-### Factories
-
-```kotlin
-interface MessageProducerFactory {
-    fun <T : Any> create(topic: String, messageType: KClass<T>): MessageProducer<T>
-}
-
-interface MessageConsumerFactory {
-    fun <T : Any> create(topic: String, groupId: String, messageType: KClass<T>): MessageConsumer<T>
-}
-```
-
-Andere Module erstellen Producer/Consumer ueber die Factories:
-
-```kotlin
-val producer = producerFactory.create("graphmesh.document.uploaded", DocumentEvent::class)
-producer.send(DocumentEvent(...))
-```
-
-### TopicRegistry & KafkaTopicConfig
-
-```kotlin
-data class KafkaTopicConfig(
-    val name: String,
-    val partitions: Int = 3,
-    val replicationFactor: Short = 1,
-    val configs: Map<String, String> = emptyMap()
-) {
-    init { require(name.startsWith("graphmesh.")) { "Topic must follow graphmesh.<domain>.<action> convention" } }
-    fun toNewTopic(): NewTopic = NewTopic(name, partitions, replicationFactor).configs(configs)
-}
-
-interface TopicRegistry {
-    fun allTopics(): List<KafkaTopicConfig>
-    fun ensureTopicsExist()
-}
-```
-
-### MessageHeaders
-
-```kotlin
-object MessageHeaders {
-    const val CORRELATION_ID = "X-Correlation-Id"
-    const val SOURCE_SERVICE = "X-Source-Service"
-    const val TIMESTAMP = "X-Timestamp"
-    const val MESSAGE_TYPE = "X-Message-Type"
-}
-```
-
-## Implementierungsdetails
-
-### KafkaMessageProducer
-
-- Nutzt `KafkaTemplate<String, T>`
-- Coroutine-Bridge: `template.send(...).asDeferred().await()` (via `kotlinx-coroutines-reactor`)
-- Setzt automatisch `X-Timestamp` und `X-Message-Type` Header
-- Registriert sich beim `GracefulShutdownCoordinator`
-
-### KafkaMessageConsumer
-
-- Erstellt `ConcurrentMessageListenerContainer` mit `ContainerProperties`
-- Message-Handler laeuft in einem `CoroutineScope` (Dispatchers.Default)
-- JSON-Deserialisierung ueber Jackson `JsonDeserializer` mit konfiguriertem `ObjectMapper`
-- Registriert sich beim `GracefulShutdownCoordinator`
-
-### DefaultTopicRegistry
-
-- Nutzt Kafka `AdminClient` fuer Topic-Erstellung
-- Topics werden aus einer registrierbaren Liste verwaltet
-- `ensureTopicsExist()` wird via `@EventListener(ApplicationReadyEvent)` getriggert wenn `auto-create-topics=true`
-
-## Konfiguration
+## Infrastruktur: docker-compose.yaml
 
 ```yaml
-graphmesh:
-  messaging:
-    kafka:
-      enabled: true
-      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-      group-id-prefix: graphmesh
-      auto-create-topics: true
-      default-partitions: 3
-      default-replication-factor: 1
-      graceful-shutdown:
-        enabled: true
-        drain-timeout-ms: 5000
-        await-termination-ms: 10000
+services:
+  kafka:
+    image: confluentinc/cp-kafka:7.9.0
+    # KRaft-Mode (kein Zookeeper)
+    # Port: localhost:9092
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.9.0
+    # Port: localhost:8081
+    # Verbunden mit Kafka
 ```
 
-### Auto-Configuration
+## Dependencies (build.gradle.kts)
 
-- `@ConditionalOnClass(KafkaProducer::class)`
-- `@ConditionalOnProperty(prefix = "graphmesh.messaging.kafka", name = ["enabled"], matchIfMissing = true)`
-- Registriert: `TopicRegistry`, `GracefulShutdownCoordinator`, `MessageProducerFactory`, `MessageConsumerFactory`
-- JSON-Serialisierung nutzt den Spring-Boot-konfigurierten `ObjectMapper`
+```kotlin
+// Neu
+implementation("org.springframework.boot:spring-boot-starter-kafka")
+implementation("org.apache.avro:avro")
+implementation("io.confluent:kafka-avro-serializer")
 
-## Graceful Shutdown
+// Confluent Maven Repository
+repositories {
+    maven("https://packages.confluent.io/maven/")
+}
 
-1. `ContextClosedEvent` wird empfangen
-2. Alle Consumer stoppen (keine neuen Messages)
-3. Drain-Timeout abwarten (`drain-timeout-ms`)
-4. Alle Producer flushen und schliessen
-5. Await-Termination-Timeout (`await-termination-ms`)
+// Entfernt
+// kotlinx-coroutines-core, kotlinx-coroutines-reactor (soweit nur fuer Kafka)
+// testcontainers:kafka, testcontainers:junit-jupiter
+// spring-kafka-test
+// kotlinx-coroutines-test
+```
 
-Producer/Consumer registrieren sich automatisch beim Coordinator wenn sie ueber die Factories erstellt werden.
+## Konfiguration (application.yml)
+
+```yaml
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+    consumer:
+      group-id: graphmesh
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+    properties:
+      schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
+```
+
+Spring Boot auto-konfiguriert `KafkaTemplate<String, GenericRecord>` und `ConsumerFactory` anhand dieser Properties. Keine eigenen `@Configuration`-Klassen fuer Factories noetig.
+
+## CloudEvents Envelope Helper
+
+Einzige Utility-Klasse — kein Interface, kein Framework:
+
+```kotlin
+package com.agentwork.graphmesh.messaging
+
+object CloudEventHeaders {
+    // MUST Headers
+    const val ID = "ce_id"                       // UUID, auto-generiert
+    const val SOURCE = "ce_source"               // Business-Kontext URI
+    const val SPEC_VERSION = "ce_specversion"    // immer "1.0"
+    const val TYPE = "ce_type"                   // Domain-Event-Typ, versioniert
+    const val TIME = "ce_time"                   // RFC 3339 Business-Timestamp
+    const val TRACEPARENT = "ce_traceparent"     // W3C Trace Context
+
+    // SHOULD Headers
+    const val CORRELATION_ID = "ce_correlationid"
+    const val CAUSATION_ID = "ce_causationid"
+
+    // MAY Headers
+    const val CONTENT_TYPE = "content-type"      // kein ce_ prefix per Spec
+    const val SUBJECT = "ce_subject"
+
+    fun build(
+        source: String,
+        type: String,
+        subject: String? = null,
+        correlationId: String? = null,
+        causationId: String? = null,
+    ): Map<String, String> {
+        // Erzeugt automatisch: ce_id (UUID), ce_time (RFC 3339), 
+        // ce_specversion ("1.0"), ce_traceparent (neuer Span oder aus MDC)
+        // + alle uebergebenen Parameter
+    }
+
+    fun extract(headers: org.apache.kafka.common.header.Headers): Map<String, String> {
+        // Liest alle ce_* und content-type Headers als Map
+    }
+}
+```
+
+## Topic-Konfiguration
+
+Via Spring Boot `NewTopic`-Beans (ersetzt `TopicRegistry` + `KafkaTopicConfig`):
+
+```kotlin
+@Configuration
+class KafkaTopicConfig {
+    @Bean
+    fun documentIngestedTopic(): NewTopic =
+        TopicBuilder.name("graphmesh.document.ingested")
+            .partitions(3)
+            .replicas(1)
+            .build()
+}
+```
+
+## Avro Schema
+
+`src/main/avro/document-ingested.avsc`:
+
+```json
+{
+  "type": "record",
+  "name": "DocumentIngested",
+  "namespace": "com.agentwork.graphmesh.events",
+  "fields": [
+    {"name": "documentId", "type": "string"},
+    {"name": "fileName", "type": "string"},
+    {"name": "mimeType", "type": "string"},
+    {"name": "sizeBytes", "type": "long"}
+  ]
+}
+```
+
+Schema wird zur Laufzeit geladen. `GenericRecord` wird manuell aus dem Schema erzeugt — kein Codegen.
+
+## Beispiel-Producer
+
+```kotlin
+@Service
+class DocumentIngestedProducer(private val kafka: KafkaTemplate<String, GenericRecord>) {
+
+    private val schema: Schema = Schema.Parser().parse(
+        javaClass.getResourceAsStream("/avro/document-ingested.avsc")
+    )
+
+    fun send(documentId: String, fileName: String, mimeType: String, sizeBytes: Long) {
+        val record = GenericData.Record(schema).apply {
+            put("documentId", documentId)
+            put("fileName", fileName)
+            put("mimeType", mimeType)
+            put("sizeBytes", sizeBytes)
+        }
+        val headers = CloudEventHeaders.build(
+            source = "graphmesh/document-service",
+            type = "graphmesh.document.ingested.v1",
+            subject = documentId
+        )
+        val producerRecord = ProducerRecord(
+            "graphmesh.document.ingested", null, documentId, record,
+            headers.map { (k, v) -> RecordHeader(k, v.toByteArray()) }
+        )
+        kafka.send(producerRecord)
+    }
+}
+```
+
+## Beispiel-Consumer
+
+```kotlin
+@Component
+class DocumentIngestedConsumer {
+
+    private val logger = KotlinLogging.logger {}
+
+    @KafkaListener(topics = ["graphmesh.document.ingested"], groupId = "graphmesh")
+    fun handle(record: ConsumerRecord<String, GenericRecord>) {
+        val ceHeaders = CloudEventHeaders.extract(record.headers())
+        val documentId = record.value()["documentId"].toString()
+
+        logger.info { "Document ingested: $documentId, type=${ceHeaders[CloudEventHeaders.TYPE]}" }
+    }
+}
+```
+
+## Dateistruktur
+
+```
+src/main/kotlin/.../messaging/
+    CloudEventHeaders.kt            # Envelope Helper (build + extract)
+    KafkaTopicConfig.kt             # NewTopic Beans
+    DocumentIngestedProducer.kt     # Beispiel-Producer
+    DocumentIngestedConsumer.kt     # Beispiel-Consumer
+
+src/main/resources/avro/
+    document-ingested.avsc          # Avro Schema
+
+src/test/kotlin/.../messaging/
+    CloudEventHeadersTest.kt        # Unit-Test: Header build/extract
+    DocumentIngestedIntegrationTest.kt  # Integration gegen docker-compose
+
+docker-compose.yaml                 # Kafka (KRaft) + Schema Registry
+```
+
+4 Produktionsdateien + 1 Schema + 2 Tests + docker-compose.
 
 ## Testing
 
 | Test | Typ | Was wird getestet |
 |---|---|---|
-| `KafkaMessageProducerTest` | Integration (Testcontainers) | Send, SendWithKey, Header-Propagation |
-| `KafkaMessageConsumerTest` | Integration (Testcontainers) | Subscribe, Deserialisierung, mehrere Messages |
-| `ProducerConsumerRoundtripTest` | Integration (Testcontainers) | Producer → Consumer End-to-End |
-| `DefaultTopicRegistryTest` | Integration (Testcontainers) | Auto-Create Topics, Topic-Listing |
-| `GracefulShutdownCoordinatorTest` | Unit (Mocks) | Shutdown-Reihenfolge, Timeout-Verhalten |
-| `GraphMeshKafkaAutoConfigurationTest` | Unit | Conditional Beans, Property-Binding |
+| `CloudEventHeadersTest` | Unit | `build()` erzeugt alle 6 MUST-Headers, `extract()` liest sie korrekt |
+| `DocumentIngestedIntegrationTest` | Integration (docker-compose) | Producer sendet, Consumer empfaengt, Avro-Serialisierung via Schema Registry, CloudEvent-Headers End-to-End |
 
-### Test-Infrastruktur
+Tests setzen voraus, dass `docker-compose up` laeuft. `application-test.yml` zeigt auf `localhost:9092` / `localhost:8081`.
 
-- `AbstractKafkaIntegrationTest`: Basisklasse mit `@Testcontainers`, `KafkaContainer`
-- `@DynamicPropertySource` setzt `graphmesh.messaging.kafka.bootstrap-servers`
-- Shared Container (Singleton) fuer schnellere Test-Ausfuehrung
+## CloudEvents Envelope Compliance
 
-### Neue Dependencies
-
-```kotlin
-// build.gradle.kts
-implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
-implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
-testImplementation("org.testcontainers:kafka")
-testImplementation("org.testcontainers:junit-jupiter")
+```
+Envelope Compliance Check:
+  [x] id            — UUID auto-generiert in build()
+  [x] source        — uebergeben als Parameter
+  [x] specversion   — hardcoded "1.0"
+  [x] type          — uebergeben als Parameter, versioniert (.v1)
+  [x] time          — RFC 3339 auto-generiert in build()
+  [x] traceparent   — W3C Trace Context, propagiert oder neu erzeugt
+  [x] correlationid (SHOULD) — optional in build()
+  [x] causationid   (SHOULD) — optional in build()
+  [x] subject       (MAY) — optional in build(), genutzt fuer documentId
+  [x] content-type  (MAY) — "application/avro"
 ```
 
 ## Scope-Ausschluesse
 
-- **Request/Reply-Pattern** (`RequestReplyProducer`): Wird spaeter bei Bedarf implementiert (fruehestens Feature 05)
-- **Dead Letter Queue**: Nicht in Scope, kann spaeter ergaenzt werden
-- **Schema Registry / Avro**: JSON-Serialisierung ist ausreichend fuer den Start
+- **Request/Reply-Pattern**: Spaeter bei Bedarf (fruehestens Feature 05)
+- **Dead Letter Queue**: Nicht in Scope
+- **Graceful Shutdown Coordinator**: Spring Boot managed Kafka-Shutdown nativ
+- **Coroutines**: Nicht noetig — `@KafkaListener` und `KafkaTemplate.send()` sind ausreichend
