@@ -48,16 +48,15 @@ class DocumentIngestedIntegrationTest {
         val consumer = consumerFactory.createConsumer()
         consumer.subscribe(listOf(DocumentIngestedProducer.TOPIC))
 
-        val records = mutableListOf<ConsumerRecord<String, GenericRecord>>()
+        var record: ConsumerRecord<String, GenericRecord>? = null
         val deadline = Instant.now().plusSeconds(30)
-        while (records.isEmpty() && Instant.now().isBefore(deadline)) {
+        while (record == null && Instant.now().isBefore(deadline)) {
             val polled = consumer.poll(Duration.ofSeconds(1))
-            polled.forEach { records.add(it) }
+            record = polled.firstOrNull { it.key() == documentId }
         }
         consumer.close()
 
-        assertTrue(records.isNotEmpty(), "Expected at least one message")
-        val record = records.first()
+        assertNotNull(record, "Expected a message with key=$documentId")
 
         assertEquals(documentId, record.value()["documentId"].toString())
         assertEquals(fileName, record.value()["fileName"].toString())
@@ -84,16 +83,16 @@ class DocumentIngestedIntegrationTest {
         val consumer = consumerFactory.createConsumer()
         consumer.subscribe(listOf(DocumentIngestedProducer.TOPIC))
 
-        val records = mutableListOf<ConsumerRecord<String, GenericRecord>>()
+        var record: ConsumerRecord<String, GenericRecord>? = null
         val deadline = Instant.now().plusSeconds(30)
-        while (records.isEmpty() && Instant.now().isBefore(deadline)) {
+        while (record == null && Instant.now().isBefore(deadline)) {
             val polled = consumer.poll(Duration.ofSeconds(1))
-            polled.forEach { records.add(it) }
+            record = polled.firstOrNull { it.key() == documentId }
         }
         consumer.close()
 
-        assertTrue(records.isNotEmpty(), "Expected at least one message")
-        val ceHeaders = CloudEventHeaders.extract(records.first().headers())
+        assertNotNull(record, "Expected a message with key=$documentId")
+        val ceHeaders = CloudEventHeaders.extract(record.headers())
 
         assertNotNull(ceHeaders[CloudEventHeaders.ID])
         assertEquals(DocumentIngestedProducer.SOURCE, ceHeaders[CloudEventHeaders.SOURCE])
