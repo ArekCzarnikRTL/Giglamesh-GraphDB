@@ -1,6 +1,11 @@
 spring:
   application:
     name: GraphMesh
+  graphql:
+    graphiql:
+      enabled: true
+    schema:
+      locations: classpath:graphql/
   autoconfigure:
     exclude:
       - org.springframework.ai.vectorstore.qdrant.autoconfigure.QdrantVectorStoreAutoConfiguration
@@ -23,6 +28,24 @@ spring:
     local-datacenter: datacenter1
     schema-action: none
 
+ai:
+  koog:
+    openai:
+      enabled: ${OPENAI_API_KEY:false}
+      api-key: ${OPENAI_API_KEY:}
+    anthropic:
+      enabled: ${ANTHROPIC_API_KEY:false}
+      api-key: ${ANTHROPIC_API_KEY:}
+    ollama:
+      enabled: true
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+
+koog:
+  spring:
+    ai:
+      embedding:
+        enabled: true
+
 graphmesh:
   cassandra:
     keyspace: graphmesh
@@ -39,3 +62,10 @@ graphmesh:
       host: ${QDRANT_HOST:localhost}
       grpc-port: ${QDRANT_GRPC_PORT:6334}
       use-tls: false
+  chunker:
+    chunk-size: 2000
+    overlap-size: 200
+  extraction:
+    model: ${LLM_EXTRACTION_MODEL:gpt-4o}
+  embedding:
+    model: ${EMBEDDING_MODEL:text-embedding-3-small}

@@ -12,6 +12,21 @@ spring:
     local-datacenter: datacenter1
     schema-action: none
 
+ai:
+  koog:
+    openai:
+      enabled: false
+    anthropic:
+      enabled: false
+    ollama:
+      enabled: false
+
+koog:
+  spring:
+    ai:
+      embedding:
+        enabled: false
+
 graphmesh:
   cassandra:
     keyspace: graphmesh_test

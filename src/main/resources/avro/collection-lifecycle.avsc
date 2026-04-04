@@ -1,0 +1,10 @@
+{
+  "type": "record",
+  "name": "CollectionLifecycle",
+  "namespace": "com.agentwork.graphmesh.collection",
+  "fields": [
+    {"name": "type", "type": "string"},
+    {"name": "collectionId", "type": "string"},
+    {"name": "collectionName", "type": "string"}
+  ]
+}

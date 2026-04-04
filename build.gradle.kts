@@ -10,6 +10,8 @@ group = "com.agentwork"
 version = "0.0.1-SNAPSHOT"
 description = "GraphMesh"
 
+val koogVersion = "0.7.3"
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
@@ -19,6 +21,7 @@ java {
 repositories {
     mavenCentral()
     maven("https://packages.confluent.io/maven/")
+
 }
 
 extra["springAiVersion"] = "2.0.0-M4"
@@ -27,11 +30,18 @@ extra["springModulithVersion"] = "2.0.5"
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-cassandra")
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
+    implementation("org.springframework.boot:spring-boot-starter-graphql")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.springframework.ai:spring-ai-starter-vector-store-qdrant")
     implementation("org.springframework.ai:spring-ai-tika-document-reader")
     implementation("org.springframework.modulith:spring-modulith-starter-core")
     implementation("tools.jackson.module:jackson-module-kotlin")
+    implementation("ai.koog:koog-agents-jvm:$koogVersion")
+    implementation("ai.koog:koog-spring-boot-starter:$koogVersion")
+    implementation("ai.koog:prompt-executor-openai-client:$koogVersion")
+    implementation("ai.koog:prompt-executor-anthropic-client:$koogVersion")
+    implementation("ai.koog:prompt-executor-ollama-client:$koogVersion")
+    implementation("ai.koog:koog-spring-ai-starter-model-embedding:$koogVersion")
     implementation("org.springframework.boot:spring-boot-starter-kafka")
     implementation("org.apache.avro:avro:1.12.0")
     implementation("io.confluent:kafka-avro-serializer:7.9.0")

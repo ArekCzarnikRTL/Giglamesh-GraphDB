@@ -25,7 +25,7 @@ Kind-Dokument im Librarian erstellt und Page-Extracted-Events publiziert.
 |---------------------------------------------|------------|----------|
 | Feature 01: Kafka Messaging Infrastructure  | Geplant    | Ja       |
 | Feature 09: Document Management (Librarian) | Geplant    | Ja       |
-| Apache PDFBox 3.x                           | Verfuegbar | Nein     |
+| Apache PDFBox                               | Verfuegbar | Nein     |
 | Spring Boot 3.x                             | Verfuegbar | Nein     |
 
 ## Architektur

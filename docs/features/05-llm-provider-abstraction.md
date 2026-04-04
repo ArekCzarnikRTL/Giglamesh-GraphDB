@@ -5,14 +5,16 @@
 GraphMesh muss verschiedene LLM-Provider (OpenAI, Anthropic, Ollama) fuer Chat Completion und Embedding-Generierung
 unterstuetzen. Ohne Abstraktionsschicht muesste jeder Service direkt mit Provider-spezifischen APIs arbeiten, was zu
 Vendor Lock-in, inkonsistenter Fehlerbehandlung und schwieriger Testbarkeit fuehrt. Ein Providerwechsel wuerde
-umfangreiche Code-Aenderungen erfordern.
+umfangreiche Code-Aenderungen erfordern. 
+
+Wichtig:
+Verwende Koog als Abstraktionsschicht.
 
 ## Ziel
 
 Bereitstellung einer provider-agnostischen LLM-Schnittstelle mit austauschbaren Implementierungen als separate Spring
 Boot Starters.
 
-1. **LlmProvider Interface** -- Einheitliche Schnittstelle fuer alle LLM-Operationen
 2. **ChatCompletionService** -- Text-in/Text-out mit konfigurierbaren Parametern (Modell, Temperatur, Max-Tokens)
 3. **EmbeddingService** -- Text-in/Vector-out fuer Embedding-Generierung
 4. **Provider-Implementierungen** -- OpenAI, Anthropic und Ollama als separate Spring Boot Starters

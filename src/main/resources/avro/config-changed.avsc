@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "ConfigChanged",
+  "namespace": "com.agentwork.graphmesh.config",
+  "fields": [
+    {"name": "configId", "type": "string"},
+    {"name": "configType", "type": "string"},
+    {"name": "key", "type": "string"},
+    {"name": "action", "type": "string"},
+    {"name": "version", "type": "int"}
+  ]
+}

@@ -1,0 +1,26 @@
+extend type Query {
+    documentRag(input: DocumentRagInput!): DocumentRagResponse!
+}
+
+input DocumentRagInput {
+    question: String!
+    collectionId: ID!
+    topK: Int = 10
+    similarityThreshold: Float = 0.5
+}
+
+type DocumentRagResponse {
+    answer: String!
+    sources: [SourceAttributionType!]!
+    retrievedChunkCount: Int!
+    durationMs: Int!
+}
+
+type SourceAttributionType {
+    chunkId: String!
+    documentId: String!
+    documentTitle: String!
+    pageNumber: Int
+    score: Float!
+    snippet: String!
+}

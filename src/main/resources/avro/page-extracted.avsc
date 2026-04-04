@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "PageExtracted",
+  "namespace": "com.agentwork.graphmesh.extraction",
+  "fields": [
+    {"name": "documentId", "type": "string"},
+    {"name": "parentDocumentId", "type": "string"},
+    {"name": "collectionId", "type": "string"},
+    {"name": "pageNumber", "type": "int"},
+    {"name": "charCount", "type": "int"}
+  ]
+}

@@ -1,0 +1,27 @@
+extend type Query {
+    graphRag(input: GraphRagInput!): GraphRagResponse!
+}
+
+input GraphRagInput {
+    question: String!
+    collectionId: ID!
+    maxEdges: Int = 150
+    maxDepth: Int = 2
+    maxSelectedEdges: Int = 30
+}
+
+type GraphRagResponse {
+    answer: String!
+    selectedEdges: [SelectedEdgeType!]!
+    retrievedEdgeCount: Int!
+    durationMs: Int!
+}
+
+type SelectedEdgeType {
+    subject: String!
+    predicate: String!
+    objectValue: String!
+    dataset: String!
+    reasoning: String!
+    relevanceScore: Float!
+}

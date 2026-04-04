@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 GraphMesh is an Enterprise Knowledge Graph Platform built with Spring Boot + Kotlin. It extracts structured knowledge (RDF/SPO triples) from documents using LLMs, stores them in a graph, and enables semantic search and RAG queries.
 
+## Code Review Process
+
+I need to implement these independent features in parallel: [LIST FEATURES]. For each feature: 1) Create a git branch named `feature/<name>`, 2) Spawn a sub-agent to implement it following our docs/features workflow—write the feature doc first, then plan, then implement with tests, 3) Each agent must run the full build and test suite on its branch before reporting done, 4) After all agents complete, merge each branch into `develop` one at a time, running tests after each merge to catch integration conflicts. Report a summary table: feature name, branch, files changed, tests added, build status.
+
 ## Build Commands
 
 ```bash

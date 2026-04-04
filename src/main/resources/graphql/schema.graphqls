@@ -1,0 +1,115 @@
+type Query {
+    collections(tags: [String]): [Collection!]!
+    collection(id: ID!): Collection
+
+    documents(collectionId: ID!, type: DocumentType): [Document!]!
+    document(id: ID!): Document
+
+    triples(
+        collectionId: ID!
+        subject: String
+        predicate: String
+        object: String
+        dataset: String
+    ): [Quad!]!
+
+    vectorSearch(
+        collectionId: ID!
+        query: String!
+        limit: Int = 10
+    ): [SearchResult!]!
+}
+
+type Mutation {
+    createCollection(input: CreateCollectionInput!): Collection!
+    updateCollection(id: ID!, input: UpdateCollectionInput!): Collection!
+    deleteCollection(id: ID!): Boolean!
+
+    uploadDocument(input: UploadDocumentInput!): Document!
+    deleteDocument(id: ID!): Boolean!
+}
+
+type Collection {
+    id: ID!
+    name: String!
+    description: String
+    tags: [String!]!
+    metadata: [KeyValue!]!
+    createdAt: String!
+    updatedAt: String!
+}
+
+type Document {
+    id: ID!
+    collectionId: ID!
+    parentId: String
+    type: DocumentType!
+    state: DocumentState!
+    title: String!
+    mimeType: String!
+    children: [Document!]!
+    metadata: [KeyValue!]!
+    createdAt: String!
+}
+
+type Quad {
+    subject: String!
+    predicate: String!
+    object: String!
+    dataset: String!
+    objectType: String!
+    datatype: String
+    language: String
+}
+
+type SearchResult {
+    id: String!
+    score: Float!
+    payload: [KeyValue!]!
+    text: String
+}
+
+type KeyValue {
+    key: String!
+    value: String!
+}
+
+enum DocumentType {
+    SOURCE
+    PAGE
+    CHUNK
+}
+
+enum DocumentState {
+    UPLOADED
+    PROCESSING
+    EXTRACTED
+    FAILED
+}
+
+input CreateCollectionInput {
+    name: String!
+    description: String
+    tags: [String!]
+    metadata: [KeyValueInput!]
+}
+
+input UpdateCollectionInput {
+    name: String
+    description: String
+    tags: [String!]
+    metadata: [KeyValueInput!]
+}
+
+input UploadDocumentInput {
+    collectionId: ID!
+    title: String!
+    mimeType: String!
+    content: String!
+    metadata: [KeyValueInput!]
+}
+
+input KeyValueInput {
+    key: String!
+    value: String!
+}

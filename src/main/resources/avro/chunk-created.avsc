@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "ChunkCreated",
+  "namespace": "com.agentwork.graphmesh.extraction",
+  "fields": [
+    {"name": "chunkId", "type": "string"},
+    {"name": "documentId", "type": "string"},
+    {"name": "collectionId", "type": "string"},
+    {"name": "chunkIndex", "type": "int"},
+    {"name": "charOffset", "type": "int"},
+    {"name": "charLength", "type": "int"}
+  ]
+}
