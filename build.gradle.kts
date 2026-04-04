@@ -67,4 +67,5 @@ tasks.generateJava {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    jvmArgs("-Xmx2g")
 }
