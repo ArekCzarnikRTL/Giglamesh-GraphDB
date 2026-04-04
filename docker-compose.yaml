@@ -29,3 +29,14 @@ services:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:29092
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+
+  cassandra:
+    image: cassandra:5.0
+    hostname: cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_CLUSTER_NAME: graphmesh
+      CASSANDRA_DC: datacenter1
+      HEAP_NEWSIZE: 128M
+      MAX_HEAP_SIZE: 512M
