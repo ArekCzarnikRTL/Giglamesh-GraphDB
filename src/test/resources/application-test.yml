@@ -1,4 +1,7 @@
 spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.vectorstore.qdrant.autoconfigure.QdrantVectorStoreAutoConfiguration
   kafka:
     bootstrap-servers: localhost:9092
     properties:
@@ -18,3 +21,6 @@ graphmesh:
       access-key: minioadmin
       secret-key: minioadmin
       default-bucket: graphmesh-test
+    vector:
+      host: localhost
+      grpc-port: 6334
