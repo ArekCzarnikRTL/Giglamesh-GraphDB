@@ -5,11 +5,14 @@ import org.apache.avro.generic.GenericData
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.header.internals.RecordHeader
+import org.slf4j.LoggerFactory
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Service
 
 @Service
 class DocumentIngestedProducer(private val kafka: KafkaTemplate<String, GenericRecord>) {
+
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     private val schema: Schema = Schema.Parser().parse(
         javaClass.getResourceAsStream("/avro/document-ingested.avsc")
@@ -37,6 +40,8 @@ class DocumentIngestedProducer(private val kafka: KafkaTemplate<String, GenericR
             RecordHeader(k, v.toByteArray()) as org.apache.kafka.common.header.Header
         }
         val producerRecord = ProducerRecord<String, GenericRecord>(TOPIC, null, documentId, record, kafkaHeaders)
-        kafka.send(producerRecord)
+        kafka.send(producerRecord).whenComplete { _, ex ->
+            if (ex != null) logger.error("Failed to send document.ingested event for {}", documentId, ex)
+        }
     }
 }
