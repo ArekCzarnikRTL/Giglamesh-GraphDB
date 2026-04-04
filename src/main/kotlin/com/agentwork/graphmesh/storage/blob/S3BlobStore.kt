@@ -50,16 +50,17 @@ class S3BlobStore(
     }
 
     override fun get(bucket: String, key: String): BlobData {
-        val response = s3Client.getObject(
+        return s3Client.getObject(
             GetObjectRequest.builder().bucket(bucket).key(key).build()
-        )
-        val bytes = response.readAllBytes()
-        return BlobData(
-            data = bytes,
-            contentType = response.response().contentType() ?: "application/octet-stream",
-            contentLength = response.response().contentLength(),
-            metadata = response.response().metadata()
-        )
+        ).use { response ->
+            val bytes = response.readAllBytes()
+            BlobData(
+                data = bytes,
+                contentType = response.response().contentType() ?: "application/octet-stream",
+                contentLength = response.response().contentLength(),
+                metadata = response.response().metadata()
+            )
+        }
     }
 
     override fun delete(bucket: String, key: String) {
