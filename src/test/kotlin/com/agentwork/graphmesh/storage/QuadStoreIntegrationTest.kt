@@ -20,7 +20,7 @@ import kotlin.test.assertTrue
 class QuadStoreIntegrationTest {
 
     @Autowired
-    lateinit var store: QuadStoreService
+    lateinit var store: CassandraQuadStore
 
     private lateinit var collection: String
 

@@ -12,10 +12,10 @@ import org.springframework.stereotype.Service
 
 @Service
 @DependsOn("cassandraSchemaInitializer")
-class QuadStoreService(
+class CassandraQuadStore(
     private val session: CqlSession,
     @Value("\${graphmesh.cassandra.keyspace}") private val keyspace: String
-) {
+) : QuadStore {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -67,25 +67,25 @@ class QuadStoreService(
         prepareQueryStatements()
     }
 
-    fun insert(collection: String, quad: StoredQuad) {
+    override fun insert(collection: String, quad: StoredQuad) {
         val batch = BatchStatement.builder(BatchType.LOGGED)
         addInsertToBatch(batch, collection, quad)
         session.execute(batch.build())
     }
 
-    fun insertBatch(collection: String, quads: List<StoredQuad>) {
+    override fun insertBatch(collection: String, quads: List<StoredQuad>) {
         val batch = BatchStatement.builder(BatchType.LOGGED)
         quads.forEach { addInsertToBatch(batch, collection, it) }
         session.execute(batch.build())
     }
 
-    fun delete(collection: String, quad: StoredQuad) {
+    override fun delete(collection: String, quad: StoredQuad) {
         val batch = BatchStatement.builder(BatchType.LOGGED)
         addDeleteToBatch(batch, collection, quad)
         session.execute(batch.build())
     }
 
-    fun deleteCollection(collection: String) {
+    override fun deleteCollection(collection: String) {
         // 1. Read all quads from collection manifest
         val rows = session.execute(selectCollection.bind(collection))
         val entities = mutableSetOf<String>()
@@ -150,7 +150,7 @@ class QuadStoreService(
         batch.addStatement(deleteCollectionRow.bind(collection, d, s, p, o, otype, dtype, lang))
     }
 
-    fun query(collection: String, query: QuadQuery): List<StoredQuad> {
+    override fun query(collection: String, query: QuadQuery): List<StoredQuad> {
         val s = query.subject
         val p = query.predicate
         val o = query.objectValue
