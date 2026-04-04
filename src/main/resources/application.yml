@@ -1,6 +1,9 @@
 spring:
   application:
     name: GraphMesh
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.vectorstore.qdrant.autoconfigure.QdrantVectorStoreAutoConfiguration
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
@@ -32,3 +35,7 @@ graphmesh:
       path-style-access: true
       default-bucket: graphmesh
       auto-create-buckets: true
+    vector:
+      host: ${QDRANT_HOST:localhost}
+      grpc-port: ${QDRANT_GRPC_PORT:6334}
+      use-tls: false

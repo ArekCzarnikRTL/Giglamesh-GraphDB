@@ -51,3 +51,10 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     command: server /data --console-address ":9001"
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    hostname: qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
