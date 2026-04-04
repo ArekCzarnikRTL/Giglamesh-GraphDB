@@ -42,6 +42,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
     testImplementation("org.testcontainers:kafka")
     testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 }
 
 dependencyManagement {
