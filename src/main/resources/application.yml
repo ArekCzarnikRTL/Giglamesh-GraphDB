@@ -1,17 +1,15 @@
 spring:
   application:
     name: GraphMesh
-
-graphmesh:
-  messaging:
-    kafka:
-      enabled: true
-      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-      group-id-prefix: graphmesh
-      auto-create-topics: true
-      default-partitions: 3
-      default-replication-factor: 1
-      graceful-shutdown:
-        enabled: true
-        drain-timeout-ms: 5000
-        await-termination-ms: 10000
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+    consumer:
+      group-id: graphmesh
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+    properties:
+      schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
