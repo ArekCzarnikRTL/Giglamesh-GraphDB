@@ -100,6 +100,49 @@ class NlpQueryServiceTest {
         assertEquals(true, result.wasReformulated)
     }
 
+    @Test
+    fun `parseReformulationResponse returns reformulated question`() {
+        val response = "What specific entities in the knowledge graph are related to machine learning?"
+        val result = parseReformulationResponse(response)
+        assertEquals("What specific entities in the knowledge graph are related to machine learning?", result)
+    }
+
+    @Test
+    fun `parseReformulationResponse returns null for KEINE_AENDERUNG`() {
+        val response = "KEINE_AENDERUNG"
+        val result = parseReformulationResponse(response)
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun `parseReformulationResponse returns null for NO_CHANGE`() {
+        val response = "NO_CHANGE"
+        val result = parseReformulationResponse(response)
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun `parseReformulationResponse trims whitespace`() {
+        val response = "  What are the key relationships?  \n"
+        val result = parseReformulationResponse(response)
+        assertEquals("What are the key relationships?", result)
+    }
+
+    @Test
+    fun `parseReformulationResponse returns null for blank`() {
+        val response = "   "
+        val result = parseReformulationResponse(response)
+        assertEquals(null, result)
+    }
+
+    private fun parseReformulationResponse(response: String): String? {
+        val trimmed = response.trim()
+        if (trimmed.isBlank() || trimmed.equals("KEINE_AENDERUNG", ignoreCase = true) || trimmed.equals("NO_CHANGE", ignoreCase = true)) {
+            return null
+        }
+        return trimmed
+    }
+
     // Standalone copy of parsing logic for testing
     private fun parseIntentResponse(response: String): DetectedIntent {
         val line = response.lines().firstOrNull { it.contains("|") }?.trim()

@@ -39,8 +39,22 @@ class NlpQueryService(
         }
         logger.info("Detected intent: {} (confidence: {})", detectedIntent.intent, detectedIntent.confidence)
 
-        // Step 2: Route to appropriate service
-        val (answer, sources) = route(query.question, detectedIntent.intent, query.collectionId)
+        // Step 2: Reformulate if confidence is low
+        val reformulated = if (detectedIntent.confidence < 0.7 && query.forceIntent == null) {
+            logger.info("Low confidence ({}), attempting reformulation", detectedIntent.confidence)
+            reformulate(query.question, detectedIntent.intent)
+        } else {
+            null
+        }
+        val effectiveQuestion = reformulated ?: query.question
+        val wasReformulated = reformulated != null
+
+        if (wasReformulated) {
+            logger.info("Question reformulated: '{}' -> '{}'", query.question, effectiveQuestion)
+        }
+
+        // Step 3: Route to appropriate service
+        val (answer, sources) = route(effectiveQuestion, detectedIntent.intent, query.collectionId)
 
         val durationMs = System.currentTimeMillis() - startTime
         logger.info("NLP query completed in {} ms via {}", durationMs, detectedIntent.intent)
@@ -48,8 +62,8 @@ class NlpQueryService(
         return NlpQueryResult(
             answer = answer,
             detectedIntent = detectedIntent,
-            wasReformulated = false,
-            effectiveQuestion = query.question,
+            wasReformulated = wasReformulated,
+            effectiveQuestion = effectiveQuestion,
             durationMs = durationMs,
             sources = sources
         )
@@ -82,6 +96,40 @@ class NlpQueryService(
         }
 
         return parseIntentResponse(response.first().content)
+    }
+
+    private fun reformulate(question: String, intent: QueryIntent): String? {
+        val reformulationPrompt = prompt("query-reformulation") {
+            system("""
+                You are a query reformulator. Analyze the question and improve it if it is vague or ambiguous.
+                The detected query type is: ${intent.name}
+
+                If the question is already specific enough, respond with exactly: NO_CHANGE
+                Otherwise, respond with ONLY the improved question, nothing else.
+
+                Rules:
+                - Make vague questions more specific
+                - Add context about what kind of answer is expected
+                - Keep the core intent of the question
+                - Do not add information the user didn't ask about
+            """.trimIndent())
+            user(question)
+        }
+
+        val llmModel = LLModel(LLMProvider.OpenAI, llmModelName)
+        val response = runBlocking {
+            promptExecutor.execute(reformulationPrompt, llmModel)
+        }
+
+        return parseReformulationResponse(response.first().content)
+    }
+
+    internal fun parseReformulationResponse(response: String): String? {
+        val trimmed = response.trim()
+        if (trimmed.isBlank() || trimmed.equals("KEINE_AENDERUNG", ignoreCase = true) || trimmed.equals("NO_CHANGE", ignoreCase = true)) {
+            return null
+        }
+        return trimmed
     }
 
     internal fun parseIntentResponse(response: String): DetectedIntent {
