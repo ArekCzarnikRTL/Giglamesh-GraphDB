@@ -8,6 +8,7 @@ import io.qdrant.client.VectorsFactory
 import io.qdrant.client.WithPayloadSelectorFactory
 import io.qdrant.client.grpc.Collections.Distance
 import io.qdrant.client.grpc.Collections.VectorParams
+import io.qdrant.client.grpc.Points.Condition
 import io.qdrant.client.grpc.Points.Filter
 import io.qdrant.client.grpc.Points.PointStruct
 import io.qdrant.client.grpc.Points.SearchPoints
@@ -26,6 +27,9 @@ class QdrantVectorStore(
         if (points.isEmpty()) return
 
         val dimension = points.first().dimension
+        require(points.all { it.dimension == dimension }) {
+            "All points must have the same dimension, found mixed: ${points.map { it.dimension }.distinct()}"
+        }
         val physicalName = CollectionNaming.physicalName(collection, dimension)
 
         ensureCollection(physicalName, dimension)
@@ -185,22 +189,21 @@ class QdrantVectorStore(
             is VectorFilter.And -> {
                 val builder = Filter.newBuilder()
                 filter.filters.forEach { sub ->
-                    val subFilter = toQdrantFilter(sub)
-                    builder.addAllMust(subFilter.mustList)
+                    builder.addMust(Condition.newBuilder().setFilter(toQdrantFilter(sub)).build())
                 }
                 builder.build()
             }
             is VectorFilter.Or -> {
                 val builder = Filter.newBuilder()
                 filter.filters.forEach { sub ->
-                    val subFilter = toQdrantFilter(sub)
-                    builder.addAllShould(subFilter.mustList)
+                    builder.addShould(Condition.newBuilder().setFilter(toQdrantFilter(sub)).build())
                 }
                 builder.build()
             }
             is VectorFilter.Not -> {
-                val subFilter = toQdrantFilter(filter.filter)
-                Filter.newBuilder().addAllMustNot(subFilter.mustList).build()
+                Filter.newBuilder()
+                    .addMustNot(Condition.newBuilder().setFilter(toQdrantFilter(filter.filter)).build())
+                    .build()
             }
         }
     }
