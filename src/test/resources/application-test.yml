@@ -3,3 +3,18 @@ spring:
     bootstrap-servers: localhost:9092
     properties:
       schema.registry.url: http://localhost:8081
+  cassandra:
+    contact-points: localhost
+    port: 9042
+    local-datacenter: datacenter1
+    schema-action: none
+
+graphmesh:
+  cassandra:
+    keyspace: graphmesh_test
+  storage:
+    blob:
+      endpoint: http://localhost:9000
+      access-key: minioadmin
+      secret-key: minioadmin
+      default-bucket: graphmesh-test

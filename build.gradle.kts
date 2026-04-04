@@ -39,6 +39,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.springframework.modulith:spring-modulith-starter-test")
+    implementation(platform("software.amazon.awssdk:bom:2.42.28"))
+    implementation("software.amazon.awssdk:s3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

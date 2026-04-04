@@ -14,3 +14,21 @@ spring:
     properties:
       schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
       specific.avro.reader: false
+  cassandra:
+    contact-points: ${CASSANDRA_CONTACT_POINTS:localhost}
+    port: ${CASSANDRA_PORT:9042}
+    local-datacenter: datacenter1
+    schema-action: none
+
+graphmesh:
+  cassandra:
+    keyspace: graphmesh
+  storage:
+    blob:
+      endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+      region: us-east-1
+      access-key: ${MINIO_ACCESS_KEY:minioadmin}
+      secret-key: ${MINIO_SECRET_KEY:minioadmin}
+      path-style-access: true
+      default-bucket: graphmesh
+      auto-create-buckets: true
