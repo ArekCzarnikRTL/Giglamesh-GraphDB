@@ -1,0 +1,31 @@
+extend type Query {
+    nlpQuery(input: NlpQueryInput!): NlpQueryResponse!
+}
+
+input NlpQueryInput {
+    question: String!
+    collectionId: ID!
+    forceIntent: QueryIntentEnum
+}
+
+type NlpQueryResponse {
+    answer: String!
+    detectedIntent: DetectedIntentType!
+    wasReformulated: Boolean!
+    effectiveQuestion: String!
+    durationMs: Int!
+    sources: [String!]!
+}
+
+type DetectedIntentType {
+    intent: QueryIntentEnum!
+    confidence: Float!
+    reasoning: String!
+}
+
+enum QueryIntentEnum {
+    GRAPH_QUERY
+    DOCUMENT_QUERY
+    STRUCTURED_QUERY
+    HYBRID
+}
