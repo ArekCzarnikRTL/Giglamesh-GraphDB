@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "DocumentIngested",
+  "namespace": "com.agentwork.graphmesh.events",
+  "fields": [
+    {"name": "documentId", "type": "string"},
+    {"name": "fileName", "type": "string"},
+    {"name": "mimeType", "type": "string"},
+    {"name": "sizeBytes", "type": "long"}
+  ]
+}
