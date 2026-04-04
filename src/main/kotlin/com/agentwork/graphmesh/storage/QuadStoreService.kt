@@ -148,12 +148,108 @@ class QuadStoreService(
         batch.addStatement(deleteCollectionRow.bind(collection, d, s, p, o, otype, dtype, lang))
     }
 
-    // Query methods — placeholder, implemented in Task 5
     fun query(collection: String, query: QuadQuery): List<StoredQuad> {
-        return emptyList()
+        val s = query.subject
+        val p = query.predicate
+        val o = query.objectValue
+        val d = query.dataset
+        val pattern = resolvePattern(s, p, o, d)
+        val stmt = queryStatements.getValue(pattern)
+
+        val bound = when (pattern) {
+            1  -> stmt.bind(collection, s, "S", p)
+            2  -> stmt.bind(collection, s, "S", p)
+            3  -> stmt.bind(collection, s, "S", p)
+            4  -> stmt.bind(collection, s, "S", p)
+            5  -> stmt.bind(collection, s, "S")
+            6  -> stmt.bind(collection, s, "S")
+            7  -> stmt.bind(collection, s, "S")
+            8  -> stmt.bind(collection, s, "S")
+            9  -> stmt.bind(collection, o, "O", p)
+            10 -> stmt.bind(collection, o, "O", p)
+            11 -> stmt.bind(collection, p, "P")
+            12 -> stmt.bind(collection, p, "P")
+            13 -> stmt.bind(collection, o, "O")
+            14 -> stmt.bind(collection, o, "O")
+            15 -> stmt.bind(collection, d, "G")
+            16 -> stmt.bind(collection)
+            else -> error("Unknown pattern: $pattern")
+        }
+
+        val rows = session.execute(bound)
+        return rows.mapNotNull { row ->
+            val quad = StoredQuad(
+                subject = row.getString("s")!!,
+                predicate = row.getString("p")!!,
+                objectValue = row.getString("o")!!,
+                dataset = row.getString("d")!!,
+                objectType = ObjectType.fromCode(row.getString("otype")!!),
+                datatype = row.getString("dtype") ?: "",
+                language = row.getString("lang") ?: ""
+            )
+            // In-memory filter for fields not covered by CQL WHERE clause
+            if (matchesFilter(quad, s, p, o, d)) quad else null
+        }
+    }
+
+    private fun resolvePattern(s: String?, p: String?, o: String?, d: String?): Int {
+        val known = listOf(s != null, p != null, o != null, d != null)
+        return when (known) {
+            listOf(true, true, true, true)    -> 1
+            listOf(true, true, true, false)   -> 2
+            listOf(true, true, false, true)   -> 3
+            listOf(true, true, false, false)  -> 4
+            listOf(true, false, true, true)   -> 5
+            listOf(true, false, true, false)  -> 6
+            listOf(true, false, false, true)  -> 7
+            listOf(true, false, false, false) -> 8
+            listOf(false, true, true, true)   -> 9
+            listOf(false, true, true, false)  -> 10
+            listOf(false, true, false, true)  -> 11
+            listOf(false, true, false, false) -> 12
+            listOf(false, false, true, true)  -> 13
+            listOf(false, false, true, false) -> 14
+            listOf(false, false, false, true) -> 15
+            listOf(false, false, false, false) -> 16
+            else -> error("Invalid pattern")
+        }
+    }
+
+    private fun matchesFilter(quad: StoredQuad, s: String?, p: String?, o: String?, d: String?): Boolean {
+        if (s != null && quad.subject != s) return false
+        if (p != null && quad.predicate != p) return false
+        if (o != null && quad.objectValue != o) return false
+        if (d != null && quad.dataset != d) return false
+        return true
     }
 
     private fun prepareQueryStatements() {
-        queryStatements = emptyMap()
+        val base = "SELECT s, p, o, d, otype, dtype, lang FROM $keyspace.quads_by_entity WHERE collection = ? AND entity = ? AND role = ?"
+
+        queryStatements = mapOf(
+            // Patterns 1-4: S known, P known -> entity=S, role='S', AND p = ?
+            1  to session.prepare("$base AND p = ?"),  // S,P,O,D — filter o,d in memory
+            2  to session.prepare("$base AND p = ?"),  // S,P,O,? — filter o in memory
+            3  to session.prepare("$base AND p = ?"),  // S,P,?,D — filter d in memory
+            4  to session.prepare("$base AND p = ?"),  // S,P,?,?
+            // Patterns 5-8: S known, P unknown -> entity=S, role='S'
+            5  to session.prepare("$base"),             // S,?,O,D — filter o,d in memory
+            6  to session.prepare("$base"),             // S,?,O,? — filter o in memory
+            7  to session.prepare("$base"),             // S,?,?,D — filter d in memory
+            8  to session.prepare("$base"),             // S,?,?,?
+            // Patterns 9-10: O known, P known -> entity=O, role='O', AND p = ?
+            9  to session.prepare("$base AND p = ?"),   // ?,P,O,D — filter d in memory
+            10 to session.prepare("$base AND p = ?"),   // ?,P,O,?
+            // Patterns 11-12: P known (S,O unknown) -> entity=P, role='P'
+            11 to session.prepare("$base"),             // ?,P,?,D — filter d in memory
+            12 to session.prepare("$base"),             // ?,P,?,?
+            // Patterns 13-14: O known (S,P unknown) -> entity=O, role='O'
+            13 to session.prepare("$base"),             // ?,?,O,D — filter d in memory
+            14 to session.prepare("$base"),             // ?,?,O,?
+            // Pattern 15: D known -> entity=D, role='G'
+            15 to session.prepare("$base"),             // ?,?,?,D
+            // Pattern 16: all wildcard -> quads_by_collection
+            16 to session.prepare("SELECT s, p, o, d, otype, dtype, lang FROM $keyspace.quads_by_collection WHERE collection = ?")
+        )
     }
 }
