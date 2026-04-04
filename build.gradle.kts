@@ -18,6 +18,7 @@ java {
 
 repositories {
     mavenCentral()
+    maven("https://packages.confluent.io/maven/")
 }
 
 extra["springAiVersion"] = "2.0.0-M4"
@@ -32,24 +33,19 @@ dependencies {
     implementation("org.springframework.modulith:spring-modulith-starter-core")
     implementation("tools.jackson.module:jackson-module-kotlin")
     implementation("org.springframework.boot:spring-boot-starter-kafka")
+    implementation("org.apache.avro:avro:1.12.0")
+    implementation("io.confluent:kafka-avro-serializer:7.9.0")
     testImplementation("org.springframework.boot:spring-boot-starter-cassandra-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.springframework.modulith:spring-modulith-starter-test")
-    testImplementation("org.springframework.kafka:spring-kafka-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
-    testImplementation("org.testcontainers:kafka")
-    testImplementation("org.testcontainers:junit-jupiter")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 }
 
 dependencyManagement {
     imports {
         mavenBom("org.springframework.modulith:spring-modulith-bom:${property("springModulithVersion")}")
         mavenBom("org.springframework.ai:spring-ai-bom:${property("springAiVersion")}")
-        mavenBom("org.testcontainers:testcontainers-bom:1.21.1")
     }
 }
 
