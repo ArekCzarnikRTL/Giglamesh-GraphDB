@@ -18,5 +18,8 @@ spring:
     contact-points: ${CASSANDRA_CONTACT_POINTS:localhost}
     port: ${CASSANDRA_PORT:9042}
     local-datacenter: datacenter1
-    keyspace-name: graphmesh
     schema-action: none
+
+graphmesh:
+  cassandra:
+    keyspace: graphmesh

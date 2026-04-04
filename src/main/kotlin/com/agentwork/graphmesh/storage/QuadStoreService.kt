@@ -7,12 +7,14 @@ import com.datastax.oss.driver.api.core.cql.BatchType
 import com.datastax.oss.driver.api.core.cql.PreparedStatement
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.DependsOn
 import org.springframework.stereotype.Service
 
 @Service
+@DependsOn("cassandraSchemaInitializer")
 class QuadStoreService(
     private val session: CqlSession,
-    @Value("\${spring.cassandra.keyspace-name:graphmesh}") private val keyspace: String
+    @Value("\${graphmesh.cassandra.keyspace}") private val keyspace: String
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)

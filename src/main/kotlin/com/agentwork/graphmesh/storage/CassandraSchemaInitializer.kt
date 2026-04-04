@@ -1,21 +1,20 @@
 package com.agentwork.graphmesh.storage
 
 import com.datastax.oss.driver.api.core.CqlSession
+import jakarta.annotation.PostConstruct
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.context.event.ApplicationReadyEvent
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.event.EventListener
+import org.springframework.stereotype.Component
 
-@Configuration
+@Component
 class CassandraSchemaInitializer(
     private val session: CqlSession,
-    @Value("\${spring.cassandra.keyspace-name:graphmesh}") private val keyspace: String
+    @Value("\${graphmesh.cassandra.keyspace}") private val keyspace: String
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @EventListener(ApplicationReadyEvent::class)
+    @PostConstruct
     fun initializeSchema() {
         createKeyspace()
         createTables()
