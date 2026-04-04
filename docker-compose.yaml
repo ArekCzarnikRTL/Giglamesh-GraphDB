@@ -40,3 +40,14 @@ services:
       CASSANDRA_DC: datacenter1
       HEAP_NEWSIZE: 128M
       MAX_HEAP_SIZE: 512M
+
+  minio:
+    image: minio/minio:latest
+    hostname: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"

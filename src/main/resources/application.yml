@@ -23,3 +23,12 @@ spring:
 graphmesh:
   cassandra:
     keyspace: graphmesh
+  storage:
+    blob:
+      endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+      region: us-east-1
+      access-key: ${MINIO_ACCESS_KEY:minioadmin}
+      secret-key: ${MINIO_SECRET_KEY:minioadmin}
+      path-style-access: true
+      default-bucket: graphmesh
+      auto-create-buckets: true
