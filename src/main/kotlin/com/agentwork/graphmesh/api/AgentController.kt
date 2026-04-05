@@ -3,6 +3,7 @@ package com.agentwork.graphmesh.api
 import com.agentwork.graphmesh.agent.AgentQueryConfig
 import com.agentwork.graphmesh.agent.AgentQueryResult
 import com.agentwork.graphmesh.agent.AgentService
+import com.agentwork.graphmesh.agent.ToolGroup
 import com.agentwork.graphmesh.agent.ToolInfo
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
@@ -19,15 +20,20 @@ class AgentController(
         val config = AgentQueryConfig(
             maxIterations = input.maxIterations ?: 10
         )
-        return agentService.query(input.question, input.collectionId, config)
+        val allowedGroups = input.allowedGroups?.toSet() ?: setOf("all")
+        return agentService.query(input.question, input.collectionId, config, allowedGroups)
     }
 
     @QueryMapping
     fun agentTools(): List<ToolInfo> = agentService.getAvailableTools()
+
+    @QueryMapping
+    fun toolGroups(): List<ToolGroup> = agentService.getToolGroups()
 }
 
 data class AgentQueryInput(
     val question: String,
     val collectionId: String,
-    val maxIterations: Int?
+    val maxIterations: Int?,
+    val allowedGroups: List<String>?
 )

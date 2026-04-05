@@ -6,18 +6,21 @@ import kotlin.test.assertTrue
 
 class AgentServiceTest {
 
+    private val registry = ToolGroupRegistry()
+
     @Test
-    fun `getAvailableTools returns knowledge and document tools`() {
-        val tools = AgentService.AVAILABLE_TOOLS
+    fun `ToolGroupRegistry resolves all group correctly`() {
+        val tools = registry.resolveToolNames(setOf("all"))
         assertEquals(2, tools.size)
-        assertTrue(tools.any { it.name == "knowledge_query" })
-        assertTrue(tools.any { it.name == "document_query" })
+        assertTrue(tools.contains("knowledge_query"))
+        assertTrue(tools.contains("document_query"))
     }
 
     @Test
-    fun `getAvailableTools has descriptions`() {
-        val tools = AgentService.AVAILABLE_TOOLS
-        assertTrue(tools.all { it.description.isNotBlank() })
+    fun `ToolGroupRegistry resolves basic group correctly`() {
+        val tools = registry.resolveToolNames(setOf("basic"))
+        assertEquals(1, tools.size)
+        assertTrue(tools.contains("knowledge_query"))
     }
 
     @Test
@@ -26,5 +29,11 @@ class AgentServiceTest {
         assertEquals(10, config.maxIterations)
         assertTrue(config.systemPrompt.contains("knowledge_query"))
         assertTrue(config.systemPrompt.contains("document_query"))
+    }
+
+    @Test
+    fun `ToolInfo includes groups`() {
+        val info = ToolInfo(name = "test", description = "desc", groups = listOf("basic", "all"))
+        assertEquals(2, info.groups.size)
     }
 }

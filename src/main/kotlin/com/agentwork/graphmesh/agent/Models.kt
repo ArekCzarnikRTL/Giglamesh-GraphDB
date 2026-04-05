@@ -20,5 +20,12 @@ data class AgentQueryResult(
 
 data class ToolInfo(
     val name: String,
-    val description: String
+    val description: String,
+    val groups: List<String> = emptyList()
+)
+
+data class ToolGroup(
+    val name: String,
+    val description: String,
+    val toolNames: Set<String>
 )

@@ -1,5 +1,6 @@
 extend type Query {
     agentTools: [ToolInfo!]!
+    toolGroups: [ToolGroup!]!
 }
 
 extend type Mutation {
@@ -10,6 +11,7 @@ input AgentQueryInput {
     question: String!
     collectionId: ID!
     maxIterations: Int = 10
+    allowedGroups: [String!]
 }
 
 type AgentQueryResult {
@@ -20,4 +22,11 @@ type AgentQueryResult {
 type ToolInfo {
     name: String!
     description: String!
+    groups: [String!]!
+}
+
+type ToolGroup {
+    name: String!
+    description: String!
+    toolNames: [String!]!
 }

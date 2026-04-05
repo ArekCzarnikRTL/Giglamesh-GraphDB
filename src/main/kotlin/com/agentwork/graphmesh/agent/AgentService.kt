@@ -18,34 +18,29 @@ class AgentService(
     private val promptExecutor: PromptExecutor,
     private val graphRagService: GraphRagService,
     private val documentRagService: DocumentRagService,
+    private val toolGroupRegistry: ToolGroupRegistry,
     @Value("\${graphmesh.extraction.model:gpt-4o}") private val modelName: String
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    companion object {
-        val AVAILABLE_TOOLS = listOf(
-            ToolInfo(
-                name = "knowledge_query",
-                description = "Query the knowledge graph for entities and relationships."
-            ),
-            ToolInfo(
-                name = "document_query",
-                description = "Search documents for relevant text passages."
-            )
-        )
-    }
-
     fun query(
         question: String,
         collectionId: String,
-        config: AgentQueryConfig = AgentQueryConfig()
+        config: AgentQueryConfig = AgentQueryConfig(),
+        allowedGroups: Set<String> = setOf("all")
     ): AgentQueryResult {
         val startTime = System.currentTimeMillis()
 
+        val allowedToolNames = toolGroupRegistry.resolveToolNames(allowedGroups)
+
         val toolRegistry = ToolRegistry {
-            tool(KnowledgeQueryTool(graphRagService, collectionId))
-            tool(DocumentQueryTool(documentRagService, collectionId))
+            if ("knowledge_query" in allowedToolNames) {
+                tool(KnowledgeQueryTool(graphRagService, collectionId))
+            }
+            if ("document_query" in allowedToolNames) {
+                tool(DocumentQueryTool(documentRagService, collectionId))
+            }
         }
 
         val agent = AIAgent(
@@ -63,8 +58,8 @@ class AgentService(
         val durationMs = System.currentTimeMillis() - startTime
 
         logger.info(
-            "Agent query complete: question='{}', durationMs={}",
-            question.take(80), durationMs
+            "Agent query complete: question='{}', groups={}, durationMs={}",
+            question.take(80), allowedGroups, durationMs
         )
 
         return AgentQueryResult(
@@ -73,5 +68,18 @@ class AgentService(
         )
     }
 
-    fun getAvailableTools(): List<ToolInfo> = AVAILABLE_TOOLS
+    fun getAvailableTools(): List<ToolInfo> = listOf(
+        ToolInfo(
+            name = "knowledge_query",
+            description = "Query the knowledge graph for entities and relationships.",
+            groups = toolGroupRegistry.getGroupsForTool("knowledge_query")
+        ),
+        ToolInfo(
+            name = "document_query",
+            description = "Search documents for relevant text passages.",
+            groups = toolGroupRegistry.getGroupsForTool("document_query")
+        )
+    )
+
+    fun getToolGroups(): List<ToolGroup> = toolGroupRegistry.getGroups()
 }
