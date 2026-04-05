@@ -3,7 +3,7 @@ package com.agentwork.graphmesh.config
 import java.time.Instant
 
 enum class ConfigType {
-    ONTOLOGY, FLOW, TOOL, PARAMETER, COLLECTION_SETTINGS, LLM_SETTINGS
+    ONTOLOGY, FLOW, TOOL, PARAMETER, COLLECTION_SETTINGS, LLM_SETTINGS, SCHEMA
 }
 
 enum class ConfigAction { CREATED, UPDATED, DELETED }
