@@ -28,25 +28,25 @@ class CassandraCollectionStore(
     @PostConstruct
     fun prepareStatements() {
         insertCollection = session.prepare("""
-            INSERT INTO $keyspace.collections (id, name, description, tags, metadata, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO $keyspace.collections (id, name, description, tags, metadata, tenant_id, owner_id, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent())
 
         insertByName = session.prepare("""
-            INSERT INTO $keyspace.collections_by_name (name, id, description, tags, metadata, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO $keyspace.collections_by_name (name, id, description, tags, metadata, tenant_id, owner_id, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent())
 
         selectById = session.prepare(
-            "SELECT id, name, description, tags, metadata, created_at, updated_at FROM $keyspace.collections WHERE id = ?"
+            "SELECT id, name, description, tags, metadata, tenant_id, owner_id, created_at, updated_at FROM $keyspace.collections WHERE id = ?"
         )
 
         selectByName = session.prepare(
-            "SELECT id, name, description, tags, metadata, created_at, updated_at FROM $keyspace.collections_by_name WHERE name = ?"
+            "SELECT id, name, description, tags, metadata, tenant_id, owner_id, created_at, updated_at FROM $keyspace.collections_by_name WHERE name = ?"
         )
 
         selectAll = session.prepare(
-            "SELECT id, name, description, tags, metadata, created_at, updated_at FROM $keyspace.collections"
+            "SELECT id, name, description, tags, metadata, tenant_id, owner_id, created_at, updated_at FROM $keyspace.collections"
         )
 
         deleteById = session.prepare("DELETE FROM $keyspace.collections WHERE id = ?")
@@ -57,14 +57,16 @@ class CassandraCollectionStore(
         session.execute(insertCollection.bind(
             collection.id, collection.name, collection.description,
             collection.tags, collection.metadata,
+            collection.tenantId, collection.ownerId,
             collection.createdAt, collection.updatedAt
         ))
         session.execute(insertByName.bind(
             collection.name, collection.id, collection.description,
             collection.tags, collection.metadata,
+            collection.tenantId, collection.ownerId,
             collection.createdAt, collection.updatedAt
         ))
-        logger.debug("Saved collection: id={}, name={}", collection.id, collection.name)
+        logger.debug("Saved collection: id={}, name={}, tenantId={}", collection.id, collection.name, collection.tenantId)
     }
 
     override fun findById(id: String): Collection? {
@@ -99,6 +101,8 @@ class CassandraCollectionStore(
             description = row.getString("description") ?: "",
             tags = row.getSet("tags", String::class.java) ?: emptySet(),
             metadata = row.getMap("metadata", String::class.java, String::class.java) ?: emptyMap(),
+            tenantId = row.getString("tenant_id"),
+            ownerId = row.getString("owner_id"),
             createdAt = row.getInstant("created_at")!!,
             updatedAt = row.getInstant("updated_at")!!
         )

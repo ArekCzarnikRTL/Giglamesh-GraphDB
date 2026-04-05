@@ -3,6 +3,8 @@ package com.agentwork.graphmesh.collection
 import com.agentwork.graphmesh.storage.QuadStore
 import com.agentwork.graphmesh.storage.blob.BlobStore
 import com.agentwork.graphmesh.storage.vector.VectorStore
+import com.agentwork.graphmesh.tenant.AccessDeniedException
+import com.agentwork.graphmesh.tenant.TenantContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationEventPublisher
@@ -32,11 +34,15 @@ class CollectionService(
             "Collection with name '$name' already exists"
         }
 
+        val tenant = TenantContext.getOrNull()
+
         val collection = Collection(
             name = name,
             description = description,
             tags = tags,
-            metadata = metadata
+            metadata = metadata,
+            tenantId = tenant?.tenantId,
+            ownerId = tenant?.userId
         )
 
         collectionStore.save(collection)
@@ -45,13 +51,12 @@ class CollectionService(
         eventPublisher.publishEvent(event)
         collectionEventProducer.send(event)
 
-        logger.info("Collection created: id={}, name={}", collection.id, collection.name)
+        logger.info("Collection created: id={}, name={}, tenantId={}", collection.id, collection.name, collection.tenantId)
         return collection
     }
 
     fun delete(id: String) {
-        val collection = collectionStore.findById(id)
-            ?: throw CollectionNotFoundException(id)
+        val collection = findByIdWithAccessCheck(id)
 
         // Cascade delete across all backends
         quadStore.deleteCollection(collection.name)
@@ -74,8 +79,7 @@ class CollectionService(
         tags: Set<String>? = null,
         metadata: Map<String, String>? = null
     ): Collection {
-        val existing = collectionStore.findById(id)
-            ?: throw CollectionNotFoundException(id)
+        val existing = findByIdWithAccessCheck(id)
 
         if (name != null && name != existing.name) {
             require(collectionStore.findByName(name) == null) {
@@ -101,19 +105,51 @@ class CollectionService(
         return updated
     }
 
-    fun findById(id: String): Collection? = collectionStore.findById(id)
+    fun findById(id: String): Collection? {
+        val collection = collectionStore.findById(id) ?: return null
+        checkTenantAccess(collection)
+        return collection
+    }
 
-    fun findByName(name: String): Collection? = collectionStore.findByName(name)
+    fun findByName(name: String): Collection? {
+        val collection = collectionStore.findByName(name) ?: return null
+        checkTenantAccess(collection)
+        return collection
+    }
 
     fun findAll(tags: Set<String> = emptySet()): List<Collection> {
-        val all = collectionStore.findAll()
-        if (tags.isEmpty()) return all
-        return all.filter { it.tags.containsAll(tags) }
+        var all = collectionStore.findAll()
+
+        val tenant = TenantContext.getOrNull()
+        if (tenant != null) {
+            all = all.filter { it.tenantId == null || it.tenantId == tenant.tenantId }
+        }
+
+        if (tags.isNotEmpty()) {
+            all = all.filter { it.tags.containsAll(tags) }
+        }
+        return all
     }
 
     fun requireExists(id: String) {
         if (!collectionStore.exists(id)) {
             throw CollectionNotFoundException(id)
+        }
+    }
+
+    private fun findByIdWithAccessCheck(id: String): Collection {
+        val collection = collectionStore.findById(id)
+            ?: throw CollectionNotFoundException(id)
+        checkTenantAccess(collection)
+        return collection
+    }
+
+    private fun checkTenantAccess(collection: Collection) {
+        val tenant = TenantContext.getOrNull() ?: return
+        if (collection.tenantId != null && collection.tenantId != tenant.tenantId) {
+            throw AccessDeniedException(
+                "Tenant '${tenant.tenantId}' has no access to collection '${collection.id}'."
+            )
         }
     }
 

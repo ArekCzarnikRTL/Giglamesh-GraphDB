@@ -17,6 +17,7 @@ class CollectionSchemaInitializer(
     @PostConstruct
     fun initializeSchema() {
         createTables()
+        addTenantColumns()
         logger.info("Collection schema initialized in keyspace '{}'", keyspace)
     }
 
@@ -46,5 +47,20 @@ class CollectionSchemaInitializer(
                 PRIMARY KEY (name)
             )
         """.trimIndent())
+    }
+
+    private fun addTenantColumns() {
+        try {
+            session.execute("ALTER TABLE $keyspace.collections ADD tenant_id text")
+        } catch (_: Exception) { /* column already exists */ }
+        try {
+            session.execute("ALTER TABLE $keyspace.collections ADD owner_id text")
+        } catch (_: Exception) { /* column already exists */ }
+        try {
+            session.execute("ALTER TABLE $keyspace.collections_by_name ADD tenant_id text")
+        } catch (_: Exception) { /* column already exists */ }
+        try {
+            session.execute("ALTER TABLE $keyspace.collections_by_name ADD owner_id text")
+        } catch (_: Exception) { /* column already exists */ }
     }
 }

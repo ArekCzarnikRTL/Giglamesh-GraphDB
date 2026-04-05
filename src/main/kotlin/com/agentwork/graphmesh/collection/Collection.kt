@@ -9,6 +9,8 @@ data class Collection(
     val description: String = "",
     val tags: Set<String> = emptySet(),
     val metadata: Map<String, String> = emptyMap(),
+    val tenantId: String? = null,
+    val ownerId: String? = null,
     val createdAt: Instant = Instant.now(),
     val updatedAt: Instant = Instant.now()
 )
