@@ -1,0 +1,23 @@
+extend type Query {
+    agentTools: [ToolInfo!]!
+}
+
+extend type Mutation {
+    askAgent(input: AgentQueryInput!): AgentQueryResult!
+}
+
+input AgentQueryInput {
+    question: String!
+    collectionId: ID!
+    maxIterations: Int = 10
+}
+
+type AgentQueryResult {
+    answer: String!
+    durationMs: Int!
+}
+
+type ToolInfo {
+    name: String!
+    description: String!
+}
