@@ -124,14 +124,14 @@ class GraphMeshMcpToolsTest {
     @Test
     fun `collectionList formats collections`() {
         every { collectionService.findAll(any()) } returns listOf(
-            Collection(id = "c1", name = "Research", description = "Research papers", tags = setOf("ai", "ml")),
+            Collection(id = "c1", name = "Research", description = "Research papers", tags = sortedSetOf("ai", "ml")),
             Collection(id = "c2", name = "Legal", description = "Legal docs", tags = setOf("compliance"))
         )
 
         val output = tools.collectionList(null)
 
-        assertTrue(output.contains("Research (ID: c1): Research papers"))
-        assertTrue(output.contains("Legal (ID: c2): Legal docs"))
+        assertTrue(output.contains("Research (ID: c1): Research papers [Tags: ai, ml]"))
+        assertTrue(output.contains("Legal (ID: c2): Legal docs [Tags: compliance]"))
     }
 
     @Test
@@ -156,7 +156,7 @@ class GraphMeshMcpToolsTest {
 
     @Test
     fun `documentSearch formats documents`() {
-        every { librarianService.findByCollection("col-1", null) } returns listOf(
+        every { librarianService.findByCollection("col-1") } returns listOf(
             Document(id = "d1", collectionId = "col-1", title = "Report Q1", type = DocumentType.SOURCE, state = DocumentState.EXTRACTED),
             Document(id = "d2", collectionId = "col-1", title = "Report Q2", type = DocumentType.SOURCE, state = DocumentState.PROCESSING)
         )
@@ -169,7 +169,7 @@ class GraphMeshMcpToolsTest {
 
     @Test
     fun `documentSearch returns message on empty result`() {
-        every { librarianService.findByCollection("col-1", null) } returns emptyList()
+        every { librarianService.findByCollection("col-1") } returns emptyList()
 
         val output = tools.documentSearch("col-1", null)
 
@@ -178,7 +178,7 @@ class GraphMeshMcpToolsTest {
 
     @Test
     fun `documentSearch filters by title case-insensitively`() {
-        every { librarianService.findByCollection("col-1", null) } returns listOf(
+        every { librarianService.findByCollection("col-1") } returns listOf(
             Document(id = "d1", collectionId = "col-1", title = "Report Q1", type = DocumentType.SOURCE, state = DocumentState.EXTRACTED),
             Document(id = "d2", collectionId = "col-1", title = "Invoice March", type = DocumentType.SOURCE, state = DocumentState.EXTRACTED)
         )
