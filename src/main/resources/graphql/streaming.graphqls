@@ -1,0 +1,26 @@
+type Subscription {
+    agentStream(input: AgentStreamInput!): StreamToken!
+}
+
+input AgentStreamInput {
+    question: String!
+    collectionId: ID!
+    maxIterations: Int = 10
+    allowedGroups: [String!]
+}
+
+type StreamToken {
+    content: String!
+    type: StreamTokenType!
+    endOfMessage: Boolean!
+    endOfStream: Boolean!
+}
+
+enum StreamTokenType {
+    TEXT
+    THOUGHT
+    ACTION
+    OBSERVATION
+    ANSWER
+    ERROR
+}
