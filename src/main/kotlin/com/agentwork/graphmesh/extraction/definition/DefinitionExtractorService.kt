@@ -5,6 +5,8 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import com.agentwork.graphmesh.librarian.LibrarianService
+import com.agentwork.graphmesh.provenance.ProvenanceService
+import com.agentwork.graphmesh.provenance.SubgraphProvenance
 import com.agentwork.graphmesh.rdf.EntityIdGenerator
 import com.agentwork.graphmesh.rdf.NamedGraph
 import com.agentwork.graphmesh.rdf.Quad
@@ -24,6 +26,7 @@ class DefinitionExtractorService(
     private val promptExecutor: PromptExecutor,
     private val quadStore: QuadStore,
     private val librarianService: LibrarianService,
+    private val provenanceService: ProvenanceService,
     @Value("\${graphmesh.extraction.model:gpt-4o}") private val modelName: String
 ) {
 
@@ -33,7 +36,6 @@ class DefinitionExtractorService(
     companion object {
         private const val RDFS_COMMENT = "http://www.w3.org/2000/01/rdf-schema#comment"
         private const val RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label"
-        private const val EXTRACTED_FROM = "http://graphmesh.io/ontology/extractedFrom"
     }
 
     fun extract(chunkId: String, collectionId: String): DefinitionExtractionResult {
@@ -81,17 +83,18 @@ class DefinitionExtractorService(
             )
         }.distinctBy { it.subject.toNTriples() }
 
-        // Provenance quads: (<<knowledge triple>>, extractedFrom, urn:chunk:X) in SOURCE graph
-        val provenanceQuads = knowledgeQuads.map { quad ->
-            Quad(
-                subject = RdfTerm.QuotedTriple(quad.triple),
-                predicate = RdfTerm.Uri(EXTRACTED_FROM),
-                objectTerm = RdfTerm.Uri("urn:chunk:$chunkId"),
-                graph = NamedGraph.SOURCE
+        // Provenance quads via subgraph compression
+        val provenanceQuads = provenanceService.buildSubgraphQuads(
+            SubgraphProvenance(
+                extractedTriples = knowledgeQuads.map { it.triple },
+                chunkUri = "urn:chunk:$chunkId",
+                agentLabel = "DefinitionExtractor",
+                modelName = modelName
             )
-        }
+        )
 
-        val allStoredQuads = (knowledgeQuads + labelQuads + provenanceQuads).map { QuadConverter.toStoredQuad(it) }
+        val allStoredQuads = (knowledgeQuads + labelQuads).map { QuadConverter.toStoredQuad(it) } +
+            provenanceQuads.map { QuadConverter.toStoredQuad(it) }
         quadStore.insertBatch(collectionId, allStoredQuads)
 
         logger.info("Extracted {} definitions from chunk {}", definitions.size, chunkId)

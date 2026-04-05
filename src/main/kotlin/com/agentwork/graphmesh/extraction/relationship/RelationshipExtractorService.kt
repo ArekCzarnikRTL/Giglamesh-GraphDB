@@ -5,6 +5,8 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import com.agentwork.graphmesh.librarian.LibrarianService
+import com.agentwork.graphmesh.provenance.ProvenanceService
+import com.agentwork.graphmesh.provenance.SubgraphProvenance
 import com.agentwork.graphmesh.rdf.EntityIdGenerator
 import com.agentwork.graphmesh.rdf.NamedGraph
 import com.agentwork.graphmesh.rdf.Quad
@@ -22,6 +24,7 @@ class RelationshipExtractorService(
     private val promptExecutor: PromptExecutor,
     private val quadStore: QuadStore,
     private val librarianService: LibrarianService,
+    private val provenanceService: ProvenanceService,
     @Value("\${graphmesh.extraction.model:gpt-4o}") private val modelName: String
 ) {
 
@@ -64,15 +67,15 @@ class RelationshipExtractorService(
             )
         }
 
-        // Generate provenance quads in source graph (RDF-Star)
-        val provenanceQuads = knowledgeQuads.map { quad ->
-            Quad(
-                subject = RdfTerm.QuotedTriple(quad.triple),
-                predicate = RdfTerm.Uri("http://graphmesh.io/ontology/extractedFrom"),
-                objectTerm = RdfTerm.Uri("urn:chunk:$chunkId"),
-                graph = NamedGraph.SOURCE
+        // Generate provenance quads via subgraph compression
+        val provenanceQuads = provenanceService.buildSubgraphQuads(
+            SubgraphProvenance(
+                extractedTriples = knowledgeQuads.map { it.triple },
+                chunkUri = "urn:chunk:$chunkId",
+                agentLabel = "RelationshipExtractor",
+                modelName = modelName
             )
-        }
+        )
 
         // Generate label quads for entity resolution
         val labelQuads = rawTriples.flatMap { (subject, _, objectValue) ->
@@ -93,7 +96,8 @@ class RelationshipExtractorService(
         }.distinctBy { it.subject.toNTriples() + it.objectTerm.toNTriples() }
 
         // Persist all quads
-        val allStoredQuads = (knowledgeQuads + provenanceQuads + labelQuads).map { QuadConverter.toStoredQuad(it) }
+        val allStoredQuads = (knowledgeQuads + labelQuads).map { QuadConverter.toStoredQuad(it) } +
+            provenanceQuads.map { QuadConverter.toStoredQuad(it) }
         quadStore.insertBatch(collectionId, allStoredQuads)
 
         logger.info("Extracted {} triples from chunk {}", rawTriples.size, chunkId)

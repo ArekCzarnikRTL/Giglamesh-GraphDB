@@ -7,6 +7,8 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import com.agentwork.graphmesh.librarian.LibrarianService
+import com.agentwork.graphmesh.provenance.ProvenanceService
+import com.agentwork.graphmesh.provenance.SubgraphProvenance
 import com.agentwork.graphmesh.query.graphrag.GraphRagService
 import com.agentwork.graphmesh.rdf.EntityIdGenerator
 import com.agentwork.graphmesh.rdf.NamedGraph
@@ -14,7 +16,6 @@ import com.agentwork.graphmesh.rdf.Quad
 import com.agentwork.graphmesh.rdf.QuadConverter
 import com.agentwork.graphmesh.rdf.RdfTerm
 import com.agentwork.graphmesh.storage.QuadStore
-import com.agentwork.graphmesh.storage.StoredQuad
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.runBlocking
@@ -28,6 +29,7 @@ class AgentExtractorService(
     private val graphRagService: GraphRagService,
     private val quadStore: QuadStore,
     private val librarianService: LibrarianService,
+    private val provenanceService: ProvenanceService,
     @Value("\${graphmesh.extraction.model:gpt-4o}") private val modelName: String
 ) {
 
@@ -38,8 +40,6 @@ class AgentExtractorService(
         private const val RDFS_COMMENT = "http://www.w3.org/2000/01/rdf-schema#comment"
         private const val RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label"
         private const val ONTOLOGY_NS = "http://graphmesh.io/ontology/"
-        private const val EXTRACTED_FROM = "${ONTOLOGY_NS}extractedFrom"
-
         val DEFAULT_STRATEGY = ExtractionStrategy(
             name = "default-extraction",
             systemPrompt = """
@@ -95,7 +95,17 @@ class AgentExtractorService(
 
         val items = parseFinalOutput(agentResult)
 
-        val storedQuads = items.flatMap { convertToQuads(it, chunkId) }
+        val knowledgeQuads = items.flatMap { convertToKnowledgeQuads(it) }
+        val provenanceQuads = provenanceService.buildSubgraphQuads(
+            SubgraphProvenance(
+                extractedTriples = knowledgeQuads.map { it.triple },
+                chunkUri = "urn:chunk:$chunkId",
+                agentLabel = "AgentExtractor",
+                modelName = modelName
+            )
+        )
+        val storedQuads = knowledgeQuads.map { QuadConverter.toStoredQuad(it) } +
+            provenanceQuads.map { QuadConverter.toStoredQuad(it) }
         if (storedQuads.isNotEmpty()) {
             quadStore.insertBatch(collectionId, storedQuads)
         }
@@ -148,8 +158,8 @@ class AgentExtractorService(
             }
     }
 
-    internal fun convertToQuads(item: ExtractedItem, chunkId: String): List<StoredQuad> {
-        val knowledgeQuads = when (item) {
+    internal fun convertToKnowledgeQuads(item: ExtractedItem): List<Quad> {
+        return when (item) {
             is ExtractedItem.Definition -> listOf(
                 Quad(EntityIdGenerator.generate(item.entity), RdfTerm.Uri(RDFS_COMMENT), RdfTerm.Literal(item.definition), NamedGraph.DEFAULT),
                 Quad(EntityIdGenerator.generate(item.entity), RdfTerm.Uri(RDFS_LABEL), RdfTerm.Literal(item.entity), NamedGraph.DEFAULT)
@@ -165,11 +175,5 @@ class AgentExtractorService(
                 Quad(EntityIdGenerator.generate(item.entity), RdfTerm.Uri("${ONTOLOGY_NS}${item.attribute}"), RdfTerm.Literal(item.value), NamedGraph.DEFAULT)
             )
         }
-
-        val provenanceQuads = knowledgeQuads.map { quad ->
-            Quad(RdfTerm.QuotedTriple(quad.triple), RdfTerm.Uri(EXTRACTED_FROM), RdfTerm.Uri("urn:chunk:$chunkId"), NamedGraph.SOURCE)
-        }
-
-        return (knowledgeQuads + provenanceQuads).map { QuadConverter.toStoredQuad(it) }
     }
 }

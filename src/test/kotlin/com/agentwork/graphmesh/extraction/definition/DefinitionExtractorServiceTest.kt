@@ -128,7 +128,9 @@ class DefinitionExtractorServiceTest {
         val quadStore = mockk<QuadStore>(relaxed = true)
         val librarianService = mockk<LibrarianService>()
 
-        val service = DefinitionExtractorService(promptExecutor, quadStore, librarianService, "gpt-4o")
+        val provenanceService = mockk<com.agentwork.graphmesh.provenance.ProvenanceService>(relaxed = true)
+        every { provenanceService.buildSubgraphQuads(any()) } returns emptyList()
+        val service = DefinitionExtractorService(promptExecutor, quadStore, librarianService, provenanceService, "gpt-4o")
 
         every { librarianService.getContent("chunk-1") } returns
             "Photosynthesis is the process by which plants convert sunlight.".toByteArray()
@@ -176,7 +178,9 @@ class DefinitionExtractorServiceTest {
         val quadStore = mockk<QuadStore>()
         val librarianService = mockk<LibrarianService>()
 
-        val service = DefinitionExtractorService(promptExecutor, quadStore, librarianService, "gpt-4o")
+        val provenanceService = mockk<com.agentwork.graphmesh.provenance.ProvenanceService>(relaxed = true)
+        every { provenanceService.buildSubgraphQuads(any()) } returns emptyList()
+        val service = DefinitionExtractorService(promptExecutor, quadStore, librarianService, provenanceService, "gpt-4o")
 
         every { librarianService.getContent("chunk-1") } returns "   ".toByteArray()
 
@@ -192,7 +196,9 @@ class DefinitionExtractorServiceTest {
         val quadStore = mockk<QuadStore>(relaxed = true)
         val librarianService = mockk<LibrarianService>()
 
-        val service = DefinitionExtractorService(promptExecutor, quadStore, librarianService, "gpt-4o")
+        val provenanceService = mockk<com.agentwork.graphmesh.provenance.ProvenanceService>(relaxed = true)
+        every { provenanceService.buildSubgraphQuads(any()) } returns emptyList()
+        val service = DefinitionExtractorService(promptExecutor, quadStore, librarianService, provenanceService, "gpt-4o")
 
         every { librarianService.getContent("chunk-1") } returns "Some text".toByteArray()
 
