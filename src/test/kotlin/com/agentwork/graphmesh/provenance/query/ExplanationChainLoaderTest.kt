@@ -136,6 +136,55 @@ class ExplanationChainLoaderTest {
     }
 
     @Test
+    fun `load graphRag chain only returns edges from this session even when multiple sessions exist`() {
+        val sessionA = UUID.randomUUID()
+        val sessionB = UUID.randomUUID()
+
+        val qa = Question(
+            uri = ExplainabilityUris.question(sessionA, QueryMechanism.GRAPH_RAG),
+            queryText = "qa",
+            timestamp = Instant.parse("2026-04-06T12:00:00Z"),
+            mechanism = QueryMechanism.GRAPH_RAG,
+        )
+        val ea = Exploration(ExplainabilityUris.exploration(sessionA), 1, qa.uri)
+        val fa = Focus(
+            uri = ExplainabilityUris.focus(sessionA),
+            selectedEdges = listOf(SelectedEdgeExplanation("urn:a", "urn:p", "urn:b", "reason A")),
+            explorationUri = ea.uri,
+        )
+        val sa = Synthesis(ExplainabilityUris.synthesis(sessionA), "answer A", fa.uri)
+
+        val qb = Question(
+            uri = ExplainabilityUris.question(sessionB, QueryMechanism.GRAPH_RAG),
+            queryText = "qb",
+            timestamp = Instant.parse("2026-04-06T12:01:00Z"),
+            mechanism = QueryMechanism.GRAPH_RAG,
+        )
+        val eb = Exploration(ExplainabilityUris.exploration(sessionB), 1, qb.uri)
+        val fb = Focus(
+            uri = ExplainabilityUris.focus(sessionB),
+            selectedEdges = listOf(SelectedEdgeExplanation("urn:c", "urn:p", "urn:d", "reason B")),
+            explorationUri = eb.uri,
+        )
+        val sb = Synthesis(ExplainabilityUris.synthesis(sessionB), "answer B", fb.uri)
+
+        persist(recorder.graphRagSessionQuads(qa, ea, fa, sa))
+        persist(recorder.graphRagSessionQuads(qb, eb, fb, sb))
+
+        val chainA = loader.load(collection, qa.uri)
+        assertNotNull(chainA)
+        assertEquals(1, chainA.focus?.selectedEdges?.size)
+        assertEquals("reason A", chainA.focus?.selectedEdges?.first()?.reasoning)
+        assertEquals("urn:a", chainA.focus?.selectedEdges?.first()?.subject)
+
+        val chainB = loader.load(collection, qb.uri)
+        assertNotNull(chainB)
+        assertEquals(1, chainB.focus?.selectedEdges?.size)
+        assertEquals("reason B", chainB.focus?.selectedEdges?.first()?.reasoning)
+        assertEquals("urn:c", chainB.focus?.selectedEdges?.first()?.subject)
+    }
+
+    @Test
     fun `listSessions filters by mechanism`() {
         val sg = UUID.randomUUID()
         val sd = UUID.randomUUID()

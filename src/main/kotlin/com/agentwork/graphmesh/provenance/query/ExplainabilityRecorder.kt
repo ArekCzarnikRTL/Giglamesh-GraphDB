@@ -46,6 +46,7 @@ class ExplainabilityRecorder {
                     objectTerm = RdfTerm.Uri(edge.objectValue),
                 )
             )
+            out += quad(s, ExplainabilityNamespaces.TG_HAS_SELECTED_EDGE, quoted)
             out += quad(quoted, ExplainabilityNamespaces.TG_REASONING, RdfTerm.Literal(edge.reasoning))
         }
         return out

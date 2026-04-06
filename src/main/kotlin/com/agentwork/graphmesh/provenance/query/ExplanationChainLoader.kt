@@ -177,21 +177,33 @@ class ExplanationChainLoader(private val quadStore: QuadStore) {
     }
 
     private fun loadFocus(collection: String, uri: String, explorationUri: String): Focus {
-        val reasoningQuads = quadStore.query(collection, QuadQuery(
-            predicate = ExplainabilityNamespaces.TG_REASONING,
+        val edgeLinkQuads = quadStore.query(collection, QuadQuery(
+            subject = uri,
+            predicate = ExplainabilityNamespaces.TG_HAS_SELECTED_EDGE,
             dataset = NamedGraph.RETRIEVAL,
         ))
-        val edges = reasoningQuads.mapNotNull { quad ->
-            val sub = quad.subject
-            if (!sub.startsWith("<<") || !sub.endsWith(">>")) return@mapNotNull null
-            val inner = sub.removePrefix("<<").removeSuffix(">>")
+        val edges = edgeLinkQuads.mapNotNull { linkQuad ->
+            val quotedSerialized = linkQuad.objectValue
+            if (!quotedSerialized.startsWith("<<") || !quotedSerialized.endsWith(">>")) {
+                return@mapNotNull null
+            }
+            val inner = quotedSerialized.removePrefix("<<").removeSuffix(">>")
             val parts = inner.split("|", limit = 3)
             if (parts.size != 3) return@mapNotNull null
+
+            // Look up the reasoning literal for this quoted triple
+            val reasoningQuads = quadStore.query(collection, QuadQuery(
+                subject = quotedSerialized,
+                predicate = ExplainabilityNamespaces.TG_REASONING,
+                dataset = NamedGraph.RETRIEVAL,
+            ))
+            val reasoning = reasoningQuads.firstOrNull()?.objectValue ?: ""
+
             SelectedEdgeExplanation(
                 subject = parts[0],
                 predicate = parts[1],
                 objectValue = parts[2],
-                reasoning = quad.objectValue,
+                reasoning = reasoning,
             )
         }
         return Focus(uri = uri, selectedEdges = edges, explorationUri = explorationUri)

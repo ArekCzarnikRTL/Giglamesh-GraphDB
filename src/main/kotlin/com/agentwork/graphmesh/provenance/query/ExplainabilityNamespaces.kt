@@ -21,4 +21,5 @@ object ExplainabilityNamespaces {
     const val TG_ARG_KEY     = "${TG}argKey"
     const val TG_ARG_VALUE   = "${TG}argValue"
     const val TG_ITERATION_INDEX = "${TG}iterationIndex"
+    const val TG_HAS_SELECTED_EDGE = "${TG}hasSelectedEdge"
 }
