@@ -18,6 +18,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
+import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -37,6 +38,7 @@ class GraphMeshMcpToolsTest {
     @Test
     fun `knowledgeQuery formats answer with sources`() {
         every { graphRagService.query(any()) } returns GraphRagResult(
+            sessionId = UUID.randomUUID(),
             answer = "Alice works at Acme Corp.",
             selectedEdges = listOf(
                 SelectedEdge("Alice", "worksAt", "Acme Corp", "ds1", "Direct relationship", 0.9)
@@ -56,7 +58,7 @@ class GraphMeshMcpToolsTest {
     @Test
     fun `knowledgeQuery uses default maxEdges when null`() {
         every { graphRagService.query(any()) } returns GraphRagResult(
-            answer = "Answer", selectedEdges = emptyList(), retrievedEdgeCount = 0, durationMs = 0
+            sessionId = UUID.randomUUID(), answer = "Answer", selectedEdges = emptyList(), retrievedEdgeCount = 0, durationMs = 0
         )
 
         tools.knowledgeQuery("question", "col-1", null)
@@ -67,7 +69,7 @@ class GraphMeshMcpToolsTest {
     @Test
     fun `knowledgeQuery passes custom maxEdges`() {
         every { graphRagService.query(any()) } returns GraphRagResult(
-            answer = "Answer", selectedEdges = emptyList(), retrievedEdgeCount = 0, durationMs = 0
+            sessionId = UUID.randomUUID(), answer = "Answer", selectedEdges = emptyList(), retrievedEdgeCount = 0, durationMs = 0
         )
 
         tools.knowledgeQuery("question", "col-1", 50)
@@ -80,6 +82,7 @@ class GraphMeshMcpToolsTest {
     @Test
     fun `documentQuery formats answer with sources`() {
         every { documentRagService.query(any()) } returns DocumentRagResult(
+            sessionId = UUID.randomUUID(),
             answer = "The document discusses AI.",
             sources = listOf(
                 SourceAttribution("chunk-1", "doc-1", "AI Paper", 3, 0.85f, "AI is transforming...")
@@ -100,7 +103,7 @@ class GraphMeshMcpToolsTest {
     @Test
     fun `documentQuery uses default topK when null`() {
         every { documentRagService.query(any()) } returns DocumentRagResult(
-            answer = "Answer", sources = emptyList(), retrievedChunkCount = 0, durationMs = 0
+            sessionId = UUID.randomUUID(), answer = "Answer", sources = emptyList(), retrievedChunkCount = 0, durationMs = 0
         )
 
         tools.documentQuery("question", "col-1", null)
@@ -111,7 +114,7 @@ class GraphMeshMcpToolsTest {
     @Test
     fun `documentQuery passes custom topK`() {
         every { documentRagService.query(any()) } returns DocumentRagResult(
-            answer = "Answer", sources = emptyList(), retrievedChunkCount = 0, durationMs = 0
+            sessionId = UUID.randomUUID(), answer = "Answer", sources = emptyList(), retrievedChunkCount = 0, durationMs = 0
         )
 
         tools.documentQuery("question", "col-1", 5)

@@ -6,6 +6,8 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import com.agentwork.graphmesh.extraction.embedding.EmbeddingConfig
+import com.agentwork.graphmesh.messaging.ExplainabilityEventProducer
+import com.agentwork.graphmesh.provenance.query.SelectedEdgeExplanation
 import com.agentwork.graphmesh.storage.QuadStore
 import com.agentwork.graphmesh.storage.StoredQuad
 import com.agentwork.graphmesh.storage.vector.VectorStore
@@ -13,6 +15,7 @@ import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.UUID
 
 @OptIn(kotlin.time.ExperimentalTime::class)
 @Service
@@ -22,12 +25,14 @@ class GraphRagService(
     private val quadStore: QuadStore,
     private val promptExecutor: PromptExecutor,
     private val embeddingConfig: EmbeddingConfig,
-    @Value("\${graphmesh.extraction.model:gpt-4o}") private val llmModelName: String
+    @Value("\${graphmesh.extraction.model:gpt-4o}") private val llmModelName: String,
+    private val explainabilityProducer: ExplainabilityEventProducer
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
     fun query(query: GraphRagQuery): GraphRagResult {
+        val sessionId = UUID.randomUUID()
         val startTime = System.currentTimeMillis()
 
         // Phase 1: Subgraph Retrieval
@@ -36,8 +41,18 @@ class GraphRagService(
         logger.info("Retrieved {} edges", subgraph.size)
 
         if (subgraph.isEmpty()) {
+            val emptyAnswer = "No relevant knowledge found for this question."
+            explainabilityProducer.sendGraphRagEvent(
+                sessionId = sessionId,
+                collectionId = query.collectionId,
+                queryText = query.question,
+                retrievedEdgeCount = 0,
+                selectedEdges = emptyList(),
+                answerText = emptyAnswer
+            )
             return GraphRagResult(
-                answer = "No relevant knowledge found for this question.",
+                sessionId = sessionId,
+                answer = emptyAnswer,
                 selectedEdges = emptyList(),
                 retrievedEdgeCount = 0,
                 durationMs = System.currentTimeMillis() - startTime
@@ -56,7 +71,19 @@ class GraphRagService(
         val durationMs = System.currentTimeMillis() - startTime
         logger.info("Graph RAG pipeline completed in {} ms", durationMs)
 
+        explainabilityProducer.sendGraphRagEvent(
+            sessionId = sessionId,
+            collectionId = query.collectionId,
+            queryText = query.question,
+            retrievedEdgeCount = subgraph.size,
+            selectedEdges = selectedEdges.map {
+                SelectedEdgeExplanation(it.subject, it.predicate, it.objectValue, it.reasoning)
+            },
+            answerText = answer
+        )
+
         return GraphRagResult(
+            sessionId = sessionId,
             answer = answer,
             selectedEdges = selectedEdges,
             retrievedEdgeCount = subgraph.size,

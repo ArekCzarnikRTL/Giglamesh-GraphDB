@@ -14,6 +14,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
+import java.util.UUID
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
@@ -23,6 +24,7 @@ class ExtractionToolsTest {
     fun `GraphQueryTool queries graph and returns answer with sources`() = runBlocking {
         val graphRagService = mockk<GraphRagService>()
         every { graphRagService.query(any()) } returns GraphRagResult(
+            sessionId = UUID.randomUUID(),
             answer = "Photosynthesis converts sunlight to energy.",
             selectedEdges = listOf(
                 SelectedEdge(

@@ -11,6 +11,7 @@ input GraphRagInput {
 }
 
 type GraphRagResponse {
+    sessionId: ID!
     answer: String!
     selectedEdges: [SelectedEdgeType!]!
     retrievedEdgeCount: Int!

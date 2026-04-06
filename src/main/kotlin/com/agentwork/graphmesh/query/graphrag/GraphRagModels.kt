@@ -1,6 +1,7 @@
 package com.agentwork.graphmesh.query.graphrag
 
 import com.agentwork.graphmesh.storage.StoredQuad
+import java.util.UUID
 
 data class GraphRagQuery(
     val question: String,
@@ -11,6 +12,7 @@ data class GraphRagQuery(
 )
 
 data class GraphRagResult(
+    val sessionId: UUID,
     val answer: String,
     val selectedEdges: List<SelectedEdge>,
     val retrievedEdgeCount: Int,

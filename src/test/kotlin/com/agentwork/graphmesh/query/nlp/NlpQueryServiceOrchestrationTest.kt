@@ -14,6 +14,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -41,6 +42,7 @@ class NlpQueryServiceOrchestrationTest {
     @Test
     fun `query with forceIntent skips intent detection and routes to GraphRag`() {
         val graphResult = GraphRagResult(
+            sessionId = UUID.randomUUID(),
             answer = "Alice works at Acme",
             selectedEdges = listOf(
                 SelectedEdge("Alice", "worksAt", "Acme", "", "relevant", 0.9)
@@ -66,6 +68,7 @@ class NlpQueryServiceOrchestrationTest {
     @Test
     fun `query with forceIntent DOCUMENT_QUERY routes to DocumentRag`() {
         val docResult = DocumentRagResult(
+            sessionId = UUID.randomUUID(),
             answer = "The document says...",
             sources = listOf(
                 SourceAttribution("chunk-1", "doc-1", "Report.pdf", 3, 0.85f, "relevant text")
@@ -107,12 +110,14 @@ class NlpQueryServiceOrchestrationTest {
     @Test
     fun `query with forceIntent HYBRID routes to both GraphRag and DocumentRag`() {
         val graphResult = GraphRagResult(
+            sessionId = UUID.randomUUID(),
             answer = "Graph says...",
             selectedEdges = emptyList(),
             retrievedEdgeCount = 0,
             durationMs = 50
         )
         val docResult = DocumentRagResult(
+            sessionId = UUID.randomUUID(),
             answer = "Document says...",
             sources = emptyList(),
             retrievedChunkCount = 0,
@@ -137,6 +142,7 @@ class NlpQueryServiceOrchestrationTest {
     @Test
     fun `query with forceIntent does not trigger reformulation`() {
         val graphResult = GraphRagResult(
+            sessionId = UUID.randomUUID(),
             answer = "answer",
             selectedEdges = emptyList(),
             retrievedEdgeCount = 0,
@@ -157,6 +163,7 @@ class NlpQueryServiceOrchestrationTest {
     @Test
     fun `query result contains duration in milliseconds`() {
         val graphResult = GraphRagResult(
+            sessionId = UUID.randomUUID(),
             answer = "answer",
             selectedEdges = emptyList(),
             retrievedEdgeCount = 0,

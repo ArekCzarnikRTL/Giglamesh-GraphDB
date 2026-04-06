@@ -1,5 +1,7 @@
 package com.agentwork.graphmesh.query.docrag
 
+import java.util.UUID
+
 data class DocumentRagQuery(
     val question: String,
     val collectionId: String,
@@ -8,6 +10,7 @@ data class DocumentRagQuery(
 )
 
 data class DocumentRagResult(
+    val sessionId: UUID,
     val answer: String,
     val sources: List<SourceAttribution>,
     val retrievedChunkCount: Int,

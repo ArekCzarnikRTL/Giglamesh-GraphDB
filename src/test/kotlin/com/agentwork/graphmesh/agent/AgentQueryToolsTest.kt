@@ -10,6 +10,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
+import java.util.UUID
 import kotlin.test.assertContains
 
 class AgentQueryToolsTest {
@@ -18,6 +19,7 @@ class AgentQueryToolsTest {
     fun `KnowledgeQueryTool returns answer with sources`() = runBlocking {
         val graphRagService = mockk<GraphRagService>()
         every { graphRagService.query(any()) } returns GraphRagResult(
+            sessionId = UUID.randomUUID(),
             answer = "Plants perform photosynthesis.",
             selectedEdges = listOf(
                 SelectedEdge(
@@ -41,6 +43,7 @@ class AgentQueryToolsTest {
     fun `DocumentQueryTool returns answer with sources`() = runBlocking {
         val documentRagService = mockk<DocumentRagService>()
         every { documentRagService.query(any()) } returns DocumentRagResult(
+            sessionId = UUID.randomUUID(),
             answer = "Photosynthesis is described in chapter 3.",
             sources = listOf(
                 SourceAttribution(

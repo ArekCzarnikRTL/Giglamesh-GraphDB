@@ -10,6 +10,7 @@ input DocumentRagInput {
 }
 
 type DocumentRagResponse {
+    sessionId: ID!
     answer: String!
     sources: [SourceAttributionType!]!
     retrievedChunkCount: Int!

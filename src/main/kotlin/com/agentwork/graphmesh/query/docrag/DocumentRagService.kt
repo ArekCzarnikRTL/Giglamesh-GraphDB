@@ -7,11 +7,13 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import com.agentwork.graphmesh.extraction.embedding.EmbeddingConfig
 import com.agentwork.graphmesh.librarian.LibrarianService
+import com.agentwork.graphmesh.messaging.ExplainabilityEventProducer
 import com.agentwork.graphmesh.storage.vector.VectorStore
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.UUID
 
 @OptIn(kotlin.time.ExperimentalTime::class)
 @Service
@@ -21,12 +23,14 @@ class DocumentRagService(
     private val librarianService: LibrarianService,
     private val promptExecutor: PromptExecutor,
     private val embeddingConfig: EmbeddingConfig,
-    @Value("\${graphmesh.extraction.model:gpt-4o}") private val llmModelName: String
+    @Value("\${graphmesh.extraction.model:gpt-4o}") private val llmModelName: String,
+    private val explainabilityProducer: ExplainabilityEventProducer
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
     fun query(query: DocumentRagQuery): DocumentRagResult {
+        val sessionId = UUID.randomUUID()
         val startTime = System.currentTimeMillis()
 
         // Phase 1: Chunk Retrieval
@@ -35,8 +39,18 @@ class DocumentRagService(
         logger.info("Retrieved {} chunks", chunks.size)
 
         if (chunks.isEmpty()) {
+            val emptyAnswer = "No relevant documents found for this question."
+            explainabilityProducer.sendDocRagEvent(
+                sessionId = sessionId,
+                collectionId = query.collectionId,
+                queryText = query.question,
+                retrievedChunkCount = 0,
+                selectedChunkIds = emptyList(),
+                answerText = emptyAnswer
+            )
             return DocumentRagResult(
-                answer = "No relevant documents found for this question.",
+                sessionId = sessionId,
+                answer = emptyAnswer,
                 sources = emptyList(),
                 retrievedChunkCount = 0,
                 durationMs = System.currentTimeMillis() - startTime
@@ -53,7 +67,17 @@ class DocumentRagService(
         val durationMs = System.currentTimeMillis() - startTime
         logger.info("Document RAG pipeline completed in {} ms", durationMs)
 
+        explainabilityProducer.sendDocRagEvent(
+            sessionId = sessionId,
+            collectionId = query.collectionId,
+            queryText = query.question,
+            retrievedChunkCount = chunks.size,
+            selectedChunkIds = chunks.map { it.chunkId },
+            answerText = answer
+        )
+
         return DocumentRagResult(
+            sessionId = sessionId,
             answer = answer,
             sources = sources,
             retrievedChunkCount = chunks.size,
