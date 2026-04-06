@@ -29,7 +29,15 @@ class GraphMeshCli : SuspendingCliktCommand(name = "graphmesh") {
         .enum<OutputFormat>()
         .default(OutputFormat.TABLE)
 
-    private val config by findOrSetObject { CliConfig(endpoint, token, format) }
+    private val config by findOrSetObject { configOverride ?: CliConfig(endpoint, token, format) }
+
+    /** Injected by tests via [setTestConfig] to bypass option parsing. */
+    private var configOverride: CliConfig? = null
+
+    /** Test hook — call before [test] to inject a [CliConfig] with a fake gateway. */
+    fun setTestConfig(cfg: CliConfig) {
+        configOverride = cfg
+    }
 
     override suspend fun run() {
         // findOrSetObject initialises the context object on first access.

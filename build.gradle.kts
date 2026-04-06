@@ -142,6 +142,19 @@ tasks.named<GraphQLGenerateClientTask>("graphqlGenerateClient") {
     serializer.set(GraphQLSerializer.JACKSON)
 }
 
+// Wire the generated GraphQL client sources into the main Kotlin source set so that
+// compileKotlin always sees the generated classes.
+sourceSets {
+    main {
+        kotlin {
+            srcDir(layout.buildDirectory.dir("generated/source/graphql/main"))
+        }
+    }
+}
+tasks.named("compileKotlin") {
+    dependsOn(tasks.named("graphqlGenerateClient"))
+}
+
 tasks.register<JavaExec>("cliRun") {
     group = "cli"
     description = "Runs the GraphMesh CLI. Usage: ./gradlew cliRun --args=\"collection list\""

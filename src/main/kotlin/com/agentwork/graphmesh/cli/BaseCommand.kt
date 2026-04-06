@@ -6,6 +6,7 @@ import com.agentwork.graphmesh.cli.output.TableOutput
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.ajalt.clikt.command.SuspendingCliktCommand
 import com.github.ajalt.clikt.core.requireObject
+import com.github.ajalt.clikt.core.terminal
 
 /**
  * Base class for all GraphMesh CLI subcommands. Pulls the shared [CliConfig]
@@ -19,9 +20,10 @@ abstract class BaseCommand(
     protected val cfg: CliConfig by requireObject()
 
     protected val out: Output by lazy {
+        val sink: (String) -> Unit = { line -> terminal.println(line) }
         when (cfg.format) {
-            OutputFormat.TABLE -> TableOutput(sink = ::println)
-            OutputFormat.JSON  -> JsonOutput(sink = ::println, mapper = jacksonObjectMapper())
+            OutputFormat.TABLE -> TableOutput(sink = sink)
+            OutputFormat.JSON  -> JsonOutput(sink = sink, mapper = jacksonObjectMapper())
         }
     }
 
