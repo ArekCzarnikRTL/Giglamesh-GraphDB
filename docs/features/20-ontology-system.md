@@ -27,7 +27,7 @@ gespeichert und koennen in Standard-Formaten importiert/exportiert werden.
 | Feature 02: Cassandra Storage Layer (CassandraClient)            | Geplant    | Ja       |
 | Feature 06: Configuration Service (ConfigService, ConfigHandler) | Geplant    | Ja       |
 | Feature 07: RDF Graph Model (RdfTerm, Uri, Literal)              | Geplant    | Ja       |
-| Spring Boot 3.x                                                  | Verfuegbar | Nein     |
+| Spring Boot 4.x                                                  | Verfuegbar | Nein     |
 
 ## Architektur
 
