@@ -15,6 +15,7 @@ input AgentQueryInput {
 }
 
 type AgentQueryResult {
+    sessionId: ID!
     answer: String!
     durationMs: Int!
 }

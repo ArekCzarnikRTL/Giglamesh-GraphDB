@@ -1,5 +1,7 @@
 package com.agentwork.graphmesh.agent
 
+import java.util.UUID
+
 data class AgentQueryConfig(
     val maxIterations: Int = 10,
     val systemPrompt: String = DEFAULT_SYSTEM_PROMPT
@@ -14,6 +16,7 @@ Wenn du genug Informationen hast, gib eine ausfuehrliche Antwort."""
 }
 
 data class AgentQueryResult(
+    val sessionId: UUID,
     val answer: String,
     val durationMs: Long
 )

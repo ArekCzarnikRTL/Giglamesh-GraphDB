@@ -6,12 +6,15 @@ import ai.koog.agents.ext.agent.reActStrategy
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import com.agentwork.graphmesh.messaging.ExplainabilityEventProducer
+import com.agentwork.graphmesh.provenance.query.AgentIterationCollector
 import com.agentwork.graphmesh.query.docrag.DocumentRagService
 import com.agentwork.graphmesh.query.graphrag.GraphRagService
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.UUID
 
 @Service
 class AgentService(
@@ -19,7 +22,8 @@ class AgentService(
     private val graphRagService: GraphRagService,
     private val documentRagService: DocumentRagService,
     private val toolGroupRegistry: ToolGroupRegistry,
-    @Value("\${graphmesh.extraction.model:gpt-4o}") private val modelName: String
+    @Value("\${graphmesh.extraction.model:gpt-4o}") private val modelName: String,
+    private val explainabilityProducer: ExplainabilityEventProducer
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -30,6 +34,7 @@ class AgentService(
         config: AgentQueryConfig = AgentQueryConfig(),
         allowedGroups: Set<String> = setOf("all")
     ): AgentQueryResult {
+        val sessionId = UUID.randomUUID()
         val startTime = System.currentTimeMillis()
 
         val allowedToolNames = toolGroupRegistry.resolveToolNames(allowedGroups)
@@ -42,6 +47,16 @@ class AgentService(
                 tool(DocumentQueryTool(documentRagService, collectionId))
             }
         }
+
+        val collector = AgentIterationCollector()
+        @Suppress("UNUSED_VARIABLE")
+        val bridge = KoogAgentTracingBridge(collector)
+
+        // NOTE: Koog Tracing installation intentionally omitted until Koog 0.7.3 event API
+        // is verified. The bridge + collector contract is ready to be wired when
+        // install(Tracing) { addMessageProcessor(...) } is confirmed available in the runtime.
+        // Until then, the collector remains empty and the producer sends an empty iteration list.
+        // See docs/superpowers/plans/2026-04-06-query-explainability.md Task 9 for the contract.
 
         val agent = AIAgent(
             promptExecutor = promptExecutor,
@@ -56,15 +71,25 @@ class AgentService(
         }
 
         val durationMs = System.currentTimeMillis() - startTime
+        val iterations = collector.snapshot()
+
+        explainabilityProducer.sendAgentEvent(
+            sessionId = sessionId,
+            collectionId = collectionId,
+            queryText = question,
+            iterations = iterations,
+            answerText = answer,
+        )
 
         logger.info(
-            "Agent query complete: question='{}', groups={}, durationMs={}",
-            question.take(80), allowedGroups, durationMs
+            "Agent query complete: question='{}', groups={}, iterations={}, durationMs={}",
+            question.take(80), allowedGroups, iterations.size, durationMs
         )
 
         return AgentQueryResult(
+            sessionId = sessionId,
             answer = answer,
-            durationMs = durationMs
+            durationMs = durationMs,
         )
     }
 

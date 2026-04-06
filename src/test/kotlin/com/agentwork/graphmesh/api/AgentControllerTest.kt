@@ -9,6 +9,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
+import java.util.UUID
 import kotlin.test.assertEquals
 
 class AgentControllerTest {
@@ -17,6 +18,7 @@ class AgentControllerTest {
     fun `askAgent delegates to agent service`() {
         val agentService = mockk<AgentService>()
         every { agentService.query("What is X?", "col-1", any(), any()) } returns AgentQueryResult(
+            sessionId = UUID.randomUUID(),
             answer = "X is a concept.",
             durationMs = 1500
         )
@@ -35,7 +37,7 @@ class AgentControllerTest {
     fun `askAgent passes custom maxIterations`() {
         val agentService = mockk<AgentService>()
         every { agentService.query(any(), any(), any(), any()) } returns AgentQueryResult(
-            answer = "Answer", durationMs = 100
+            sessionId = UUID.randomUUID(), answer = "Answer", durationMs = 100
         )
 
         val controller = AgentController(agentService)
@@ -50,7 +52,7 @@ class AgentControllerTest {
     fun `askAgent passes allowedGroups`() {
         val agentService = mockk<AgentService>()
         every { agentService.query(any(), any(), any(), any()) } returns AgentQueryResult(
-            answer = "Answer", durationMs = 100
+            sessionId = UUID.randomUUID(), answer = "Answer", durationMs = 100
         )
 
         val controller = AgentController(agentService)
