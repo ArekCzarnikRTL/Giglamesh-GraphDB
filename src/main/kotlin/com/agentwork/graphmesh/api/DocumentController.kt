@@ -16,8 +16,36 @@ class DocumentController(
 ) {
 
     @QueryMapping
-    fun documents(@Argument collectionId: String, @Argument type: DocumentType?): List<Document> {
-        return librarianService.findByCollection(collectionId, type)
+    fun documents(
+        @Argument collectionId: String,
+        @Argument filter: DocumentFilterInput?,
+        @Argument page: Int?,
+        @Argument pageSize: Int?
+    ): DocumentPagePayload {
+        val effectiveFilter = filter?.let {
+            com.agentwork.graphmesh.librarian.DocumentFilterCriteria(
+                type = it.type,
+                state = it.state,
+                search = it.search
+            )
+        } ?: com.agentwork.graphmesh.librarian.DocumentFilterCriteria()
+
+        val result = librarianService.findByCollectionPaginated(
+            collectionId = collectionId,
+            filter = effectiveFilter,
+            page = page ?: 0,
+            pageSize = pageSize ?: 20
+        )
+        return DocumentPagePayload(
+            items = result.items,
+            totalCount = result.totalCount,
+            hasNextPage = result.hasNextPage
+        )
+    }
+
+    @QueryMapping
+    fun documentChunks(@Argument documentId: String): List<Document> {
+        return librarianService.findChunksOf(documentId)
     }
 
     @QueryMapping
