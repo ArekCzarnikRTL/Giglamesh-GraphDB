@@ -1,0 +1,9 @@
+query ListCollections($tags: [String]) {
+  collections(tags: $tags) {
+    id
+    name
+    description
+    tags
+    createdAt
+  }
+}
