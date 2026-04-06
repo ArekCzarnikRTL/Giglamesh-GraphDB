@@ -169,8 +169,10 @@ tasks.register<Jar>("cliJar") {
     description = "Builds an executable fat-jar for the CLI."
     dependsOn(tasks.named("classes"))
     archiveBaseName.set("graphmesh-cli")
+    archiveVersion.set("")
     archiveClassifier.set("")
     destinationDirectory.set(layout.buildDirectory.dir("libs"))
+    isZip64 = true
     manifest {
         attributes(
             "Main-Class" to "com.agentwork.graphmesh.cli.GraphMeshCliKt",
