@@ -2,8 +2,15 @@ type Query {
     collections(tags: [String]): [Collection!]!
     collection(id: ID!): Collection
 
-    documents(collectionId: ID!, type: DocumentType): [Document!]!
+    documents(
+        collectionId: ID!
+        filter: DocumentFilter
+        page: Int = 0
+        pageSize: Int = 20
+    ): DocumentPage!
+
     document(id: ID!): Document
+    documentChunks(documentId: ID!): [Document!]!
 
     triples(
         collectionId: ID!
@@ -112,4 +119,16 @@ input UploadDocumentInput {
 input KeyValueInput {
     key: String!
     value: String!
+}
+
+input DocumentFilter {
+    type: DocumentType
+    state: DocumentState
+    search: String
+}
+
+type DocumentPage {
+    items: [Document!]!
+    totalCount: Int!
+    hasNextPage: Boolean!
 }
