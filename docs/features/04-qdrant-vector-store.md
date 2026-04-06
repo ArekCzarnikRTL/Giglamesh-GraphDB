@@ -24,7 +24,7 @@ filterbasierter Aehnlichkeitssuche.
 |--------------------|------------|----------|
 | Qdrant Server 1.x+ | Geplant    | Nein     |
 | Qdrant Java Client | Verfuegbar | Nein     |
-| Spring Boot 3.x    | Verfuegbar | Nein     |
+| Spring Boot 4.x    | Verfuegbar | Nein     |
 
 ## Architektur
 

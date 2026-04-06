@@ -26,7 +26,7 @@ Schema inferiert und die extrahierten Zeilen im Structured Data Storage (Feature
 | Feature 05: LLM Provider Abstraction (LlmProvider, ChatCompletionService)          | Geplant    | Ja       |
 | Feature 11: Document Chunker (liefert chunk.created Events)                        | Geplant    | Ja       |
 | Feature 22: Structured Data Storage (StructuredDataStore, SchemaService, RowStore) | Geplant    | Ja       |
-| Spring Boot 3.x                                                                    | Verfuegbar | Nein     |
+| Spring Boot 4.x                                                                    | Verfuegbar | Nein     |
 
 ## Architektur
 

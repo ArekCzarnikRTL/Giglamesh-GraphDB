@@ -26,7 +26,7 @@ zerlegt, als Kind-Dokumente im Librarian speichert und Chunk-Created-Events publ
 | Feature 01: Kafka Messaging Infrastructure              | Geplant    | Ja       |
 | Feature 09: Document Management (Librarian)             | Geplant    | Ja       |
 | Feature 10: PDF Decoder (liefert page.extracted Events) | Geplant    | Ja       |
-| Spring Boot 3.x                                         | Verfuegbar | Nein     |
+| Spring Boot 4.x                                         | Verfuegbar | Nein     |
 
 ## Architektur
 

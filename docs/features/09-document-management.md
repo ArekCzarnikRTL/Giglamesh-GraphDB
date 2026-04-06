@@ -25,7 +25,7 @@ einer Parent-Child-Hierarchie (Source -> Pages -> Chunks).
 | Feature 02: Cassandra Storage Layer | Geplant    | Ja       |
 | Feature 03: S3 Blob Storage         | Geplant    | Ja       |
 | Feature 08: Collection Management   | Geplant    | Ja       |
-| Spring Boot 3.x                     | Verfuegbar | Nein     |
+| Spring Boot 4.x                     | Verfuegbar | Nein     |
 
 ## Architektur
 

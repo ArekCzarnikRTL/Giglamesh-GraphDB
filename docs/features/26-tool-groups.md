@@ -28,7 +28,7 @@ Blueprint-Instance-Pattern.
 | Feature 25: Agent System (AgentService, AgentTool, AgentContext) | Geplant    | Ja       |
 | Feature 06: Configuration Service (ConfigService, ConfigHandler) | Geplant    | Ja       |
 | Feature 17: MCP Tool Interface (McpServer, McpTool)              | Geplant    | Ja       |
-| Spring Boot 3.x                                                  | Verfuegbar | Nein     |
+| Spring Boot 4.x                                                  | Verfuegbar | Nein     |
 
 ## Architektur
 

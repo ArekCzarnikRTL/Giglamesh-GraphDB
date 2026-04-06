@@ -1,108 +1,109 @@
 ---
-name: implement-feature
-description: Use when user wants to implement a feature from docs/features/00-feature-set-overview.md. Presents feature list for selection, researches tech stack via context7, then runs full superpowers workflow (brainstorm, plan, subagent-driven implementation).
+name: feature-implementieren
+description: Verwenden, wenn der Nutzer ein Feature aus docs/features/00-feature-set-overview.md implementieren möchte. Stellt die Feature-Liste zur Auswahl dar, recherchiert den Tech-Stack über context7 und führt anschließend den vollständigen Superpowers-Workflow aus (Brainstorming, Planung, subagentengesteuerte Implementierung).
 ---
 
-# Implement Feature
+# Feature implementieren
 
-Pick a feature from the GraphMesh feature set, research the tech with context7, then implement it end-to-end using superpowers.
+Wähle ein Feature aus diesem Projekt-Feature-Set, recherchiere die Technik mit context7 und implementiere es anschließend Ende-zu-Ende mit Superpowers.
 
-## Process
+## Prozess
 
 ```dot
 digraph implement_feature {
     rankdir=TB;
-    "Show feature table from\n00-feature-set-overview.md" [shape=box];
-    "User picks feature #" [shape=diamond];
-    "Read feature doc\ndocs/features/NN-feature-name.md" [shape=box];
-    "Research tech stack via context7\n(resolve-library-id + query-docs)" [shape=box];
-    "Invoke superpowers:brainstorming\n(pass feature doc + context7 findings)" [shape=box];
-    "Brainstorming produces spec\n-> invokes superpowers:writing-plans" [shape=box];
-    "Plan produced\n-> invoke superpowers:subagent-driven-development" [shape=box];
-    "Implementation complete\n-> invoke superpowers:finishing-a-development-branch" [shape=doublecircle];
+    "Feature-Tabelle aus\n00-feature-set-overview.md anzeigen" [shape=box];
+    "Nutzer wählt Feature-Nummer" [shape=diamond];
+    "Feature-Dokument lesen:\ndocs/features/NN-feature-name.md" [shape=box];
+    "Tech-Stack über context7 recherchieren\n(resolve-library-id + query-docs)" [shape=box];
+    "superpowers:brainstorming aufrufen\n(Feature-Dokument + context7-Erkenntnisse übergeben)" [shape=box];
+    "Brainstorming erzeugt Spezifikation\n-> ruft superpowers:writing-plans auf" [shape=box];
+    "Plan erstellt\n-> superpowers:subagent-driven-development aufrufen" [shape=box];
+    "Implementierung abgeschlossen\n-> superpowers:finishing-a-development-branch aufrufen" [shape=doublecircle];
 
-    "Show feature table from\n00-feature-set-overview.md" -> "User picks feature #";
-    "User picks feature #" -> "Read feature doc\ndocs/features/NN-feature-name.md";
-    "Read feature doc\ndocs/features/NN-feature-name.md" -> "Research tech stack via context7\n(resolve-library-id + query-docs)";
-    "Research tech stack via context7\n(resolve-library-id + query-docs)" -> "Invoke superpowers:brainstorming\n(pass feature doc + context7 findings)";
-    "Invoke superpowers:brainstorming\n(pass feature doc + context7 findings)" -> "Brainstorming produces spec\n-> invokes superpowers:writing-plans";
-    "Brainstorming produces spec\n-> invokes superpowers:writing-plans" -> "Plan produced\n-> invoke superpowers:subagent-driven-development";
-    "Plan produced\n-> invoke superpowers:subagent-driven-development" -> "Implementation complete\n-> invoke superpowers:finishing-a-development-branch";
+    "Feature-Tabelle aus\n00-feature-set-overview.md anzeigen" -> "Nutzer wählt Feature-Nummer";
+    "Nutzer wählt Feature-Nummer" -> "Feature-Dokument lesen:\ndocs/features/NN-feature-name.md";
+    "Feature-Dokument lesen:\ndocs/features/NN-feature-name.md" -> "Tech-Stack über context7 recherchieren\n(resolve-library-id + query-docs)";
+    "Tech-Stack über context7 recherchieren\n(resolve-library-id + query-docs)" -> "superpowers:brainstorming aufrufen\n(Feature-Dokument + context7-Erkenntnisse übergeben)";
+    "superpowers:brainstorming aufrufen\n(Feature-Dokument + context7-Erkenntnisse übergeben)" -> "Brainstorming erzeugt Spezifikation\n-> ruft superpowers:writing-plans auf";
+    "Brainstorming erzeugt Spezifikation\n-> ruft superpowers:writing-plans auf" -> "Plan erstellt\n-> superpowers:subagent-driven-development aufrufen";
+    "Plan erstellt\n-> superpowers:subagent-driven-development aufrufen" -> "Implementierung abgeschlossen\n-> superpowers:finishing-a-development-branch aufrufen";
 }
 ```
 
-## Step 1: Feature Selection
+## Schritt 1: Feature-Auswahl
 
-Read `docs/features/00-feature-set-overview.md` and present the feature table to the user. Show phase, number, name, dependencies, and effort. Let the user pick by number.
+Lies `docs/features/00-feature-set-overview.md` und präsentiere dem Nutzer die Feature-Tabelle. Zeige Phase, Nummer, Name, Abhängigkeiten und Aufwand. Der Nutzer soll per Nummer auswählen.
 
-If the user already specified a feature number or name, skip the selection.
+Falls der Nutzer bereits eine Feature-Nummer oder einen Namen angegeben hat, überspringe die Auswahl.
 
-## Step 2: Read Feature Doc
+## Schritt 2: Feature-Dokument lesen
 
-Read the full feature doc at `docs/features/NN-feature-name.md`. Extract:
-- Problem and goal
-- Architecture and data models
-- Service interfaces and implementations
-- GraphQL schema changes
-- Affected files
-- Acceptance criteria
-- Dependencies on other features
+Lies das vollständige Feature-Dokument unter `docs/features/NN-feature-name.md`. Extrahiere:
+- Problem und Ziel
+- Architektur und Datenmodelle
+- Service-Schnittstellen und Implementierungen
+- Änderungen am GraphQL-Schema
+- Betroffene Dateien
+- Akzeptanzkriterien
+- Abhängigkeiten zu anderen Features
 
-Check which dependencies are already implemented by scanning the codebase (look for existing classes, interfaces, services mentioned in the dependency list).
+Prüfe, welche Abhängigkeiten bereits implementiert sind, indem du die Codebasis durchsuchst (suche nach bestehenden Klassen, Interfaces und Services aus der Abhängigkeitsliste).
 
-## Step 3: Context7 Research
+## Schritt 3: Context7-Recherche
 
-Based on the feature's tech requirements, query context7 for current documentation:
+Recherchiere auf Basis der technischen Anforderungen des Features die aktuelle Dokumentation über context7:
 
-1. **Identify libraries** the feature uses (from feature doc + project tech stack)
-2. **Resolve library IDs** via `mcp__plugin_context7_context7__resolve-library-id`
-3. **Query relevant docs** via `mcp__plugin_context7_context7__query-docs`
+1. **Bibliotheken identifizieren**, die das Feature verwendet (aus dem Feature-Dokument und dem Projekt-Tech-Stack)
+2. **Library-IDs auflösen** über `mcp__plugin_context7_context7__resolve-library-id`
+3. **Relevante Dokumentation abfragen** über `mcp__plugin_context7_context7__query-docs`
 
-Common libraries to check per feature type:
+Beispiel Typische Bibliotheken je nach Feature-Typ:
 
-| Feature Type | Libraries to Research |
+| Feature-Typ | Zu recherchierende Bibliotheken |
 |---|---|
 | Storage (Cassandra, Qdrant, S3) | Spring Data Cassandra, Qdrant Java Client, AWS S3 SDK |
-| LLM/AI | Spring AI (ChatClient, structured output, embeddings) |
-| GraphQL API | Spring Boot GraphQL (@QueryMapping, coroutines) |
-| Kafka messaging | Spring Kafka |
+| LLM/KI | Spring AI (ChatClient, strukturiertes Output, Embeddings) |
+| GraphQL API | Spring Boot GraphQL (@QueryMapping, Coroutines) |
+| Kafka Messaging | Spring Kafka |
 | Frontend | Next.js, React |
 
-Also check: Koog framework (the project's LLM abstraction) if the feature involves LLM calls.
+Zusätzlich prüfen: Koog-Framework (die LLM-Abstraktion des Projekts), falls das Feature LLM-Aufrufe enthält.
 
-Summarize findings concisely — focus on API patterns, Kotlin-specific considerations, and anything that differs from what the feature doc assumes.
+Fasse die Erkenntnisse knapp zusammen — konzentriere dich auf API-Muster, Kotlin-spezifische Aspekte und alles, was von den Annahmen im Feature-Dokument abweicht.
 
-## Step 4: Brainstorming
+## Schritt 4: Brainstorming
 
-**REQUIRED SUB-SKILL:** Invoke `superpowers:brainstorming`
+**ERFORDERLICHE SUB-SKILL:** `superpowers:brainstorming` aufrufen
 
-Provide the brainstorming skill with:
-- The full feature doc content
-- Context7 research findings (relevant API patterns, gotchas)
-- Current codebase state (what's already implemented vs. missing)
-- Any discrepancies between feature doc and actual code (e.g., package names, framework choices)
+Übergib dem Brainstorming-Skill:
+- Den vollständigen Inhalt des Feature-Dokuments
+- Die Ergebnisse der Context7-Recherche (relevante API-Muster, Stolperfallen)
+- Den aktuellen Zustand der Codebasis (was bereits implementiert ist und was fehlt)
+- Alle Abweichungen zwischen Feature-Dokument und tatsächlichem Code (z. B. Paketnamen, Framework-Entscheidungen)
 
-The brainstorming skill handles: clarifying questions, approach proposals, design presentation, spec writing, and handoff to writing-plans.
+Der Brainstorming-Skill übernimmt: Rückfragen, Vorschläge zur Herangehensweise, Darstellung des Designs, Spezifikationserstellung und Übergabe an writing-plans.
 
-## Step 5: Planning
+## Schritt 5: Planung
 
-The brainstorming skill invokes `superpowers:writing-plans` automatically.
+Der Brainstorming-Skill ruft automatisch `superpowers:writing-plans` auf.
 
-## Step 6: Implementation
+## Schritt 6: Implementierung
 
-After the plan is written, offer execution choice:
-- **Subagent-Driven (recommended):** `superpowers:subagent-driven-development`
-- **Inline:** `superpowers:executing-plans`
+Sobald der Plan geschrieben ist, biete die Ausführungswahl an:
+- **Subagentengesteuert** `superpowers:subagent-driven-development`
 
-## Step 7: Completion
+## Schritt 7: Abschluss
 
-**REQUIRED SUB-SKILL:** Invoke `superpowers:finishing-a-development-branch`
+**ERFORDERLICHE SUB-SKILL:** `superpowers:finishing-a-development-branch` aufrufen
+**Feature done datei:** schreibe eine `features/NN-feature-name-done.md` mit:
+- Kurze Zusammenfassung der Implementierung
+- Alle Abweichungen vom ursprünglichen Plan oder Feature-Dokument
+- Alle offenen Fragen oder technischen Schulden, die nach der Implementierung bestehen
 
-## Key Rules
+## Wichtige Regeln
 
-- **Always use context7** before brainstorming — don't rely on training data for library APIs
-- **Check existing code** before assuming something needs to be built from scratch
-- **Follow existing patterns** — the project uses Koog (not Spring AI ChatClient) for LLM calls, `runBlocking` for coroutines, standalone parsing logic copies in tests
-- **Package is `com.agentwork.graphmesh`**, not `com.graphmesh` as feature docs sometimes say
-- **No Testcontainers** — use docker-compose for integration tests
-- **No submodules** — flat Spring Modulith package structure
+- **Immer context7 verwenden**, bevor Brainstorming startet — verlasse dich bei Bibliotheks-APIs nicht auf Trainingsdaten
+- **Bestehenden Code prüfen**, bevor du annimmst, dass etwas von Grund auf neu gebaut werden muss
+- **Bestehenden Mustern folgen** Folge Best Practices, Architektur- und Designentscheidungen, die in der Codebasis bereits etabliert sind.
+- **Feature die bereits fertiggestellt wurde** sollte nicht erneut implementiert die bereits mit `features/NN-feature-name-done.md` existiert, so sollte der Nutzer darauf hingewiesen werden, dass dieses Feature bereits implementiert wurde und die entsprechende Done-Datei lesen, anstatt eine neue Implementierung zu starten.

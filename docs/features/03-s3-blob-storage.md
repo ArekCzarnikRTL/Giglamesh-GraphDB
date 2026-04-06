@@ -24,7 +24,7 @@ Presigned-URL-Unterstuetzung.
 |-------------------------------------------|------------|----------|
 | S3-kompatibler Speicher (MinIO/AWS S3/R2) | Geplant    | Nein     |
 | AWS SDK v2 for Java                       | Verfuegbar | Nein     |
-| Spring Boot 3.x                           | Verfuegbar | Nein     |
+| Spring Boot 4.x                           | Verfuegbar | Nein     |
 
 ## Architektur
 

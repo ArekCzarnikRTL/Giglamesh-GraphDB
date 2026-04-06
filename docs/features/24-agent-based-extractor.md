@@ -28,7 +28,7 @@ extrahiert, mit dem bestehenden Graph abgleicht und das Ergebnis im JSONL-Format
 | Feature 05: LLM Provider Abstraction (LlmProvider, ChatCompletionService) | Geplant    | Ja       |
 | Feature 11: Document Chunker (liefert chunk.created Events)               | Geplant    | Ja       |
 | Feature 17: MCP Tool Interface (McpServer, McpTool)                       | Geplant    | Ja       |
-| Spring Boot 3.x                                                           | Verfuegbar | Nein     |
+| Spring Boot 4.x                                                           | Verfuegbar | Nein     |
 
 ## Architektur
 

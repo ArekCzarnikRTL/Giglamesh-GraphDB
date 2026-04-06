@@ -9,8 +9,9 @@ ist und die Akzeptanz der Plattform einschraenkt.
 
 ## Ziel
 
-Implementierung einer Next.js-basierten Document-UI, die den gesamten Dokumentenlebenszyklus von Upload bis
+Implementierung einer Next.js-basierten mit shadcn ui und tailwind Document-UI, die den gesamten Dokumentenlebenszyklus von Upload bis
 Detailansicht abdeckt und ueber die GraphQL-API mit dem Backend kommuniziert.
+
 
 1. **Document Upload** -- Drag-and-Drop und File-Picker fuer den Dokumenten-Upload mit Fortschrittsanzeige
 2. **Document List** -- Durchsuchbare und filterbare Dokumentenliste (Collection, Typ, Status)
@@ -18,6 +19,8 @@ Detailansicht abdeckt und ueber die GraphQL-API mit dem Backend kommuniziert.
 4. **Collection Selector** -- Wiederverwendbare Komponente zur Auswahl der aktiven Collection
 5. **Upload Progress** -- Echtzeit-Fortschrittsanzeige waehrend des Uploads und der Extraktion
 
+## Skills und MCP 
+Verwende Skills wie frontend-design. 
 ## Voraussetzungen
 
 | Abhaengigkeit                                        | Status     | Blocker? |

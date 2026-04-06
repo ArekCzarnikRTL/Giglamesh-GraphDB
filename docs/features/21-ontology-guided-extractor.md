@@ -29,7 +29,7 @@ extrahierte Triples gegen die Ontologie validiert.
 | Feature 07: RDF Graph Model (Quad, RdfTerm, EntityIdGenerator)                              | Geplant    | Ja       |
 | Feature 11: Document Chunker (liefert chunk.created Events)                                 | Geplant    | Ja       |
 | Feature 20: Ontology System (Ontology, OntologyService)                                     | Geplant    | Ja       |
-| Spring Boot 3.x                                                                             | Verfuegbar | Nein     |
+| Spring Boot 4.x                                                                             | Verfuegbar | Nein     |
 
 ## Architektur
 

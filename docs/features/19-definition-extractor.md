@@ -27,7 +27,7 @@ Entitaetsdefinitionen durchsucht und diese als `rdfs:comment`-Triples im Knowled
 | Feature 05: LLM Provider Abstraction (LlmProvider, ChatCompletionService) | Geplant    | Ja       |
 | Feature 07: RDF Graph Model (Quad, RdfTerm, EntityIdGenerator)            | Geplant    | Ja       |
 | Feature 11: Document Chunker (liefert chunk.created Events)               | Geplant    | Ja       |
-| Spring Boot 3.x                                                           | Verfuegbar | Nein     |
+| Spring Boot 4.x                                                           | Verfuegbar | Nein     |
 
 ## Architektur
 

@@ -24,7 +24,7 @@ Boot Starters.
 
 | Abhaengigkeit           | Status     | Blocker? |
 |-------------------------|------------|----------|
-| Spring Boot 3.x         | Verfuegbar | Nein     |
+| Spring Boot 4.x         | Verfuegbar | Nein     |
 | OpenAI API (extern)     | Verfuegbar | Nein     |
 | Anthropic API (extern)  | Verfuegbar | Nein     |
 | Ollama (lokal)          | Verfuegbar | Nein     |

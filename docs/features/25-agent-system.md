@@ -28,7 +28,7 @@ zufriedenstellende Antwort vorliegt oder ein Abbruchkriterium greift.
 | Feature 16: Document RAG (DocumentRagService, ChunkRetriever)             | Geplant    | Ja       |
 | Feature 17: MCP Tool Interface (McpServer, McpTool, McpToolDefinition)    | Geplant    | Ja       |
 | Feature 14: GraphQL API (Schema-first, Controller-Infrastruktur)          | Geplant    | Ja       |
-| Spring Boot 3.x                                                           | Verfuegbar | Nein     |
+| Spring Boot 4.x                                                           | Verfuegbar | Nein     |
 
 ## Architektur
 

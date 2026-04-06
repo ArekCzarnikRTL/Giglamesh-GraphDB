@@ -27,7 +27,7 @@ Storage-Backends verteilt und bei Loeschung kaskadiert bereinigt.
 | Feature 03: S3 Blob Storage         | Geplant    | Ja       |
 | Feature 04: Qdrant Vector Store     | Geplant    | Ja       |
 | Feature 06: Configuration Service   | Geplant    | Ja       |
-| Spring Boot 3.x                     | Verfuegbar | Nein     |
+| Spring Boot 4.x                     | Verfuegbar | Nein     |
 
 ## Architektur
 

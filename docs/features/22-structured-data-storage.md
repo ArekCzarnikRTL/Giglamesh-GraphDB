@@ -26,7 +26,7 @@ CRUD-Operationen und einer Query-API mit Filter-, Sort- und Paginierungs-Unterst
 |------------------------------------------------------------------|------------|----------|
 | Feature 02: Cassandra Storage Layer (CassandraClient)            | Geplant    | Ja       |
 | Feature 06: Configuration Service (ConfigService, ConfigHandler) | Geplant    | Ja       |
-| Spring Boot 3.x                                                  | Verfuegbar | Nein     |
+| Spring Boot 4.x                                                  | Verfuegbar | Nein     |
 
 ## Architektur
 

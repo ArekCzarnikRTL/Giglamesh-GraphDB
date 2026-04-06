@@ -26,7 +26,7 @@ Batches verarbeitet und mit Chunk-ID-Tracking in Qdrant speichert.
 | Feature 04: Qdrant Vector Store (VectorStore)               | Geplant    | Ja       |
 | Feature 05: LLM Provider Abstraction (EmbeddingService)     | Geplant    | Ja       |
 | Feature 11: Document Chunker (liefert chunk.created Events) | Geplant    | Ja       |
-| Spring Boot 3.x                                             | Verfuegbar | Nein     |
+| Spring Boot 4.x                                             | Verfuegbar | Nein     |
 
 ## Architektur
 
