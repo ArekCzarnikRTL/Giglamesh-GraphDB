@@ -1,0 +1,16 @@
+query DocRagQuery($input: DocumentRagInput!) {
+  documentRag(input: $input) {
+    sessionId
+    answer
+    retrievedChunkCount
+    durationMs
+    sources {
+      chunkId
+      documentId
+      documentTitle
+      pageNumber
+      score
+      snippet
+    }
+  }
+}

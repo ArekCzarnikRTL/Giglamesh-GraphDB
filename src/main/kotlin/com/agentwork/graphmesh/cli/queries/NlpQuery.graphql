@@ -1,0 +1,14 @@
+query NlpQuery($input: NlpQueryInput!) {
+  nlpQuery(input: $input) {
+    answer
+    wasReformulated
+    effectiveQuestion
+    durationMs
+    sources
+    detectedIntent {
+      intent
+      confidence
+      reasoning
+    }
+  }
+}

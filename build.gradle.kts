@@ -91,7 +91,7 @@ tasks.withType<Test> {
 
 val assembleCliSchema by tasks.registering {
     group = "cli"
-    description = "Concatenates all graphql/*.graphqls files into a single SDL for CLI codegen."
+    description = "Merges all graphql/*.graphqls files into a flat SDL for CLI codegen (extend type → inline fields)."
     val inputDir = layout.projectDirectory.dir("src/main/resources/graphql")
     val outputFile = layout.buildDirectory.file("generated/cli-schema/schema.graphqls")
     inputs.dir(inputDir)
@@ -105,7 +105,28 @@ val assembleCliSchema by tasks.registering {
             compareByDescending<java.io.File> { it.name == "schema.graphqls" }
                 .thenBy { it.name }
         )
-        out.writeText(sorted.joinToString("\n\n") { it.readText() })
+        // Merge extend type blocks into their base types so graphql-kotlin codegen sees one flat schema.
+        // Collect all lines from all files, then rewrite extend type X { ... } as plain content appended to type X.
+        val combined = sorted.joinToString("\n\n") { it.readText() }
+        // Extract fields from each "extend type Foo { ... }" block and append them to the "type Foo { ... }" block.
+        val extendPattern = Regex("""extend\s+type\s+(\w+)\s*\{([^}]*)\}""", RegexOption.DOT_MATCHES_ALL)
+        val merged = extendPattern.replace(combined) { "" } // strip all extend blocks first
+        val fieldsToAppend = mutableMapOf<String, MutableList<String>>()
+        extendPattern.findAll(combined).forEach { match ->
+            val typeName = match.groupValues[1]
+            val body = match.groupValues[2].trim()
+            fieldsToAppend.getOrPut(typeName) { mutableListOf() }.add(body)
+        }
+        // Now insert the extra fields into the base type blocks.
+        val typePattern = Regex("""(type\s+(\w+)\s*\{)([^}]*)\}""", RegexOption.DOT_MATCHES_ALL)
+        val result = typePattern.replace(merged) { m ->
+            val typeName = m.groupValues[2]
+            val extra = fieldsToAppend[typeName]?.joinToString("\n") ?: ""
+            val existingBody = m.groupValues[3]
+            val newBody = if (extra.isBlank()) existingBody else "$existingBody\n    $extra\n"
+            "${m.groupValues[1]}$newBody}"
+        }
+        out.writeText(result)
     }
 }
 

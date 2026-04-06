@@ -1,0 +1,15 @@
+query GraphRagQuery($input: GraphRagInput!) {
+  graphRag(input: $input) {
+    sessionId
+    answer
+    retrievedEdgeCount
+    durationMs
+    selectedEdges {
+      subject
+      predicate
+      objectValue
+      reasoning
+      relevanceScore
+    }
+  }
+}
