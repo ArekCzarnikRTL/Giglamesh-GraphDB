@@ -1,0 +1,13 @@
+mutation UploadDocument($input: UploadDocumentInput!) {
+  uploadDocument(input: $input) {
+    id
+    collectionId
+    parentId
+    type
+    state
+    title
+    mimeType
+    createdAt
+    metadata { key value }
+  }
+}

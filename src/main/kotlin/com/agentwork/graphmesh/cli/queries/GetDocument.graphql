@@ -1,0 +1,13 @@
+query GetDocument($id: ID!) {
+  document(id: $id) {
+    id
+    collectionId
+    parentId
+    type
+    state
+    title
+    mimeType
+    createdAt
+    metadata { key value }
+  }
+}

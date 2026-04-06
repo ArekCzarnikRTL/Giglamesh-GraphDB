@@ -1,0 +1,10 @@
+query ListDocuments($collectionId: ID!, $type: DocumentType) {
+  documents(collectionId: $collectionId, type: $type) {
+    id
+    title
+    mimeType
+    type
+    state
+    createdAt
+  }
+}
