@@ -4,6 +4,7 @@ plugins {
     id("org.springframework.boot") version "4.0.5"
     id("io.spring.dependency-management") version "1.1.7"
     id("com.netflix.dgs.codegen") version "8.3.0"
+    id("com.expediagroup.graphql") version "8.2.1"
 }
 
 group = "com.agentwork"
@@ -55,6 +56,9 @@ dependencies {
     testImplementation("io.mockk:mockk:1.13.16")
     implementation(platform("software.amazon.awssdk:bom:2.42.28"))
     implementation("software.amazon.awssdk:s3")
+    implementation("com.github.ajalt.clikt:clikt:5.0.1")
+    implementation("com.expediagroup:graphql-kotlin-ktor-client:8.2.1")
+    implementation("io.ktor:ktor-client-cio:3.0.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
