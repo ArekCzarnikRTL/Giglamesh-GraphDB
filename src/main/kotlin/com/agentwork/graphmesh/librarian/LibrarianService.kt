@@ -9,6 +9,18 @@ import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.UUID
 
+data class DocumentFilterCriteria(
+    val type: DocumentType? = null,
+    val state: DocumentState? = null,
+    val search: String? = null
+)
+
+data class DocumentPageResult(
+    val items: List<Document>,
+    val totalCount: Int,
+    val hasNextPage: Boolean
+)
+
 @Service
 class LibrarianService(
     private val documentStore: DocumentStore,
@@ -108,6 +120,36 @@ class LibrarianService(
 
     fun findByCollection(collectionId: String, type: DocumentType? = null): List<Document> =
         documentStore.findByCollection(collectionId, type)
+
+    fun findByCollectionPaginated(
+        collectionId: String,
+        filter: DocumentFilterCriteria,
+        page: Int,
+        pageSize: Int
+    ): DocumentPageResult {
+        val all = documentStore.findByCollection(collectionId, filter.type)
+        val filtered = all.asSequence()
+            .let { seq ->
+                val state = filter.state
+                if (state != null) seq.filter { it.state == state } else seq
+            }
+            .let { seq ->
+                val q = filter.search?.lowercase()?.takeIf { it.isNotBlank() }
+                if (q != null) seq.filter { it.title.lowercase().contains(q) } else seq
+            }
+            .toList()
+
+        val total = filtered.size
+        val safePageSize = pageSize.coerceAtLeast(1)
+        val safePage = page.coerceAtLeast(0)
+        val from = (safePage * safePageSize).coerceAtMost(total)
+        val to = (from + safePageSize).coerceAtMost(total)
+        val items = filtered.subList(from, to)
+        return DocumentPageResult(items = items, totalCount = total, hasNextPage = to < total)
+    }
+
+    fun findChunksOf(documentId: String): List<Document> =
+        documentStore.findChildren(documentId).filter { it.type == DocumentType.CHUNK }
 
     fun findChildren(parentId: String): List<Document> =
         documentStore.findChildren(parentId)

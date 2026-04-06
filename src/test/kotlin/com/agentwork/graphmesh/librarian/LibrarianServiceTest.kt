@@ -1,5 +1,10 @@
 package com.agentwork.graphmesh.librarian
 
+import com.agentwork.graphmesh.collection.CollectionService
+import com.agentwork.graphmesh.messaging.DocumentIngestedProducer
+import com.agentwork.graphmesh.storage.blob.BlobStore
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -7,6 +12,7 @@ import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class LibrarianServiceTest {
 
@@ -77,6 +83,134 @@ class LibrarianServiceTest {
         assertNull(store.findById("doc-1"))
         assertNull(store.findById("doc-1/p1"))
         assertNull(store.findById("doc-1/p1/c1"))
+    }
+
+    @Test
+    fun `findByCollectionPaginated returns DocumentPage with items and pagination metadata`() {
+        val documentStore = mockk<DocumentStore>()
+        val librarianService = LibrarianService(
+            documentStore = documentStore,
+            blobStore = mockk(relaxed = true),
+            collectionService = mockk(relaxed = true),
+            documentIngestedProducer = mockk(relaxed = true),
+            defaultBucket = "graphmesh"
+        )
+        val docs = (1..25).map {
+            Document(id = "doc-$it", collectionId = "col-1", title = "Doc $it", type = DocumentType.SOURCE)
+        }
+        every { documentStore.findByCollection("col-1", null) } returns docs
+
+        val page0 = librarianService.findByCollectionPaginated(
+            collectionId = "col-1",
+            filter = DocumentFilterCriteria(),
+            page = 0,
+            pageSize = 10
+        )
+
+        assertEquals(10, page0.items.size)
+        assertEquals(25, page0.totalCount)
+        assertTrue(page0.hasNextPage)
+        assertEquals("doc-1", page0.items.first().id)
+    }
+
+    @Test
+    fun `findByCollectionPaginated filters by type`() {
+        val documentStore = mockk<DocumentStore>()
+        val librarianService = LibrarianService(
+            documentStore = documentStore,
+            blobStore = mockk(relaxed = true),
+            collectionService = mockk(relaxed = true),
+            documentIngestedProducer = mockk(relaxed = true),
+            defaultBucket = "graphmesh"
+        )
+        val page = Document(id = "p1", collectionId = "col-1", type = DocumentType.PAGE, title = "Page")
+        every { documentStore.findByCollection("col-1", DocumentType.PAGE) } returns listOf(page)
+
+        val result = librarianService.findByCollectionPaginated(
+            collectionId = "col-1",
+            filter = DocumentFilterCriteria(type = DocumentType.PAGE),
+            page = 0,
+            pageSize = 20
+        )
+
+        assertEquals(1, result.items.size)
+        assertEquals("p1", result.items.first().id)
+    }
+
+    @Test
+    fun `findByCollectionPaginated filters by state`() {
+        val documentStore = mockk<DocumentStore>()
+        val librarianService = LibrarianService(
+            documentStore = documentStore,
+            blobStore = mockk(relaxed = true),
+            collectionService = mockk(relaxed = true),
+            documentIngestedProducer = mockk(relaxed = true),
+            defaultBucket = "graphmesh"
+        )
+        val docs = listOf(
+            Document(id = "d1", collectionId = "col-1", state = DocumentState.UPLOADED),
+            Document(id = "d2", collectionId = "col-1", state = DocumentState.EXTRACTED)
+        )
+        every { documentStore.findByCollection("col-1", null) } returns docs
+
+        val result = librarianService.findByCollectionPaginated(
+            collectionId = "col-1",
+            filter = DocumentFilterCriteria(state = DocumentState.EXTRACTED),
+            page = 0,
+            pageSize = 20
+        )
+
+        assertEquals(1, result.items.size)
+        assertEquals("d2", result.items.first().id)
+    }
+
+    @Test
+    fun `findByCollectionPaginated filters by search case-insensitively on title`() {
+        val documentStore = mockk<DocumentStore>()
+        val librarianService = LibrarianService(
+            documentStore = documentStore,
+            blobStore = mockk(relaxed = true),
+            collectionService = mockk(relaxed = true),
+            documentIngestedProducer = mockk(relaxed = true),
+            defaultBucket = "graphmesh"
+        )
+        val docs = listOf(
+            Document(id = "d1", collectionId = "col-1", title = "Annual Report 2025"),
+            Document(id = "d2", collectionId = "col-1", title = "Memo")
+        )
+        every { documentStore.findByCollection("col-1", null) } returns docs
+
+        val result = librarianService.findByCollectionPaginated(
+            collectionId = "col-1",
+            filter = DocumentFilterCriteria(search = "annual"),
+            page = 0,
+            pageSize = 20
+        )
+
+        assertEquals(1, result.items.size)
+        assertEquals("d1", result.items.first().id)
+    }
+
+    @Test
+    fun `findChunksOf returns only CHUNK children`() {
+        val documentStore = mockk<DocumentStore>()
+        val librarianService = LibrarianService(
+            documentStore = documentStore,
+            blobStore = mockk(relaxed = true),
+            collectionService = mockk(relaxed = true),
+            documentIngestedProducer = mockk(relaxed = true),
+            defaultBucket = "graphmesh"
+        )
+        every { documentStore.findChildren("doc-1") } returns listOf(
+            Document(id = "doc-1/p1", collectionId = "col-1", parentId = "doc-1", type = DocumentType.PAGE),
+            Document(id = "doc-1/c1", collectionId = "col-1", parentId = "doc-1", type = DocumentType.CHUNK),
+            Document(id = "doc-1/c2", collectionId = "col-1", parentId = "doc-1", type = DocumentType.CHUNK)
+        )
+
+        val chunks = librarianService.findChunksOf("doc-1")
+
+        assertEquals(2, chunks.size)
+        assertTrue(chunks.all { it.type == DocumentType.CHUNK })
     }
 
     @Test
