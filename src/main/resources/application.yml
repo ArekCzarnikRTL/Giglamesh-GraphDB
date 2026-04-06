@@ -6,6 +6,12 @@ spring:
       enabled: true
     schema:
       locations: classpath:graphql/
+  ai:
+    mcp:
+      server:
+        name: graphmesh
+        version: 1.0.0
+        protocol: SSE
   autoconfigure:
     exclude:
       - org.springframework.ai.vectorstore.qdrant.autoconfigure.QdrantVectorStoreAutoConfiguration
