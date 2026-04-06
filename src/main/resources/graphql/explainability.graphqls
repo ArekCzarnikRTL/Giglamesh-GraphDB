@@ -1,0 +1,72 @@
+extend type Query {
+    explanationChain(collectionId: ID!, sessionUri: ID!): ExplanationChain
+    explanationSessions(
+        collectionId: ID!,
+        mechanism: QueryMechanism,
+        limit: Int = 50
+    ): [QuestionExplanation!]!
+}
+
+enum QueryMechanism {
+    GRAPH_RAG
+    DOC_RAG
+    AGENT
+}
+
+type ExplanationChain {
+    question: QuestionExplanation!
+    exploration: ExplorationExplanation
+    focus: FocusExplanation
+    analyses: [AnalysisExplanation!]
+    synthesis: SynthesisExplanation
+    conclusion: ConclusionExplanation
+    mechanism: QueryMechanism!
+}
+
+type QuestionExplanation {
+    uri: ID!
+    queryText: String!
+    timestamp: String!
+    mechanism: QueryMechanism!
+}
+
+type ExplorationExplanation {
+    uri: ID!
+    edgeCount: Int!
+}
+
+type FocusExplanation {
+    uri: ID!
+    selectedEdges: [SelectedEdgeDetail!]!
+}
+
+type SelectedEdgeDetail {
+    subject: String!
+    predicate: String!
+    objectValue: String!
+    reasoning: String!
+}
+
+type AnalysisExplanation {
+    uri: ID!
+    iterationIndex: Int!
+    thought: String!
+    action: String
+    arguments: [ArgumentEntry!]
+    observation: String
+}
+
+type ArgumentEntry {
+    key: String!
+    value: String!
+}
+
+type SynthesisExplanation {
+    uri: ID!
+    answerText: String!
+}
+
+type ConclusionExplanation {
+    uri: ID!
+    answerText: String!
+}
