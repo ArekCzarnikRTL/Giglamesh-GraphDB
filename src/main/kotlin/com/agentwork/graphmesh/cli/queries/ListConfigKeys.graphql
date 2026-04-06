@@ -1,0 +1,9 @@
+query ListConfigKeys($type: String) {
+  configKeys(type: $type) {
+    id
+    type
+    key
+    value
+    version
+  }
+}

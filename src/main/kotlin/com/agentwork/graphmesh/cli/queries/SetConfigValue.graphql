@@ -1,0 +1,9 @@
+mutation SetConfigValue($key: String!, $value: String!, $type: String!) {
+  setConfig(key: $key, value: $value, type: $type) {
+    id
+    type
+    key
+    value
+    version
+  }
+}

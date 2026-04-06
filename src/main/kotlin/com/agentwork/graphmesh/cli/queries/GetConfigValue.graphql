@@ -1,0 +1,9 @@
+query GetConfigValue($key: String!, $type: String!) {
+  configValue(key: $key, type: $type) {
+    id
+    type
+    key
+    value
+    version
+  }
+}
