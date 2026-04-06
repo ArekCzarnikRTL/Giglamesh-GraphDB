@@ -39,6 +39,15 @@ class ConfigService(
 
     fun findByTypeAndKey(type: ConfigType, key: String): ConfigItem? = store.findByTypeAndKey(type, key)
 
+    /**
+     * Returns all config items across every [ConfigType].
+     * If [type] is non-null, restricts results to that type.
+     */
+    fun findAll(type: ConfigType? = null): List<ConfigItem> {
+        if (type != null) return store.findByType(type)
+        return ConfigType.values().flatMap { store.findByType(it) }
+    }
+
     fun history(id: String, limit: Int = 10): List<ConfigItem> = store.history(id, limit)
 
     fun delete(id: String) {
