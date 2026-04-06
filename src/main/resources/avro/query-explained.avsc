@@ -1,0 +1,48 @@
+{
+  "type": "record",
+  "name": "QueryExplained",
+  "namespace": "com.agentwork.graphmesh.events",
+  "fields": [
+    { "name": "sessionId",          "type": "string" },
+    { "name": "collectionId",       "type": "string" },
+    { "name": "mechanism",          "type": {
+        "type": "enum", "name": "QueryMechanismAvro",
+        "symbols": ["GRAPH_RAG", "DOC_RAG", "AGENT"]
+    } },
+    { "name": "queryText",          "type": "string" },
+    { "name": "timestamp",          "type": "string" },
+    { "name": "answerText",         "type": "string" },
+
+    { "name": "retrievedEdgeCount", "type": ["null", "int"], "default": null },
+    { "name": "selectedEdges",      "type": ["null", {
+        "type": "array",
+        "items": {
+            "type": "record", "name": "SelectedEdgeRecord",
+            "fields": [
+                { "name": "subject",     "type": "string" },
+                { "name": "predicate",   "type": "string" },
+                { "name": "objectValue", "type": "string" },
+                { "name": "reasoning",   "type": "string" }
+            ]
+        }
+    }], "default": null },
+
+    { "name": "retrievedChunkCount", "type": ["null", "int"], "default": null },
+    { "name": "selectedChunkIds",    "type": ["null", { "type": "array", "items": "string" }],
+                                     "default": null },
+
+    { "name": "iterations",          "type": ["null", {
+        "type": "array",
+        "items": {
+            "type": "record", "name": "AgentIterationAvro",
+            "fields": [
+                { "name": "thought",     "type": "string" },
+                { "name": "action",      "type": ["null", "string"], "default": null },
+                { "name": "arguments",   "type": ["null", { "type": "map", "values": "string" }],
+                                         "default": null },
+                { "name": "observation", "type": ["null", "string"], "default": null }
+            ]
+        }
+    }], "default": null }
+  ]
+}

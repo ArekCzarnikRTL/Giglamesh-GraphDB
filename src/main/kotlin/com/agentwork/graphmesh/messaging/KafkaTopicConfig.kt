@@ -14,4 +14,11 @@ class KafkaTopicConfig {
             .partitions(3)
             .replicas(1)
             .build()
+
+    @Bean
+    fun queryExplainedTopic(): NewTopic =
+        TopicBuilder.name("graphmesh.query.explained")
+            .partitions(3)
+            .replicas(1)
+            .build()
 }
