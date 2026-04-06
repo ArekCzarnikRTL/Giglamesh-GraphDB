@@ -1,0 +1,10 @@
+extend type Query {
+    documentHierarchy(collectionId: ID!, documentId: ID!): DocumentNode
+}
+
+type DocumentNode {
+    id: ID!
+    title: String!
+    type: String!
+    children: [DocumentNode!]!
+}
