@@ -1,3 +1,6 @@
+import com.expediagroup.graphql.plugin.gradle.config.GraphQLSerializer
+import com.expediagroup.graphql.plugin.gradle.tasks.GraphQLGenerateClientTask
+
 plugins {
     kotlin("jvm") version "2.2.21"
     kotlin("plugin.spring") version "2.2.21"
@@ -104,4 +107,16 @@ val assembleCliSchema by tasks.registering {
         )
         out.writeText(sorted.joinToString("\n\n") { it.readText() })
     }
+}
+
+tasks.named<GraphQLGenerateClientTask>("graphqlGenerateClient") {
+    dependsOn(assembleCliSchema)
+    packageName.set("com.agentwork.graphmesh.cli.generated")
+    schemaFile.set(layout.buildDirectory.file("generated/cli-schema/schema.graphqls"))
+    queryFiles.from(
+        fileTree("${projectDir}/src/main/kotlin/com/agentwork/graphmesh/cli/queries") {
+            include("*.graphql")
+        }
+    )
+    serializer.set(GraphQLSerializer.JACKSON)
 }
