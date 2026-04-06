@@ -29,8 +29,11 @@ function createMemoryStorage(): Storage {
   };
 }
 
-function ensureStorage(target: any, prop: "localStorage" | "sessionStorage") {
-  const existing = target[prop];
+function ensureStorage(
+  target: Record<string, unknown>,
+  prop: "localStorage" | "sessionStorage",
+) {
+  const existing = target[prop] as Partial<Storage> | undefined;
   if (!existing || typeof existing.setItem !== "function") {
     Object.defineProperty(target, prop, {
       configurable: true,
@@ -40,11 +43,11 @@ function ensureStorage(target: any, prop: "localStorage" | "sessionStorage") {
   }
 }
 
-ensureStorage(globalThis, "localStorage");
-ensureStorage(globalThis, "sessionStorage");
+ensureStorage(globalThis as unknown as Record<string, unknown>, "localStorage");
+ensureStorage(globalThis as unknown as Record<string, unknown>, "sessionStorage");
 if (typeof window !== "undefined") {
-  ensureStorage(window, "localStorage");
-  ensureStorage(window, "sessionStorage");
+  ensureStorage(window as unknown as Record<string, unknown>, "localStorage");
+  ensureStorage(window as unknown as Record<string, unknown>, "sessionStorage");
 }
 
 afterEach(() => {
