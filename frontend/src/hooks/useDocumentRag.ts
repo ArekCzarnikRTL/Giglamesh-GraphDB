@@ -10,7 +10,7 @@ interface DocumentRagQueryData {
 }
 
 export function useDocumentRag() {
-  const [run, { data, loading, error, reset }] =
+  const [run, { data, loading, error }] =
     useLazyQuery<DocumentRagQueryData>(DOCUMENT_RAG_QUERY, {
       fetchPolicy: "network-only",
     });
@@ -29,6 +29,5 @@ export function useDocumentRag() {
     data: data?.documentRag,
     loading,
     error,
-    reset,
   };
 }

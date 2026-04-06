@@ -57,6 +57,7 @@ export default function QueryPage() {
     setPendingCollection(null);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleHistorySelect = (_entry: HistoryEntry) => {
     setHistoryOpen(false);
   };

@@ -10,7 +10,7 @@ interface NlpQueryData {
 }
 
 export function useNlpQuery() {
-  const [run, { data, loading, error, reset }] = useLazyQuery<NlpQueryData>(
+  const [run, { data, loading, error }] = useLazyQuery<NlpQueryData>(
     NLP_QUERY,
     { fetchPolicy: "network-only" },
   );
@@ -29,6 +29,5 @@ export function useNlpQuery() {
     data: data?.nlpQuery,
     loading,
     error,
-    reset,
   };
 }

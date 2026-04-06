@@ -31,12 +31,14 @@ const errorMock = {
   error: new Error("backend down"),
 };
 
-function wrapper(mocks: any[]) {
-  return ({ children }: { children: ReactNode }) => (
+function wrapper(mocks: Parameters<typeof MockedProvider>[0]["mocks"]) {
+  const Wrapper = ({ children }: { children: ReactNode }) => (
     <MockedProvider mocks={mocks} addTypename={false}>
       {children}
     </MockedProvider>
   );
+  Wrapper.displayName = "MockWrapper";
+  return Wrapper;
 }
 
 describe("useGraphRag", () => {

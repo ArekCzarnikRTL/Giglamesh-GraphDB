@@ -158,16 +158,13 @@ export function QueryChat({ collectionId }: Props) {
     setMessages((prev) => [...prev, userMsg, assistantMsg]);
 
     if (mode === "graph-rag") {
-      graphRag.reset?.();
       graphRag.execute(question, collectionId);
     } else if (mode === "document-rag") {
-      documentRag.reset?.();
       documentRag.execute(question, collectionId);
     } else if (mode === "auto") {
-      nlpQuery.reset?.();
       nlpQuery.execute(question, collectionId);
     } else if (mode === "agent-stream") {
-      agentStream.reset?.();
+      agentStream.reset();
       agentStream.execute(question, collectionId);
     }
   }

@@ -10,7 +10,7 @@ interface GraphRagQueryData {
 }
 
 export function useGraphRag() {
-  const [run, { data, loading, error, reset }] =
+  const [run, { data, loading, error }] =
     useLazyQuery<GraphRagQueryData>(GRAPH_RAG_QUERY, {
       fetchPolicy: "network-only",
     });
@@ -29,6 +29,5 @@ export function useGraphRag() {
     data: data?.graphRag,
     loading,
     error,
-    reset,
   };
 }
