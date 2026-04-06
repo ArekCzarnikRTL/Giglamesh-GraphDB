@@ -12,6 +12,7 @@ import com.agentwork.graphmesh.cli.generated.enums.DocumentType
 import com.agentwork.graphmesh.cli.generated.getdocument.Document as GetDocumentResult
 import com.agentwork.graphmesh.cli.generated.getdocument.KeyValue as GetDocumentKeyValue
 import com.agentwork.graphmesh.cli.generated.listdocuments.Document as ListedDocument
+import com.agentwork.graphmesh.cli.generated.listdocuments.DocumentPage as ListedDocumentPage
 import com.agentwork.graphmesh.cli.generated.uploaddocument.Document as UploadedDocument
 import com.agentwork.graphmesh.cli.generated.uploaddocument.KeyValue as UploadKeyValue
 import com.github.ajalt.clikt.command.test
@@ -79,15 +80,19 @@ class DocumentCommandsTest {
         val fake = FakeGateway.builder()
             .on(ListDocuments::class) { _ ->
                 ListDocuments.Result(
-                    documents = listOf(
-                        ListedDocument(
-                            id = "doc-42",
-                            title = "MyReport",
-                            mimeType = "application/pdf",
-                            type = DocumentType.SOURCE,
-                            state = DocumentState.EXTRACTED,
-                            createdAt = "2026-01-01T00:00:00Z"
-                        )
+                    documents = ListedDocumentPage(
+                        items = listOf(
+                            ListedDocument(
+                                id = "doc-42",
+                                title = "MyReport",
+                                mimeType = "application/pdf",
+                                type = DocumentType.SOURCE,
+                                state = DocumentState.EXTRACTED,
+                                createdAt = "2026-01-01T00:00:00Z"
+                            )
+                        ),
+                        totalCount = 1,
+                        hasNextPage = false
                     )
                 )
             }

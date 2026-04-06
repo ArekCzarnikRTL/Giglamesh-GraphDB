@@ -9,7 +9,6 @@ import com.agentwork.graphmesh.cli.generated.inputs.UploadDocumentInput
 import com.agentwork.graphmesh.cli.generated.uploaddocument.KeyValue as UploadKeyValue
 import com.agentwork.graphmesh.cli.generated.getdocument.Document as GetDocumentDoc
 import com.agentwork.graphmesh.cli.generated.getdocument.KeyValue
-import com.agentwork.graphmesh.cli.generated.listdocuments.Document as ListDocumentDoc
 import com.agentwork.graphmesh.cli.output.DocumentInfoView
 import com.agentwork.graphmesh.cli.output.DocumentView
 import com.github.ajalt.clikt.core.subcommands
@@ -75,7 +74,7 @@ class DocumentList : BaseCommand("list") {
         val result = gateway().execute(
             ListDocuments(ListDocuments.Variables(collectionId = collectionId, type = docType))
         )
-        val items = result.documents.map { doc: ListDocumentDoc ->
+        val items = result.documents.items.map { doc ->
             DocumentView(
                 id = doc.id,
                 title = doc.title,

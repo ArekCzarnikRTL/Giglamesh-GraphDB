@@ -1,10 +1,14 @@
 query ListDocuments($collectionId: ID!, $type: DocumentType) {
-  documents(collectionId: $collectionId, type: $type) {
-    id
-    title
-    mimeType
-    type
-    state
-    createdAt
+  documents(collectionId: $collectionId, filter: { type: $type }) {
+    items {
+      id
+      title
+      mimeType
+      type
+      state
+      createdAt
+    }
+    totalCount
+    hasNextPage
   }
 }
