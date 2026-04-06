@@ -120,3 +120,71 @@ tasks.named<GraphQLGenerateClientTask>("graphqlGenerateClient") {
     )
     serializer.set(GraphQLSerializer.JACKSON)
 }
+
+tasks.register<JavaExec>("cliRun") {
+    group = "cli"
+    description = "Runs the GraphMesh CLI. Usage: ./gradlew cliRun --args=\"collection list\""
+    dependsOn(tasks.named("classes"))
+    mainClass.set("com.agentwork.graphmesh.cli.GraphMeshCliKt")
+    classpath = sourceSets["main"].runtimeClasspath
+    standardInput = System.`in`
+}
+
+tasks.register<Jar>("cliJar") {
+    group = "cli"
+    description = "Builds an executable fat-jar for the CLI."
+    dependsOn(tasks.named("classes"))
+    archiveBaseName.set("graphmesh-cli")
+    archiveClassifier.set("")
+    destinationDirectory.set(layout.buildDirectory.dir("libs"))
+    manifest {
+        attributes(
+            "Main-Class" to "com.agentwork.graphmesh.cli.GraphMeshCliKt",
+            "Implementation-Title" to "GraphMesh CLI",
+            "Implementation-Version" to project.version
+        )
+    }
+    from(sourceSets["main"].output)
+    val runtimeClasspath = configurations.runtimeClasspath.get()
+    from({ runtimeClasspath.filter { it.name.endsWith(".jar") }.map { zipTree(it) } }) {
+        exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "META-INF/INDEX.LIST", "module-info.class")
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.register<Copy>("cliInstall") {
+    group = "cli"
+    description = "Assembles a distributable CLI layout under build/cli with bin/ and lib/."
+    dependsOn(tasks.named("cliJar"))
+    val jarProvider = tasks.named<Jar>("cliJar").flatMap { it.archiveFile }
+    from(jarProvider) {
+        into("lib")
+    }
+    into(layout.buildDirectory.dir("cli"))
+    doLast {
+        val binDir = layout.buildDirectory.dir("cli/bin").get().asFile
+        binDir.mkdirs()
+        val shellScript = binDir.resolve("graphmesh")
+        shellScript.writeText(
+            """
+            #!/usr/bin/env bash
+            # GraphMesh CLI launcher
+            SCRIPT_DIR="${'$'}(cd "${'$'}(dirname "${'$'}{BASH_SOURCE[0]}")" && pwd)"
+            LIB_DIR="${'$'}SCRIPT_DIR/../lib"
+            exec java -jar "${'$'}LIB_DIR/graphmesh-cli.jar" "${'$'}@"
+            """.trimIndent() + "\n"
+        )
+        shellScript.setExecutable(true)
+
+        val batScript = binDir.resolve("graphmesh.bat")
+        batScript.writeText(
+            """
+            @echo off
+            rem GraphMesh CLI launcher (Windows)
+            set SCRIPT_DIR=%~dp0
+            set LIB_DIR=%SCRIPT_DIR%..\lib
+            java -jar "%LIB_DIR%\graphmesh-cli.jar" %*
+            """.trimIndent() + "\r\n"
+        )
+    }
+}
