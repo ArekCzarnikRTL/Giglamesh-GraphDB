@@ -1,0 +1,16 @@
+extend type Query {
+    configKeys(type: String): [ConfigEntry!]!
+    configValue(key: String!, type: String!): ConfigEntry
+}
+
+extend type Mutation {
+    setConfig(key: String!, value: String!, type: String!): ConfigEntry!
+}
+
+type ConfigEntry {
+    id: ID!
+    type: String!
+    key: String!
+    value: String!
+    version: Int!
+}
