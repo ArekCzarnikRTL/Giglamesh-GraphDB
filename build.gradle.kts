@@ -85,3 +85,23 @@ tasks.withType<Test> {
     useJUnitPlatform()
     jvmArgs("-Xmx2g")
 }
+
+val assembleCliSchema by tasks.registering {
+    group = "cli"
+    description = "Concatenates all graphql/*.graphqls files into a single SDL for CLI codegen."
+    val inputDir = layout.projectDirectory.dir("src/main/resources/graphql")
+    val outputFile = layout.buildDirectory.file("generated/cli-schema/schema.graphqls")
+    inputs.dir(inputDir)
+    outputs.file(outputFile)
+    doLast {
+        val out = outputFile.get().asFile
+        out.parentFile.mkdirs()
+        val files = inputDir.asFile.listFiles { f -> f.extension == "graphqls" }
+            ?: error("No .graphqls files found in ${inputDir.asFile}")
+        val sorted = files.sortedWith(
+            compareByDescending<java.io.File> { it.name == "schema.graphqls" }
+                .thenBy { it.name }
+        )
+        out.writeText(sorted.joinToString("\n\n") { it.readText() })
+    }
+}
