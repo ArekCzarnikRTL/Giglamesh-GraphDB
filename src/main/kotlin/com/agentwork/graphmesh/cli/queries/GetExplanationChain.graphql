@@ -1,0 +1,21 @@
+query GetExplanationChain($collectionId: ID!, $sessionUri: ID!) {
+  explanationChain(collectionId: $collectionId, sessionUri: $sessionUri) {
+    mechanism
+    question { uri queryText timestamp mechanism }
+    exploration { uri edgeCount }
+    focus {
+      uri
+      selectedEdges { subject predicate objectValue reasoning }
+    }
+    analyses {
+      uri
+      iterationIndex
+      thought
+      action
+      arguments { key value }
+      observation
+    }
+    synthesis { uri answerText }
+    conclusion { uri answerText }
+  }
+}

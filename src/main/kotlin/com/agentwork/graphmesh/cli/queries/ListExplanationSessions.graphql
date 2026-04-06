@@ -1,0 +1,8 @@
+query ListExplanationSessions($collectionId: ID!, $mechanism: QueryMechanism, $limit: Int) {
+  explanationSessions(collectionId: $collectionId, mechanism: $mechanism, limit: $limit) {
+    uri
+    queryText
+    timestamp
+    mechanism
+  }
+}

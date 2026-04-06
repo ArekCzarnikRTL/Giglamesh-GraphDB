@@ -1,0 +1,22 @@
+query GetDocumentHierarchy($collectionId: ID!, $documentId: ID!) {
+  documentHierarchy(collectionId: $collectionId, documentId: $documentId) {
+    id
+    title
+    type
+    children {
+      id
+      title
+      type
+      children {
+        id
+        title
+        type
+        children {
+          id
+          title
+          type
+        }
+      }
+    }
+  }
+}
