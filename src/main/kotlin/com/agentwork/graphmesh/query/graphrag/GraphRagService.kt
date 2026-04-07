@@ -1,5 +1,7 @@
 package com.agentwork.graphmesh.query.graphrag
 
+import com.agentwork.graphmesh.llm.resolveLlmModel
+
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -92,31 +94,66 @@ class GraphRagService(
     }
 
     private fun retrieveSubgraph(query: GraphRagQuery): List<StoredQuad> {
-        val embeddingModel = LLModel(LLMProvider.OpenAI, embeddingConfig.model)
+        val embeddingModel = resolveLlmModel(embeddingConfig.model)
 
         val embedding = runBlocking {
             embeddingProvider.embed(query.question, embeddingModel)
         }
         val queryVector = FloatArray(embedding.size) { embedding[it].toFloat() }
 
-        // Find similar chunks via vector search
+        // Vector hits → bare chunk ids from the embedding payload
         val searchResults = vectorStore.search(
             collection = query.collectionId,
             queryVector = queryVector,
             limit = 50
         )
 
-        // Extract entity IDs from search results
-        val entityIds = searchResults.mapNotNull { result ->
-            result.payload["chunk_id"]?.toString()
+        val chunkUrns = searchResults
+            .mapNotNull { it.payload["chunk_id"]?.toString() }
+            .map { "urn:chunk:$it" }
+            .distinct()
+
+        if (chunkUrns.isEmpty()) {
+            logger.debug("retrieveSubgraph: no chunk_ids in vector hits")
+            return emptyList()
         }
 
-        if (entityIds.isEmpty()) return emptyList()
+        // Phase 1: chunks → provenance subgraphs
+        val subgraphUris = quadStore.findSubgraphsForChunks(query.collectionId, chunkUrns)
+        if (subgraphUris.isEmpty()) {
+            logger.debug("retrieveSubgraph: no subgraphs for {} chunkUrns", chunkUrns.size)
+            return emptyList()
+        }
 
-        // Get subgraph edges for these entities
-        val edges = quadStore.findByEntities(query.collectionId, entityIds)
+        // Phase 2: subgraphs → unpacked quoted triples (the actual knowledge edges)
+        val quotedTriples = quadStore.findQuotedTriplesForSubgraphs(query.collectionId, subgraphUris)
 
-        return edges.take(query.maxEdges)
+        // Phase 3: 1-hop entity expansion
+        val entityUris = collectEntityUris(quotedTriples)
+        val expandedEdges = if (entityUris.isNotEmpty()) {
+            quadStore.findByEntities(query.collectionId, entityUris)
+        } else {
+            emptyList()
+        }
+
+        logger.debug(
+            "retrieveSubgraph: {} chunks → {} subgraphs → {} quoted triples → {} entities → {} expanded edges",
+            chunkUrns.size, subgraphUris.size, quotedTriples.size, entityUris.size, expandedEdges.size
+        )
+
+        return (quotedTriples + expandedEdges).distinct().take(query.maxEdges)
+    }
+
+    /**
+     * Pure helper: collects entity URIs (subjects/objects starting with the
+     * GraphMesh entity-URI prefix) from a list of unpacked quoted triples.
+     * `internal` so it can be unit-tested without constructing the full service.
+     */
+    internal fun collectEntityUris(quotedTriples: List<StoredQuad>): List<String> {
+        return quotedTriples
+            .flatMap { listOf(it.subject, it.objectValue) }
+            .filter { it.startsWith("http://graphmesh.io/entity/") }
+            .distinct()
     }
 
     private fun selectEdges(
@@ -149,7 +186,7 @@ class GraphRagService(
             """.trimIndent())
         }
 
-        val llmModel = LLModel(LLMProvider.OpenAI, llmModelName)
+        val llmModel = resolveLlmModel(llmModelName)
         val response = runBlocking {
             promptExecutor.execute(selectionPrompt, llmModel)
         }
@@ -197,7 +234,7 @@ class GraphRagService(
             user(question)
         }
 
-        val llmModel = LLModel(LLMProvider.OpenAI, llmModelName)
+        val llmModel = resolveLlmModel(llmModelName)
         val response = runBlocking {
             promptExecutor.execute(synthesisPrompt, llmModel)
         }
