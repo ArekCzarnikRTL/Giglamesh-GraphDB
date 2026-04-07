@@ -63,14 +63,4 @@ class GraphController(
     // GraphQL enum exposed as String.
     @SchemaMapping(typeName = "Quad", field = "objectType")
     fun quadObjectType(quad: StoredQuad): String = quad.objectType.name
-
-    // Map GraphMetadataView to GraphQL type GraphMetadata via field name.
-    @SchemaMapping(typeName = "GraphMetadata", field = "datasets")
-    fun gmDatasets(view: GraphMetadataView): List<String> = view.datasets
-
-    @SchemaMapping(typeName = "GraphMetadata", field = "predicates")
-    fun gmPredicates(view: GraphMetadataView): List<String> = view.predicates
-
-    @SchemaMapping(typeName = "GraphMetadata", field = "entityTypes")
-    fun gmEntityTypes(view: GraphMetadataView): List<String> = view.entityTypes
 }

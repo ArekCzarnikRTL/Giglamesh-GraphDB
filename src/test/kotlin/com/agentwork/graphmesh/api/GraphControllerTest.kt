@@ -3,6 +3,8 @@ package com.agentwork.graphmesh.api
 import com.agentwork.graphmesh.rdf.NamedGraph
 import com.agentwork.graphmesh.storage.InMemoryQuadStore
 import com.agentwork.graphmesh.storage.ObjectType
+import com.agentwork.graphmesh.storage.QuadQuery
+import com.agentwork.graphmesh.storage.QuadStore
 import com.agentwork.graphmesh.storage.RDF_TYPE_URI
 import com.agentwork.graphmesh.storage.StoredQuad
 import org.junit.jupiter.api.Test
@@ -39,9 +41,29 @@ class GraphControllerTest {
     }
 
     @Test fun `triples caps limit at 5000`() {
-        val (ctl, _) = seeded()
-        val result = ctl.triples("c1", null, null, null, null, limit = 100000)
-        assertTrue(result.size <= 5000)
+        var capturedLimit: Int? = null
+        val store = object : QuadStore by InMemoryQuadStore() {
+            override fun query(collection: String, query: QuadQuery, limit: Int?): List<StoredQuad> {
+                capturedLimit = limit
+                return emptyList()
+            }
+        }
+        val ctl = GraphController(store)
+        ctl.triples("c1", null, null, null, null, limit = 100000)
+        assertEquals(5000, capturedLimit)
+    }
+
+    @Test fun `triples uses default limit when null`() {
+        var capturedLimit: Int? = null
+        val store = object : QuadStore by InMemoryQuadStore() {
+            override fun query(collection: String, query: QuadQuery, limit: Int?): List<StoredQuad> {
+                capturedLimit = limit
+                return emptyList()
+            }
+        }
+        val ctl = GraphController(store)
+        ctl.triples("c1", null, null, null, null, limit = null)
+        assertEquals(500, capturedLimit)
     }
 
     @Test fun `entitySearch returns matching subjects`() {
