@@ -98,8 +98,10 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
           ctx.arc(node.x, node.y, node.size + 2, 0, 2 * Math.PI);
           ctx.fill();
         }}
-        onNodeClick={onNodeClick}
-        onNodeRightClick={onNodeRightClick}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onNodeClick={onNodeClick as (node: any, event: MouseEvent) => void}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onNodeRightClick={onNodeRightClick as (node: any, event: MouseEvent) => void}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         linkLabel={(l: any) => l.label}
         linkDirectionalArrowLength={4}

@@ -50,7 +50,7 @@ const neighborMock = {
   },
 };
 
-const wrapper = (mocks: any[]) => {
+const wrapper = (mocks: Parameters<typeof MockedProvider>[0]["mocks"]) => {
   const Wrapper = ({ children }: { children: ReactNode }) => (
     <MockedProvider mocks={mocks} addTypename={false}>{children}</MockedProvider>
   );
