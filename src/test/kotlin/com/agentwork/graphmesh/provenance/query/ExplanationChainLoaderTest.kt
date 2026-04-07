@@ -2,6 +2,7 @@ package com.agentwork.graphmesh.provenance.query
 
 import com.agentwork.graphmesh.rdf.NamedGraph
 import com.agentwork.graphmesh.rdf.QuadConverter
+import com.agentwork.graphmesh.storage.GraphMetadataView
 import com.agentwork.graphmesh.storage.QuadQuery
 import com.agentwork.graphmesh.storage.QuadStore
 import com.agentwork.graphmesh.storage.StoredQuad
@@ -25,13 +26,18 @@ private class InMemoryQuadStore : QuadStore {
         store[collection]?.remove(quad)
     }
     override fun deleteCollection(collection: String) { store.remove(collection) }
-    override fun query(collection: String, query: QuadQuery): List<StoredQuad> =
-        (store[collection] ?: emptyList()).filter {
+    override fun query(collection: String, query: QuadQuery, limit: Int?): List<StoredQuad> {
+        val filtered = (store[collection] ?: emptyList()).filter {
             (query.subject == null || it.subject == query.subject) &&
             (query.predicate == null || it.predicate == query.predicate) &&
             (query.objectValue == null || it.objectValue == query.objectValue) &&
             (query.dataset == null || it.dataset == query.dataset)
         }
+        return if (limit != null) filtered.take(limit) else filtered
+    }
+    override fun findSubjects(collection: String, substringMatch: String, limit: Int): List<String> = emptyList()
+    override fun aggregateMetadata(collection: String): GraphMetadataView =
+        GraphMetadataView(emptyList(), emptyList(), emptyList())
 }
 
 class ExplanationChainLoaderTest {

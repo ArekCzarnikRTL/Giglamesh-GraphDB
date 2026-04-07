@@ -8,7 +8,21 @@ interface QuadStore {
     fun insertBatch(collection: String, quads: List<StoredQuad>)
     fun delete(collection: String, quad: StoredQuad)
     fun deleteCollection(collection: String)
-    fun query(collection: String, query: QuadQuery): List<StoredQuad>
+    fun query(collection: String, query: QuadQuery, limit: Int? = null): List<StoredQuad>
+
+    /**
+     * Returns up to [limit] distinct subject URIs from [collection] whose
+     * URI string contains [substringMatch] (case-insensitive). Result order
+     * is implementation-defined; callers should not rely on it.
+     */
+    fun findSubjects(collection: String, substringMatch: String, limit: Int): List<String>
+
+    /**
+     * Returns distinct datasets, predicates, and entity types
+     * (objects of `rdf:type` triples) for [collection]. Each list is
+     * alphabetically sorted and capped at 200 entries.
+     */
+    fun aggregateMetadata(collection: String): GraphMetadataView
 
     fun findByEntities(collection: String, entityIds: List<String>): List<StoredQuad> {
         return entityIds.flatMap { id ->

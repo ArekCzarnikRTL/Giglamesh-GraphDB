@@ -3,6 +3,7 @@ package com.agentwork.graphmesh.messaging
 import com.agentwork.graphmesh.provenance.query.ExplainabilityNamespaces
 import com.agentwork.graphmesh.provenance.query.ExplainabilityRecorder
 import com.agentwork.graphmesh.rdf.NamedGraph
+import com.agentwork.graphmesh.storage.GraphMetadataView
 import com.agentwork.graphmesh.storage.QuadQuery
 import com.agentwork.graphmesh.storage.QuadStore
 import com.agentwork.graphmesh.storage.StoredQuad
@@ -23,7 +24,10 @@ private class CapturingQuadStore : QuadStore {
     }
     override fun delete(collection: String, quad: StoredQuad) {}
     override fun deleteCollection(collection: String) {}
-    override fun query(collection: String, query: QuadQuery): List<StoredQuad> = emptyList()
+    override fun query(collection: String, query: QuadQuery, limit: Int?): List<StoredQuad> = emptyList()
+    override fun findSubjects(collection: String, substringMatch: String, limit: Int): List<String> = emptyList()
+    override fun aggregateMetadata(collection: String): GraphMetadataView =
+        GraphMetadataView(emptyList(), emptyList(), emptyList())
 }
 
 class ExplainabilityEventConsumerTest {

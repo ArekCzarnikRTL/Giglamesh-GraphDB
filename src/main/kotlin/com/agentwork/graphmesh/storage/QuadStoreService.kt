@@ -150,7 +150,7 @@ class CassandraQuadStore(
         batch.addStatement(deleteCollectionRow.bind(collection, d, s, p, o, otype, dtype, lang))
     }
 
-    override fun query(collection: String, query: QuadQuery): List<StoredQuad> {
+    override fun query(collection: String, query: QuadQuery, limit: Int?): List<StoredQuad> {
         val s = query.subject
         val p = query.predicate
         val o = query.objectValue
@@ -179,7 +179,7 @@ class CassandraQuadStore(
         }
 
         val rows = session.execute(bound)
-        return rows.mapNotNull { row ->
+        val result = rows.mapNotNull { row ->
             val quad = StoredQuad(
                 subject = row.getString("s")!!,
                 predicate = row.getString("p")!!,
@@ -192,6 +192,35 @@ class CassandraQuadStore(
             // In-memory filter for fields not covered by CQL WHERE clause
             if (matchesFilter(quad, s, p, o, d)) quad else null
         }
+        return if (limit != null) result.take(limit) else result
+    }
+
+    override fun findSubjects(collection: String, substringMatch: String, limit: Int): List<String> {
+        // MVP: full scan via query(QuadQuery()), then in-memory filter+distinct.
+        // TODO: replace with CQL prefix index or materialized view when needed.
+        val needle = substringMatch.lowercase()
+        return query(collection, QuadQuery(), limit = null)
+            .asSequence()
+            .map { it.subject }
+            .filter { it.lowercase().contains(needle) }
+            .distinct()
+            .take(limit)
+            .toList()
+    }
+
+    override fun aggregateMetadata(collection: String): GraphMetadataView {
+        val all = query(collection, QuadQuery(), limit = null)
+        val datasets = all.map { it.dataset }.distinct().sorted().take(200)
+        val predicates = all.map { it.predicate }.distinct().sorted().take(200)
+        val rdfType = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+        val entityTypes = all.asSequence()
+            .filter { it.predicate == rdfType }
+            .map { it.objectValue }
+            .distinct()
+            .sorted()
+            .take(200)
+            .toList()
+        return GraphMetadataView(datasets, predicates, entityTypes)
     }
 
     private fun resolvePattern(s: String?, p: String?, o: String?, d: String?): Int {
