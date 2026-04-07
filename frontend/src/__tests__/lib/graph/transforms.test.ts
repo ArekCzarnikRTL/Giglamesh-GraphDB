@@ -65,6 +65,14 @@ describe("quadsToGraphData", () => {
     ]);
     expect(data.nodes.find((n) => n.id === "lit")?.type).toBe("LITERAL");
   });
+
+  it("deduplicates identical quads within a single call", () => {
+    const data = quadsToGraphData([
+      q({ subject: "a", object: "b" }),
+      q({ subject: "a", object: "b" }),
+    ]);
+    expect(data.links).toHaveLength(1);
+  });
 });
 
 describe("quadToEdgeId", () => {

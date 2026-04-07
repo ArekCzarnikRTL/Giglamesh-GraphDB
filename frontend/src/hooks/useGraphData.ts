@@ -76,8 +76,19 @@ function filterByEntityTypes(
     quads.filter((q) => q.predicate === RDF_TYPE && types.has(q.object)).map((q) => q.subject)
   );
   if (allowedSubjects.size === 0) return data;
-  const nodes = data.nodes.filter((n) => allowedSubjects.has(n.id) || !n.isSubject);
-  const ids = new Set(nodes.map((n) => n.id));
-  const links = data.links.filter((l) => ids.has(l.source) && ids.has(l.target));
+
+  const resolveId = (ref: string | { id: string }): string =>
+    typeof ref === "string" ? ref : ref.id;
+  const links = data.links.filter((l) =>
+    allowedSubjects.has(resolveId(l.source as string | { id: string }))
+  );
+  const liveNodeIds = new Set<string>();
+  links.forEach((l) => {
+    liveNodeIds.add(resolveId(l.source as string | { id: string }));
+    liveNodeIds.add(resolveId(l.target as string | { id: string }));
+  });
+  // also keep allowed subjects even if they have no surviving edges (so the user sees them)
+  allowedSubjects.forEach((s) => liveNodeIds.add(s));
+  const nodes = data.nodes.filter((n) => liveNodeIds.has(n.id));
   return { nodes, links };
 }

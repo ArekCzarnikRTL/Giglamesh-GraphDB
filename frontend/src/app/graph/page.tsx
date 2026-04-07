@@ -44,19 +44,21 @@ function GraphPageInner() {
   });
 
   useEffect(() => {
-    if (collectionId) {
-      void loadInitial(filter);
-    }
-  }, [collectionId, filter, loadInitial]);
-
-  useEffect(() => {
-    if (collectionId && initialEntity && graphData.nodes.length > 0) {
-      void expandNode(initialEntity).then(() => {
+    if (!collectionId) return;
+    let cancelled = false;
+    void (async () => {
+      await loadInitial(filter);
+      if (cancelled) return;
+      if (initialEntity) {
+        await expandNode(initialEntity);
+        if (cancelled) return;
         canvasRef.current?.centerOnNode(initialEntity);
-      });
-    }
+      }
+    })();
+    return () => { cancelled = true; };
+    // initialEntity is intentionally read fresh per filter change; this effect runs whenever filter changes too.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [collectionId, initialEntity]);
+  }, [collectionId, filter, loadInitial, expandNode, initialEntity]);
 
   return (
     <main className="h-screen flex flex-col">

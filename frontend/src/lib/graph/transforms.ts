@@ -20,6 +20,7 @@ export function quadToEdgeId(quad: QuadDto): string {
 export function quadsToGraphData(quads: QuadDto[]): GraphData {
   const nodes = new Map<string, GraphNode>();
   const links: GraphEdge[] = [];
+  const seenLinkIds = new Set<string>();
 
   for (const quad of quads) {
     if (!nodes.has(quad.subject)) {
@@ -48,14 +49,18 @@ export function quadsToGraphData(quads: QuadDto[]): GraphData {
       });
     }
 
-    links.push({
-      id: quadToEdgeId(quad),
-      source: quad.subject,
-      target: quad.object,
-      predicate: quad.predicate,
-      dataset: quad.dataset,
-      label: extractLabel(quad.predicate),
-    });
+    const linkId = quadToEdgeId(quad);
+    if (!seenLinkIds.has(linkId)) {
+      seenLinkIds.add(linkId);
+      links.push({
+        id: linkId,
+        source: quad.subject,
+        target: quad.object,
+        predicate: quad.predicate,
+        dataset: quad.dataset,
+        label: extractLabel(quad.predicate),
+      });
+    }
   }
 
   return { nodes: Array.from(nodes.values()), links };
