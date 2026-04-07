@@ -18,6 +18,7 @@ type Query {
         predicate: String
         object: String
         dataset: String
+        limit: Int = 500
     ): [Quad!]!
 
     vectorSearch(
@@ -25,6 +26,14 @@ type Query {
         query: String!
         limit: Int = 10
     ): [SearchResult!]!
+
+    entitySearch(
+        collectionId: ID!
+        prefix: String!
+        limit: Int = 20
+    ): [String!]!
+
+    graphMetadata(collectionId: ID!): GraphMetadata!
 }
 
 type Mutation {
@@ -131,4 +140,10 @@ type DocumentPage {
     items: [Document!]!
     totalCount: Int!
     hasNextPage: Boolean!
+}
+
+type GraphMetadata {
+    datasets: [String!]!
+    predicates: [String!]!
+    entityTypes: [String!]!
 }
