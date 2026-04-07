@@ -4,8 +4,59 @@ import com.agentwork.graphmesh.storage.ObjectType
 import com.agentwork.graphmesh.storage.StoredQuad
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class QuadConverterTest {
+
+    @Test
+    fun `unpackQuotedTriple returns inner triple as StoredQuad`() {
+        val outer = StoredQuad(
+            subject = "urn:graphmesh:subgraph:abc",
+            predicate = "http://graphmesh.io/ontology/contains",
+            objectValue = "<<http://graphmesh.io/entity/aaa|http://example.org/label|GraphMesh>>",
+            dataset = "urn:graph:source",
+            objectType = ObjectType.QUOTED_TRIPLE
+        )
+
+        val inner = QuadConverter.unpackQuotedTriple(outer)
+
+        assertEquals(
+            StoredQuad(
+                subject = "http://graphmesh.io/entity/aaa",
+                predicate = "http://example.org/label",
+                objectValue = "GraphMesh",
+                dataset = "",
+                objectType = ObjectType.URI
+            ),
+            inner
+        )
+    }
+
+    @Test
+    fun `unpackQuotedTriple returns null when row is not a quoted triple`() {
+        val outer = StoredQuad(
+            subject = "urn:graphmesh:subgraph:abc",
+            predicate = "http://www.w3.org/ns/prov#wasDerivedFrom",
+            objectValue = "urn:chunk:doc-1/p1/c1",
+            dataset = "urn:graph:source",
+            objectType = ObjectType.URI
+        )
+
+        assertNull(QuadConverter.unpackQuotedTriple(outer))
+    }
+
+    @Test
+    fun `unpackQuotedTriple returns null on malformed payload`() {
+        val outer = StoredQuad(
+            subject = "urn:graphmesh:subgraph:abc",
+            predicate = "http://graphmesh.io/ontology/contains",
+            objectValue = "not a quoted triple",
+            dataset = "urn:graph:source",
+            objectType = ObjectType.QUOTED_TRIPLE
+        )
+
+        assertNull(QuadConverter.unpackQuotedTriple(outer))
+    }
 
     @Test
     fun `converts URI quad to StoredQuad`() {

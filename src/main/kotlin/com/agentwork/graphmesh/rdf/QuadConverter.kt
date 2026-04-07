@@ -43,6 +43,31 @@ object QuadConverter {
             "<<${serializeTerm(term.triple.subject)}|${term.triple.predicate.value}|${serializeTerm(term.triple.objectTerm)}>>"
     }
 
+    /**
+     * Unpacks a `tg:contains <<s|p|o>>` row produced by `ProvenanceService` back
+     * into the inner knowledge triple. Returns `null` if [stored] is not a
+     * QUOTED_TRIPLE row, or if the payload cannot be parsed.
+     *
+     * The returned [StoredQuad] uses the empty default-graph dataset because
+     * the inner triple's original dataset is not preserved by the
+     * `<<s|p|o>>` serialization.
+     */
+    fun unpackQuotedTriple(stored: StoredQuad): StoredQuad? {
+        if (stored.objectType != ObjectType.QUOTED_TRIPLE) return null
+        val v = stored.objectValue
+        if (!v.startsWith("<<") || !v.endsWith(">>")) return null
+        val inner = v.removePrefix("<<").removeSuffix(">>")
+        val parts = inner.split("|", limit = 3)
+        if (parts.size != 3) return null
+        return StoredQuad(
+            subject = parts[0],
+            predicate = parts[1],
+            objectValue = parts[2],
+            dataset = "",
+            objectType = ObjectType.URI
+        )
+    }
+
     private fun deserializeQuotedTriple(value: String): RdfTerm.QuotedTriple {
         val inner = value.removePrefix("<<").removeSuffix(">>")
         val parts = inner.split("|", limit = 3)
