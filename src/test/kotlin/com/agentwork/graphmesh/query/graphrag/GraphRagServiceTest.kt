@@ -90,6 +90,75 @@ class GraphRagServiceTest {
         assertTrue(selected[0].relevanceScore > selected[1].relevanceScore)
     }
 
+    @Test
+    fun `collectEntityUris extracts entity URIs from both subject and object positions`() {
+        val triples = listOf(
+            StoredQuad(
+                subject = "http://graphmesh.io/entity/aaa",
+                predicate = "http://example.org/label",
+                objectValue = "GraphMesh",
+                dataset = ""
+            ),
+            StoredQuad(
+                subject = "http://graphmesh.io/entity/bbb",
+                predicate = "http://example.org/relatedTo",
+                objectValue = "http://graphmesh.io/entity/aaa",
+                dataset = ""
+            )
+        )
+
+        val result = collectEntityUrisCopy(triples)
+
+        assertEquals(
+            setOf("http://graphmesh.io/entity/aaa", "http://graphmesh.io/entity/bbb"),
+            result.toSet()
+        )
+    }
+
+    @Test
+    fun `collectEntityUris filters out non-entity URIs and literals`() {
+        val triples = listOf(
+            StoredQuad(
+                subject = "urn:graphmesh:subgraph:abc",
+                predicate = "http://www.w3.org/ns/prov#wasDerivedFrom",
+                objectValue = "urn:chunk:doc-1/p1/c1",
+                dataset = ""
+            )
+        )
+
+        assertTrue(collectEntityUrisCopy(triples).isEmpty())
+    }
+
+    @Test
+    fun `collectEntityUris deduplicates`() {
+        val triples = listOf(
+            StoredQuad(
+                subject = "http://graphmesh.io/entity/aaa",
+                predicate = "p",
+                objectValue = "http://graphmesh.io/entity/bbb",
+                dataset = ""
+            ),
+            StoredQuad(
+                subject = "http://graphmesh.io/entity/aaa",
+                predicate = "q",
+                objectValue = "http://graphmesh.io/entity/bbb",
+                dataset = ""
+            )
+        )
+
+        val result = collectEntityUrisCopy(triples)
+        assertEquals(2, result.size)
+    }
+
+    // Standalone copy of GraphRagService.collectEntityUris for testing without
+    // having to construct the full service (which needs LLM/vector collaborators).
+    private fun collectEntityUrisCopy(quotedTriples: List<StoredQuad>): List<String> {
+        return quotedTriples
+            .flatMap { listOf(it.subject, it.objectValue) }
+            .filter { it.startsWith("http://graphmesh.io/entity/") }
+            .distinct()
+    }
+
     // Standalone copy of parsing logic for testing
     private fun parseEdgeSelection(llmResponse: String, edges: List<StoredQuad>): List<SelectedEdge> {
         return llmResponse.lines()
