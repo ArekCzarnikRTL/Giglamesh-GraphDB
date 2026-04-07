@@ -8,7 +8,6 @@ import kotlin.test.assertTrue
 class QuadStoreLimitTest {
 
     private val collection = "c1"
-    private val rdfType = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
     private fun store(): InMemoryQuadStore {
         val s = InMemoryQuadStore()
@@ -23,14 +22,14 @@ class QuadStoreLimitTest {
         }
         s.insert(collection, StoredQuad(
             subject = "http://ex.org/e1",
-            predicate = rdfType,
+            predicate = RDF_TYPE_URI,
             objectValue = "http://ex.org/Person",
             dataset = NamedGraph.SOURCE,
             objectType = ObjectType.URI
         ))
         s.insert(collection, StoredQuad(
             subject = "http://ex.org/e2",
-            predicate = rdfType,
+            predicate = RDF_TYPE_URI,
             objectValue = "http://ex.org/Org",
             dataset = NamedGraph.SOURCE,
             objectType = ObjectType.URI
@@ -72,7 +71,7 @@ class QuadStoreLimitTest {
         val meta = s.aggregateMetadata(collection)
         assertEquals(listOf(NamedGraph.SOURCE), meta.datasets)
         assertTrue("http://ex.org/p" in meta.predicates)
-        assertTrue(rdfType in meta.predicates)
+        assertTrue(RDF_TYPE_URI in meta.predicates)
         assertEquals(listOf("http://ex.org/Org", "http://ex.org/Person"), meta.entityTypes)
     }
 }

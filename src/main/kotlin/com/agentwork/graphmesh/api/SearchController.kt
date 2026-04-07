@@ -1,5 +1,7 @@
 package com.agentwork.graphmesh.api
 
+import com.agentwork.graphmesh.llm.resolveLlmModel
+
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -25,7 +27,7 @@ class SearchController(
         @Argument query: String,
         @Argument limit: Int?
     ): List<Map<String, Any?>> {
-        val model = LLModel(LLMProvider.OpenAI, embeddingConfig.model)
+        val model = resolveLlmModel(embeddingConfig.model)
 
         val embedding = runBlocking {
             embeddingProvider.embed(query, model)

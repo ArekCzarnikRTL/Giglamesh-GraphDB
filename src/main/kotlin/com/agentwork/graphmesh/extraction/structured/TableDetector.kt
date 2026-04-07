@@ -1,5 +1,7 @@
 package com.agentwork.graphmesh.extraction.structured
 
+import com.agentwork.graphmesh.llm.resolveLlmModel
+
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
@@ -48,7 +50,7 @@ class TableDetector(
 
         return try {
             val llmResponse = runBlocking {
-                promptExecutor.execute(detectionPrompt, LLModel(LLMProvider.OpenAI, modelName))
+                promptExecutor.execute(detectionPrompt, resolveLlmModel(modelName))
             }
             val responseText = llmResponse.first().content
             parseDetectionResult(responseText)

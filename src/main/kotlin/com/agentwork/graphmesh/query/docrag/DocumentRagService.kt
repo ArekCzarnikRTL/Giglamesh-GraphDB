@@ -1,5 +1,7 @@
 package com.agentwork.graphmesh.query.docrag
 
+import com.agentwork.graphmesh.llm.resolveLlmModel
+
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -86,7 +88,7 @@ class DocumentRagService(
     }
 
     private fun retrieveChunks(query: DocumentRagQuery): List<RetrievedChunk> {
-        val embeddingModel = LLModel(LLMProvider.OpenAI, embeddingConfig.model)
+        val embeddingModel = resolveLlmModel(embeddingConfig.model)
 
         val embedding = runBlocking {
             embeddingProvider.embed(query.question, embeddingModel)
@@ -137,7 +139,7 @@ class DocumentRagService(
             user(question)
         }
 
-        val llmModel = LLModel(LLMProvider.OpenAI, llmModelName)
+        val llmModel = resolveLlmModel(llmModelName)
         val response = runBlocking {
             promptExecutor.execute(synthesisPrompt, llmModel)
         }

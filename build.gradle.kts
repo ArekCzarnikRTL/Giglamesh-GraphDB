@@ -22,6 +22,10 @@ java {
     }
 }
 
+springBoot {
+    mainClass.set("com.agentwork.graphmesh.GraphMeshApplicationKt")
+}
+
 repositories {
     mavenCentral()
     maven("https://packages.confluent.io/maven/")

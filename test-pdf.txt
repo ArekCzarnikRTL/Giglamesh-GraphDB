@@ -1,0 +1,31 @@
+GraphMesh - Enterprise Knowledge Graph Platform
+
+Ueberblick
+
+GraphMesh ist eine Enterprise Wissensgraph-Plattform. GraphMesh ist eine Integrationsplattform fuer Unternehmensdaten. Die Acme Corp baut GraphMesh als zentrale Integrationsplattform fuer ihre Kunden. GraphMesh wurde von der Acme Corp entwickelt und wird von der Acme Corp betrieben.
+
+Funktionen
+
+GraphMesh extrahiert Entitaeten aus Dokumenten. GraphMesh extrahiert Beziehungen zwischen Entitaeten. GraphMesh extrahiert RDF-Triples aus Texten. GraphMesh extrahiert strukturierte Daten aus PDF-Dokumenten. GraphMesh nutzt Large Language Models fuer die Wissensextraktion.
+
+Die Plattform verwendet Apache Cassandra zur Speicherung von Triples. GraphMesh verwendet Qdrant fuer Vektor-Embeddings. GraphMesh verwendet Apache Kafka fuer Event-Streaming. GraphMesh verwendet MinIO fuer Blob-Storage.
+
+Abfragen
+
+Der Wissensgraph unterstuetzt semantische Suche. Der Wissensgraph ermoeglicht Graph-RAG-Abfragen. Der Wissensgraph unterstuetzt natuerlichsprachliche Abfragen. Benutzer koennen Fragen in natuerlicher Sprache stellen.
+
+Architektur
+
+GraphMesh basiert auf Spring Boot. GraphMesh ist in Kotlin implementiert. Die Plattform nutzt Spring Modulith fuer die Modularisierung. GraphMesh verwendet GraphQL als API-Schicht.
+
+Personen
+
+Alice Mueller leitet das GraphMesh-Projekt. Bob Schmidt entwickelt die Extraktions-Pipeline. Carol Weber verantwortet die Frontend-Entwicklung bei der Acme Corp. Dave Fischer betreut den Betrieb der Plattform.
+
+Kunden
+
+Die Beispiel GmbH nutzt GraphMesh zur Dokumentenanalyse. Die Muster AG setzt GraphMesh fuer Compliance-Pruefungen ein. Die Test KG verwendet GraphMesh im Forschungsbereich.
+
+Definitionen
+
+Ein Wissensgraph ist eine Datenstruktur zur Repraesentation von Wissen in Form von Entitaeten und deren Beziehungen. Eine Integrationsplattform ist ein System zur Verknuepfung verschiedener Datenquellen. RDF steht fuer Resource Description Framework und ist ein Standard zur Beschreibung von Ressourcen im Web. Ein Triple besteht aus Subjekt, Praedikat und Objekt.

@@ -1,5 +1,7 @@
 package com.agentwork.graphmesh.extraction.structured
 
+import com.agentwork.graphmesh.llm.resolveLlmModel
+
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
@@ -114,7 +116,7 @@ class StructuredDataExtractorService(
         }
 
         val llmResponse = runBlocking {
-            promptExecutor.execute(extractionPrompt, LLModel(LLMProvider.OpenAI, modelName))
+            promptExecutor.execute(extractionPrompt, resolveLlmModel(modelName))
         }
         val responseText = llmResponse.first().content
         return parseRows(responseText, schema.name, collectionId, chunkId)

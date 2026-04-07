@@ -44,7 +44,7 @@ class CassandraDocumentStore(
         """.trimIndent())
 
         insertByParent = session.prepare("""
-            INSERT INTO $keyspace.documents_by_parent (parent_id, $cols) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO $keyspace.documents_by_parent ($cols) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent())
 
         selectById = session.prepare("SELECT $cols FROM $keyspace.documents WHERE id = ?")
@@ -84,7 +84,7 @@ class CassandraDocumentStore(
         session.execute(insertDoc.bind(*params))
         session.execute(insertByCollection.bind(*params))
         if (document.parentId != null) {
-            session.execute(insertByParent.bind(document.parentId, *params))
+            session.execute(insertByParent.bind(*params))
         }
         logger.debug("Saved document: id={}, type={}, collection={}", document.id, document.type, document.collectionId)
     }

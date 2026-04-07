@@ -1,7 +1,5 @@
 package com.agentwork.graphmesh.storage
 
-private const val RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-
 /**
  * In-memory test fake for [QuadStore]. Stores quads in a per-collection list
  * and answers [query] by linear scan, matching the same semantics
@@ -56,7 +54,7 @@ class InMemoryQuadStore : QuadStore {
         val datasets = rows.map { it.dataset }.distinct().sorted().take(200)
         val predicates = rows.map { it.predicate }.distinct().sorted().take(200)
         val entityTypes = rows.asSequence()
-            .filter { it.predicate == RDF_TYPE }
+            .filter { it.predicate == RDF_TYPE_URI }
             .map { it.objectValue }
             .distinct()
             .sorted()

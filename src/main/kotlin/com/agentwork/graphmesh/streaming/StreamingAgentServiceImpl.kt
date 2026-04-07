@@ -1,5 +1,7 @@
 package com.agentwork.graphmesh.streaming
 
+import com.agentwork.graphmesh.llm.resolveLlmModel
+
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
@@ -48,7 +50,7 @@ Wenn du genug Informationen hast, antworte direkt mit der finalen Antwort."""
     ): Flow<StreamToken> = flow {
         val allowedToolNames = toolGroupRegistry.resolveToolNames(allowedGroups)
         val tools = buildTools(collectionId, allowedToolNames)
-        val model = LLModel(LLMProvider.OpenAI, modelName)
+        val model = resolveLlmModel(modelName)
         val conversationHistory = mutableListOf<Pair<String, String>>() // role -> content
 
         for (iteration in 1..config.maxIterations) {

@@ -43,7 +43,10 @@ class ConfigSchemaInitializer(
                 id          text,
                 value       text,
                 version     int,
+                created_at  timestamp,
                 updated_at  timestamp,
+                created_by  text,
+                description text,
                 PRIMARY KEY (type, key)
             )
         """.trimIndent())

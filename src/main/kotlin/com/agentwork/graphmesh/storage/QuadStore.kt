@@ -3,6 +3,8 @@ package com.agentwork.graphmesh.storage
 import com.agentwork.graphmesh.provenance.ProvenanceNamespaces
 import com.agentwork.graphmesh.rdf.QuadConverter
 
+const val RDF_TYPE_URI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+
 interface QuadStore {
     fun insert(collection: String, quad: StoredQuad)
     fun insertBatch(collection: String, quads: List<StoredQuad>)

@@ -1,5 +1,7 @@
 package com.agentwork.graphmesh.extraction.ontology
 
+import com.agentwork.graphmesh.llm.resolveLlmModel
+
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
@@ -75,7 +77,7 @@ class OntologyGuidedExtractorService(
             user(chunkText)
         }
         val classificationResponse = runBlocking {
-            promptExecutor.execute(classificationPrompt, LLModel(LLMProvider.OpenAI, modelName))
+            promptExecutor.execute(classificationPrompt, resolveLlmModel(modelName))
         }
         val entities = parseEntities(classificationResponse.first().content)
             .filter { filter.validateEntity(it.entityType) }
@@ -87,7 +89,7 @@ class OntologyGuidedExtractorService(
             user("Bekannte Entitaeten:\n$entityContext\n\nText:\n$chunkText")
         }
         val relationshipResponse = runBlocking {
-            promptExecutor.execute(relationshipPrompt, LLModel(LLMProvider.OpenAI, modelName))
+            promptExecutor.execute(relationshipPrompt, resolveLlmModel(modelName))
         }
         val extractionItems = parseExtractionItems(relationshipResponse.first().content)
 

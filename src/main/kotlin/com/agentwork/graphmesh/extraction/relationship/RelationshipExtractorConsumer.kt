@@ -1,5 +1,6 @@
 package com.agentwork.graphmesh.extraction.relationship
 
+import com.agentwork.graphmesh.librarian.DocumentNotFoundException
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
@@ -27,6 +28,8 @@ class RelationshipExtractorConsumer(
                 "Relationship extraction complete: chunkId={}, triples={}, entities={}",
                 chunkId, result.triplesExtracted, result.entitiesFound
             )
+        } catch (e: DocumentNotFoundException) {
+            logger.info("Skip relationship extraction for chunk {}: deleted before processing", chunkId)
         } catch (e: Exception) {
             logger.error("Relationship extraction failed for chunk {}", chunkId, e)
         }

@@ -1,3 +1,10 @@
+logging:
+  file:
+    name: logs/graphmesh.log
+  level:
+    com.agentwork.graphmesh: DEBUG
+    ai.koog: DEBUG
+
 spring:
   application:
     name: GraphMesh
@@ -15,6 +22,10 @@ spring:
   autoconfigure:
     exclude:
       - org.springframework.ai.vectorstore.qdrant.autoconfigure.QdrantVectorStoreAutoConfiguration
+      # Sowohl MultiLLM- als auch Ollama-AutoConfig registrieren einen PromptExecutor-Bean.
+      # Ollama liefert zusaetzlich den LLMEmbeddingProvider, deshalb behalten wir Ollama
+      # und schliessen den Multi-LLM-Executor aus.
+      - ai.koog.spring.prompt.executor.MultiLLMAutoConfiguration
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
@@ -37,10 +48,10 @@ spring:
 ai:
   koog:
     openai:
-      enabled: ${OPENAI_API_KEY:false}
+      enabled: ${OPENAI_ENABLED:false}
       api-key: ${OPENAI_API_KEY:}
     anthropic:
-      enabled: ${ANTHROPIC_API_KEY:false}
+      enabled: ${ANTHROPIC_ENABLED:false}
       api-key: ${ANTHROPIC_API_KEY:}
     ollama:
       enabled: true
@@ -72,6 +83,6 @@ graphmesh:
     chunk-size: 2000
     overlap-size: 200
   extraction:
-    model: ${LLM_EXTRACTION_MODEL:gpt-4o}
+    model: ${LLM_EXTRACTION_MODEL:llama3.2}
   embedding:
-    model: ${EMBEDDING_MODEL:text-embedding-3-small}
+    model: ${EMBEDDING_MODEL:nomic-embed-text}

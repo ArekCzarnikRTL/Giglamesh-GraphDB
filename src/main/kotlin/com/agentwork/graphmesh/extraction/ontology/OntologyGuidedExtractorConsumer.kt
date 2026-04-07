@@ -1,5 +1,6 @@
 package com.agentwork.graphmesh.extraction.ontology
 
+import com.agentwork.graphmesh.librarian.DocumentNotFoundException
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
@@ -28,6 +29,8 @@ class OntologyGuidedExtractorConsumer(
                 chunkId, result.mode, result.entitiesExtracted, result.relationshipsExtracted,
                 result.attributesExtracted, result.validationFailures
             )
+        } catch (e: DocumentNotFoundException) {
+            logger.info("Skip ontology extraction for chunk {}: deleted before processing", chunkId)
         } catch (e: Exception) {
             logger.error("Ontology extraction failed for chunk {}", chunkId, e)
         }

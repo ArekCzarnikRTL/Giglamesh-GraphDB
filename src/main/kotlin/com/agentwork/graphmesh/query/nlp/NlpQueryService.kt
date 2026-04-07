@@ -1,5 +1,7 @@
 package com.agentwork.graphmesh.query.nlp
 
+import com.agentwork.graphmesh.llm.resolveLlmModel
+
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
@@ -90,7 +92,7 @@ class NlpQueryService(
             user(question)
         }
 
-        val llmModel = LLModel(LLMProvider.OpenAI, llmModelName)
+        val llmModel = resolveLlmModel(llmModelName)
         val response = runBlocking {
             promptExecutor.execute(intentPrompt, llmModel)
         }
@@ -116,7 +118,7 @@ class NlpQueryService(
             user(question)
         }
 
-        val llmModel = LLModel(LLMProvider.OpenAI, llmModelName)
+        val llmModel = resolveLlmModel(llmModelName)
         val response = runBlocking {
             promptExecutor.execute(reformulationPrompt, llmModel)
         }

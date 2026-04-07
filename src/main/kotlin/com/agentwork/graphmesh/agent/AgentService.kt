@@ -1,5 +1,7 @@
 package com.agentwork.graphmesh.agent
 
+import com.agentwork.graphmesh.llm.resolveLlmModel
+
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.reActStrategy
@@ -60,7 +62,7 @@ class AgentService(
 
         val agent = AIAgent(
             promptExecutor = promptExecutor,
-            llmModel = LLModel(LLMProvider.OpenAI, modelName),
+            llmModel = resolveLlmModel(modelName),
             strategy = reActStrategy(reasoningInterval = 1, name = "query_agent"),
             toolRegistry = toolRegistry,
             systemPrompt = config.systemPrompt

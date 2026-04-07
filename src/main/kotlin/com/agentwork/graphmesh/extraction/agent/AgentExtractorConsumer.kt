@@ -1,5 +1,6 @@
 package com.agentwork.graphmesh.extraction.agent
 
+import com.agentwork.graphmesh.librarian.DocumentNotFoundException
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
@@ -27,6 +28,8 @@ class AgentExtractorConsumer(
                 "Agent extraction complete: chunkId={}, items={}, strategy={}",
                 chunkId, result.extractedItems.size, result.strategy
             )
+        } catch (e: DocumentNotFoundException) {
+            logger.info("Skip agent extraction for chunk {}: deleted before processing", chunkId)
         } catch (e: Exception) {
             logger.error("Agent extraction failed for chunk {}", chunkId, e)
         }

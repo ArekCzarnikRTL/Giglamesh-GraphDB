@@ -79,6 +79,12 @@ Abhaengigkeiten folgen einem DAG (Directed Acyclic Graph) — manche Features ko
 | 34 | Graph Explorer UI           | [34-graph-explorer-ui.md](34-graph-explorer-ui.md)         | 07, 14         | XL      |
 | 35 | Admin UI                    | [35-admin-ui.md](35-admin-ui.md)                           | 06, 08, 14     | M       |
 
+### Phase 6: Fixes & Hardening
+
+| #  | Feature                                  | Datei                                                            | Abhaengig von  | Aufwand |
+|----|------------------------------------------|------------------------------------------------------------------|----------------|---------|
+| 36 | Fix `GraphRagService.retrieveSubgraph`   | [36-fix-retrieveSubgraph.md](36-fix-retrieveSubgraph.md)         | 07, 13, 15, 29 | M       |
+
 ## DAG-Visualisierung
 
 ```
@@ -121,4 +127,6 @@ Phase 5 (Extend):   05,15,16,17 ──▶ 25(Agent)
                            14,15,16 ──▶ 33(QueryUI)
                               07,14 ──▶ 34(GraphUI)
                            06,08,14 ──▶ 35(AdminUI)
+
+Phase 6 (Fixes):    07,13,15,29 ──▶ 36(FixRetrieveSubgraph)
 ```

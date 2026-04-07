@@ -212,9 +212,8 @@ class CassandraQuadStore(
         val all = query(collection, QuadQuery(), limit = null)
         val datasets = all.map { it.dataset }.distinct().sorted().take(200)
         val predicates = all.map { it.predicate }.distinct().sorted().take(200)
-        val rdfType = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
         val entityTypes = all.asSequence()
-            .filter { it.predicate == rdfType }
+            .filter { it.predicate == RDF_TYPE_URI }
             .map { it.objectValue }
             .distinct()
             .sorted()

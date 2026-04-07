@@ -1,5 +1,6 @@
 package com.agentwork.graphmesh.extraction.structured
 
+import com.agentwork.graphmesh.librarian.DocumentNotFoundException
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
@@ -27,6 +28,8 @@ class StructuredDataExtractorConsumer(
                 "Structured data extraction complete: chunkId={}, tableDetected={}, schema={}, rows={}",
                 chunkId, result.tableDetected, result.schemaName, result.rowsExtracted
             )
+        } catch (e: DocumentNotFoundException) {
+            logger.info("Skip structured data extraction for chunk {}: deleted before processing", chunkId)
         } catch (e: Exception) {
             logger.error("Structured data extraction failed for chunk {}", chunkId, e)
         }

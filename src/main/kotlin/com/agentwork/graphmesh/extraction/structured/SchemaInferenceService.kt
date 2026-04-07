@@ -1,5 +1,7 @@
 package com.agentwork.graphmesh.extraction.structured
 
+import com.agentwork.graphmesh.llm.resolveLlmModel
+
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
@@ -60,7 +62,7 @@ class SchemaInferenceService(
         }
 
         val llmResponse = runBlocking {
-            promptExecutor.execute(inferencePrompt, LLModel(LLMProvider.OpenAI, modelName))
+            promptExecutor.execute(inferencePrompt, resolveLlmModel(modelName))
         }
         val responseText = llmResponse.first().content
         return parseInferredSchema(responseText)

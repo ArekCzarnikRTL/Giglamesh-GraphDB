@@ -1,5 +1,6 @@
 package com.agentwork.graphmesh.extraction.definition
 
+import com.agentwork.graphmesh.librarian.DocumentNotFoundException
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
@@ -27,6 +28,8 @@ class DefinitionExtractorConsumer(
                 "Definition extraction complete: chunkId={}, definitions={}, entities={}",
                 chunkId, result.definitionsExtracted, result.entitiesFound.size
             )
+        } catch (e: DocumentNotFoundException) {
+            logger.info("Skip definition extraction for chunk {}: deleted before processing", chunkId)
         } catch (e: Exception) {
             logger.error("Definition extraction failed for chunk {}", chunkId, e)
         }

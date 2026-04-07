@@ -1,5 +1,7 @@
 package com.agentwork.graphmesh.extraction.agent
 
+import com.agentwork.graphmesh.llm.resolveLlmModel
+
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.reActStrategy
@@ -83,7 +85,7 @@ class AgentExtractorService(
 
         val agent = AIAgent(
             promptExecutor = promptExecutor,
-            llmModel = LLModel(LLMProvider.OpenAI, modelName),
+            llmModel = resolveLlmModel(modelName),
             strategy = reActStrategy(reasoningInterval = 1, name = "extraction_agent"),
             toolRegistry = toolRegistry,
             systemPrompt = strategy.systemPrompt

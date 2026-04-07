@@ -1,5 +1,6 @@
 package com.agentwork.graphmesh.extraction.embedding
 
+import com.agentwork.graphmesh.librarian.DocumentNotFoundException
 import com.agentwork.graphmesh.librarian.LibrarianService
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -30,6 +31,8 @@ class EmbeddingConsumer(
             val collectionName = doc?.collectionId ?: collectionId
 
             embeddingService.embed(chunkId, documentId, collectionName)
+        } catch (e: DocumentNotFoundException) {
+            logger.info("Skip embedding for chunk {}: deleted before processing", chunkId)
         } catch (e: Exception) {
             logger.error("Embedding failed for chunk {}", chunkId, e)
         }

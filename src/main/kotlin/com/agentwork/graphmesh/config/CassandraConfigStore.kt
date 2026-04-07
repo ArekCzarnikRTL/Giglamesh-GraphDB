@@ -36,8 +36,8 @@ class CassandraConfigStore(
         """.trimIndent())
 
         insertByType = session.prepare("""
-            INSERT INTO $keyspace.config_by_type (type, key, id, value, version, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO $keyspace.config_by_type (type, key, id, value, version, created_at, updated_at, created_by, description)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent())
 
         insertHistory = session.prepare("""
@@ -80,7 +80,8 @@ class CassandraConfigStore(
         ))
 
         session.execute(insertByType.bind(
-            saved.type.name, saved.key, saved.id, saved.value, saved.version, saved.updatedAt
+            saved.type.name, saved.key, saved.id, saved.value, saved.version,
+            saved.createdAt, saved.updatedAt, saved.createdBy, saved.description
         ))
 
         session.execute(insertHistory.bind(

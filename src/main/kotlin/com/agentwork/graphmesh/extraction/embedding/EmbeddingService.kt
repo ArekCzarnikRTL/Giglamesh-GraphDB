@@ -1,5 +1,7 @@
 package com.agentwork.graphmesh.extraction.embedding
 
+import com.agentwork.graphmesh.llm.resolveLlmModel
+
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -29,7 +31,7 @@ class EmbeddingService(
             return
         }
 
-        val model = LLModel(LLMProvider.OpenAI, config.model)
+        val model = resolveLlmModel(config.model)
 
         val embedding = runBlocking {
             embeddingProvider.embed(text, model)
