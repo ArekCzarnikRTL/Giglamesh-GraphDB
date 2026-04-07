@@ -51,6 +51,14 @@ object QuadConverter {
      * The returned [StoredQuad] uses the empty default-graph dataset because
      * the inner triple's original dataset is not preserved by the
      * `<<s|p|o>>` serialization.
+     *
+     * **Lossy by design:** the `<<s|p|o>>` format does not encode the inner
+     * object's [ObjectType], so the returned [StoredQuad] always claims
+     * `objectType = URI` even when the inner object is a literal. Callers must
+     * therefore NOT round-trip the result through [fromStoredQuad] (which would
+     * wrap a literal value as `RdfTerm.Uri`). The unpacked quads are intended
+     * to be consumed as plain (subject, predicate, objectValue) string tuples,
+     * e.g. for graph-RAG edge display.
      */
     fun unpackQuotedTriple(stored: StoredQuad): StoredQuad? {
         if (stored.objectType != ObjectType.QUOTED_TRIPLE) return null
