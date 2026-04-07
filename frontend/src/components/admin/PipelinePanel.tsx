@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@apollo/client/react";
 import {
@@ -52,6 +52,8 @@ function PipelinePanelInner({ initialCollectionId }: Props) {
     ADMIN_COLLECTIONS_QUERY,
   );
 
+  const processingTotalRef = useRef(0);
+
   const { data, loading, error } = useQuery<PipelineData>(
     PIPELINE_DOCUMENTS_QUERY,
     {
@@ -63,9 +65,13 @@ function PipelinePanelInner({ initialCollectionId }: Props) {
       skip: !collectionId,
       fetchPolicy: "cache-and-network",
       pollInterval: 10000,
-      skipPollAttempt: () => (data?.processing.totalCount ?? 0) === 0,
+      skipPollAttempt: () => processingTotalRef.current === 0,
     },
   );
+
+  useEffect(() => {
+    processingTotalRef.current = data?.processing.totalCount ?? 0;
+  }, [data]);
 
   return (
     <div className="space-y-6">

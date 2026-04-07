@@ -1,7 +1,7 @@
 // frontend/src/components/admin/AdminDashboard.tsx
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useQuery } from "@apollo/client/react";
 import { ADMIN_COLLECTIONS_QUERY } from "@/graphql/admin";
 import { AdminCollection } from "@/types/admin";
@@ -34,9 +34,12 @@ export function AdminDashboard() {
     Record<string, { processing: number; failed: number }>
   >({});
 
-  const handleCounts = (id: string) => (processing: number, failed: number) => {
-    setCounts((prev) => ({ ...prev, [id]: { processing, failed } }));
-  };
+  const handleCounts = useCallback(
+    (id: string, processing: number, failed: number) => {
+      setCounts((prev) => ({ ...prev, [id]: { processing, failed } }));
+    },
+    [],
+  );
 
   const totalCollections = data?.collections.length ?? 0;
   const totalProcessing = Object.values(counts).reduce(
@@ -95,7 +98,7 @@ export function AdminDashboard() {
               <CollectionStatsRow
                 key={c.id}
                 collection={c}
-                onCounts={handleCounts(c.id)}
+                onCounts={handleCounts}
               />
             ))}
           </TableBody>

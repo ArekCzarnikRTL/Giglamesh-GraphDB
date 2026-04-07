@@ -1,6 +1,7 @@
 // frontend/src/components/admin/CollectionStatsRow.tsx
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { useQuery } from "@apollo/client/react";
 import { ADMIN_COLLECTION_COUNTS_QUERY } from "@/graphql/admin";
@@ -11,7 +12,7 @@ import { AdminCollection } from "@/types/admin";
 
 interface Props {
   collection: AdminCollection;
-  onCounts?: (processing: number, failed: number) => void;
+  onCounts?: (id: string, processing: number, failed: number) => void;
 }
 
 interface CountsData {
@@ -28,12 +29,13 @@ export function CollectionStatsRow({ collection, onCounts }: Props) {
     },
     fetchPolicy: "cache-and-network",
     pollInterval: 30000,
-    onCompleted: (d) => {
-      if (onCounts) {
-        onCounts(d.processing.totalCount, d.failed.totalCount);
-      }
-    },
   });
+
+  useEffect(() => {
+    if (data && onCounts) {
+      onCounts(collection.id, data.processing.totalCount, data.failed.totalCount);
+    }
+  }, [data, onCounts, collection.id]);
 
   return (
     <TableRow>
