@@ -32,10 +32,10 @@ export function EntitySearch({ collectionId, onSelect }: EntitySearchProps) {
         value={value}
         onChange={handleChange}
         placeholder="Entity suchen…"
-        className="text-sm border rounded px-3 py-1 w-72"
+        className="w-72 rounded-md border border-input bg-input/30 px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
       />
       {data?.entitySearch && data.entitySearch.length > 0 && (
-        <ul className="absolute z-10 mt-1 w-full bg-white border rounded shadow text-sm max-h-64 overflow-auto">
+        <ul className="absolute z-10 mt-1 max-h-64 w-full overflow-auto rounded-md border border-border bg-popover text-sm text-popover-foreground shadow-md">
           {data.entitySearch.map((uri) => (
             <li
               key={uri}
@@ -43,7 +43,7 @@ export function EntitySearch({ collectionId, onSelect }: EntitySearchProps) {
                 onSelect(uri);
                 setValue("");
               }}
-              className="px-3 py-2 hover:bg-gray-100 cursor-pointer truncate"
+              className="cursor-pointer truncate px-3 py-2 hover:bg-accent hover:text-accent-foreground"
             >
               {uri}
             </li>

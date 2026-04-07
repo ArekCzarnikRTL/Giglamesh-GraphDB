@@ -77,7 +77,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
       ctx.font = `${fontSize}px Sans-Serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
-      ctx.fillStyle = "#1F2937";
+      ctx.fillStyle = "#E5E7EB";
       ctx.fillText(label, node.x, node.y + node.size + 2);
     },
     [selectedNodeId]

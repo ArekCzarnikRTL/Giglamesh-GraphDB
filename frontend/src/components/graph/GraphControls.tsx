@@ -17,8 +17,8 @@ export const DEFAULT_LAYOUT: LayoutConfig = {
 
 export function GraphControls({ config, onChange, onResetView }: GraphControlsProps) {
   return (
-    <div className="p-3 border-b bg-gray-50 flex items-center gap-6">
-      <label className="flex items-center gap-2 text-sm">
+    <div className="flex items-center gap-6 border-b border-border bg-card p-3 [color-scheme:dark]">
+      <label className="flex items-center gap-2 text-sm text-foreground">
         Abstoßung
         <input
           type="range"
@@ -30,7 +30,7 @@ export function GraphControls({ config, onChange, onResetView }: GraphControlsPr
           }
         />
       </label>
-      <label className="flex items-center gap-2 text-sm">
+      <label className="flex items-center gap-2 text-sm text-foreground">
         Kantenlänge
         <input
           type="range"
@@ -44,13 +44,13 @@ export function GraphControls({ config, onChange, onResetView }: GraphControlsPr
       </label>
       <button
         onClick={() => onChange(DEFAULT_LAYOUT)}
-        className="text-sm text-gray-600 hover:text-gray-900"
+        className="text-sm text-muted-foreground hover:text-foreground"
       >
         Zurücksetzen
       </button>
       <button
         onClick={onResetView}
-        className="text-sm text-gray-600 hover:text-gray-900"
+        className="text-sm text-muted-foreground hover:text-foreground"
       >
         Ansicht zentrieren
       </button>

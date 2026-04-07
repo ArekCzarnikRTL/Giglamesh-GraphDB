@@ -28,12 +28,12 @@ export function NodeDetail({ node, collectionId, onExpand, onClose }: NodeDetail
   });
 
   return (
-    <aside className="w-96 border-l bg-white p-4 overflow-y-auto">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="font-semibold truncate">{node.label}</h3>
+    <aside className="w-96 overflow-y-auto border-l border-border bg-card p-4 text-card-foreground">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="truncate font-semibold">{node.label}</h3>
         <button
           onClick={onClose}
-          className="text-gray-500 hover:text-gray-700"
+          className="text-muted-foreground hover:text-foreground"
           aria-label="Schließen"
         >
           ×
@@ -41,35 +41,35 @@ export function NodeDetail({ node, collectionId, onExpand, onClose }: NodeDetail
       </div>
 
       <div className="mb-4">
-        <span className="text-xs uppercase text-gray-500">{node.type}</span>
-        <p className="text-sm text-gray-700 break-all">{node.id}</p>
+        <span className="text-xs uppercase text-muted-foreground">{node.type}</span>
+        <p className="break-all text-sm text-foreground">{node.id}</p>
       </div>
 
       {!node.expanded && (
         <button
           onClick={() => onExpand(node.id)}
-          className="mb-4 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="mb-4 rounded-md bg-primary px-3 py-1 text-sm text-primary-foreground hover:bg-primary/90"
         >
           Nachbarn laden
         </button>
       )}
 
-      <h4 className="font-medium text-sm mb-2">
+      <h4 className="mb-2 text-sm font-medium">
         Triples ({data?.triples?.length ?? 0})
       </h4>
       {loading ? (
-        <p className="text-sm text-gray-500">Laden...</p>
+        <p className="text-sm text-muted-foreground">Laden...</p>
       ) : (
         <div className="space-y-2">
           {data?.triples?.map((t, i) => (
-            <div key={i} className="text-xs border rounded p-2 bg-gray-50">
+            <div key={i} className="rounded-md border border-border bg-muted/30 p-2 text-xs text-foreground">
               <div>
                 <span className="font-medium">Prädikat:</span> {t.predicate}
               </div>
               <div>
                 <span className="font-medium">Objekt:</span> {t.object}
               </div>
-              <div className="text-gray-400">Dataset: {t.dataset}</div>
+              <div className="text-muted-foreground">Dataset: {t.dataset}</div>
             </div>
           ))}
         </div>

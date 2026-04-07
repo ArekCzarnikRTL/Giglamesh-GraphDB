@@ -22,44 +22,47 @@ export function GraphFilter({
     onChange({ ...filter, [key]: selected });
   };
 
+  const selectClass =
+    "text-sm rounded-md border border-input bg-input/30 px-2 py-1 min-w-[140px] text-foreground [color-scheme:dark] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50";
+
   return (
-    <div className="flex flex-wrap gap-4 p-3 border-b bg-gray-50">
-      <label className="flex flex-col text-xs text-gray-600">
+    <div className="flex flex-wrap gap-4 border-b border-border bg-card p-3">
+      <label className="flex flex-col gap-1 text-xs text-muted-foreground">
         Dataset
         <select
           multiple
           aria-label="Dataset"
           value={filter.datasets}
           onChange={handle("datasets")}
-          className="text-sm border rounded px-2 py-1 min-w-[140px]"
+          className={selectClass}
         >
           {availableDatasets.map((d) => (
             <option key={d} value={d}>{d}</option>
           ))}
         </select>
       </label>
-      <label className="flex flex-col text-xs text-gray-600">
+      <label className="flex flex-col gap-1 text-xs text-muted-foreground">
         Prädikat
         <select
           multiple
           aria-label="Prädikat"
           value={filter.predicates}
           onChange={handle("predicates")}
-          className="text-sm border rounded px-2 py-1 min-w-[140px]"
+          className={selectClass}
         >
           {availablePredicates.map((p) => (
             <option key={p} value={p}>{p}</option>
           ))}
         </select>
       </label>
-      <label className="flex flex-col text-xs text-gray-600">
+      <label className="flex flex-col gap-1 text-xs text-muted-foreground">
         Typ
         <select
           multiple
           aria-label="Typ"
           value={filter.entityTypes}
           onChange={handle("entityTypes")}
-          className="text-sm border rounded px-2 py-1 min-w-[140px]"
+          className={selectClass}
         >
           {availableTypes.map((t) => (
             <option key={t} value={t}>{t}</option>
