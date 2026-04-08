@@ -46,6 +46,20 @@
 
     --radius: 0.625rem;
   }
+
+  /*
+   * react-sigma control + minimap theming.
+   * Uses html:root (specificity 0,1,1) to beat @react-sigma/core/lib/style.css
+   * which defines these vars on :root (0,1,0) and is loaded AFTER globals.css
+   * because it is imported inside a client component.
+   */
+  html:root {
+    --sigma-background-color: oklch(0.13 0.02 260);
+    --sigma-controls-background-color: oklch(0.17 0.02 260);
+    --sigma-controls-background-color-hover: oklch(0.22 0.03 260);
+    --sigma-controls-border-color: oklch(1 0 0 / 10%);
+    --sigma-controls-color: oklch(0.93 0.01 250);
+  }
 }
 
 @layer base {

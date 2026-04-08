@@ -3,11 +3,13 @@ import { EdgeAttributes, NodeAttributes } from "@/types/graph";
 
 const FADED_COLOR = "#1F2937";
 const HIGHLIGHT_EDGE_COLOR = "#4F46E5";
+const HIGHLIGHT_NODE_COLOR = "#818CF8";
 
 export interface NodeDisplay {
   label?: string;
   color?: string;
   highlighted?: boolean;
+  forceLabel?: boolean;
   hidden?: boolean;
   size?: number;
 }
@@ -34,8 +36,19 @@ export function buildNodeReducer(
   const neighbors = new Set(graph.neighbors(activeNode));
   neighbors.add(activeNode);
   return (node, data) => {
+    if (node === activeNode) {
+      // Active node: boosted color + forceLabel, but NOT highlighted:true
+      // (sigma's built-in hover drawing paints a white rect behind highlighted
+      // labels, which is unreadable on a dark theme).
+      return {
+        ...data,
+        color: HIGHLIGHT_NODE_COLOR,
+        forceLabel: true,
+        size: (data.size ?? 6) * 1.4,
+      };
+    }
     if (neighbors.has(node)) {
-      return { ...data, highlighted: true };
+      return { ...data, forceLabel: true };
     }
     return { ...data, color: FADED_COLOR, label: "" };
   };

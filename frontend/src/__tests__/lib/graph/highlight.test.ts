@@ -33,9 +33,13 @@ describe("buildNodeReducer", () => {
       q("d", "p", "e"),
     ]);
     const reducer = buildNodeReducer(g, "a");
-    expect(reducer("a", {}).highlighted).toBe(true);
-    expect(reducer("b", {}).highlighted).toBe(true);
-    expect(reducer("c", {}).highlighted).toBe(true);
+    // Active node gets a boosted color, not `highlighted: true` (which would
+    // trigger sigma's white-rectangle hover label background).
+    expect(reducer("a", { size: 6 }).forceLabel).toBe(true);
+    expect(reducer("a", { size: 6 }).color).toBeDefined();
+    // Neighbors get forceLabel so their labels stay visible.
+    expect(reducer("b", {}).forceLabel).toBe(true);
+    expect(reducer("c", {}).forceLabel).toBe(true);
   });
 
   it("fades non-neighbor nodes and clears their labels", () => {
