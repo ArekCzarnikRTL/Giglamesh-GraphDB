@@ -1,4 +1,14 @@
-import { GraphData, GraphEdge, GraphNode, QuadDto, RdfTermType } from "@/types/graph";
+import Graph from "graphology";
+import { EdgeAttributes, NodeAttributes, QuadDto, RdfTermType } from "@/types/graph";
+
+const NODE_COLORS: Record<RdfTermType, string> = {
+  URI: "#4F46E5",
+  LITERAL: "#059669",
+  BLANK_NODE: "#D97706",
+  QUOTED_TRIPLE: "#7C3AED",
+};
+
+const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 
 export function extractLabel(uri: string): string {
   const hash = uri.lastIndexOf("#");
@@ -13,85 +23,87 @@ export function inferSubjectType(uri: string): RdfTermType {
   return "URI";
 }
 
-export function quadToEdgeId(quad: QuadDto): string {
-  return `${quad.subject}|${quad.predicate}|${quad.object}|${quad.dataset}`;
+export function createEmptyGraph(): Graph<NodeAttributes, EdgeAttributes> {
+  return new Graph<NodeAttributes, EdgeAttributes>({
+    type: "directed",
+    multi: true,
+    allowSelfLoops: true,
+  });
 }
 
-export function quadsToGraphData(quads: QuadDto[]): GraphData {
-  const nodes = new Map<string, GraphNode>();
-  const links: GraphEdge[] = [];
-  const seenLinkIds = new Set<string>();
-
+/**
+ * Inserts quads into a graphology graph, mutating it in place.
+ * Idempotent: existing nodes and edges are not duplicated.
+ *
+ * @param target - existing graph to merge into. If omitted, a fresh graph is created.
+ * @returns the same graph instance (or the freshly created one).
+ */
+export function quadsToGraphologyGraph(
+  quads: QuadDto[],
+  target?: Graph<NodeAttributes, EdgeAttributes>,
+): Graph<NodeAttributes, EdgeAttributes> {
+  const graph = target ?? createEmptyGraph();
   for (const quad of quads) {
-    if (!nodes.has(quad.subject)) {
-      nodes.set(quad.subject, {
-        id: quad.subject,
-        label: extractLabel(quad.subject),
-        type: inferSubjectType(quad.subject),
-        isSubject: true,
-        expanded: false,
-        size: 6,
-      });
-    } else {
-      const existing = nodes.get(quad.subject)!;
-      existing.isSubject = true;
-    }
+    upsertNode(graph, quad.subject, inferSubjectType(quad.subject), true);
+    const objectType = (quad.objectType as RdfTermType) ?? "URI";
+    upsertNode(graph, quad.object, objectType, false);
 
-    if (!nodes.has(quad.object)) {
-      const objectType = (quad.objectType as RdfTermType) ?? "URI";
-      nodes.set(quad.object, {
-        id: quad.object,
-        label: extractLabel(quad.object),
-        type: objectType,
-        isSubject: false,
-        expanded: false,
-        size: objectType === "LITERAL" ? 4 : 6,
-      });
-    }
-
-    const linkId = quadToEdgeId(quad);
-    if (!seenLinkIds.has(linkId)) {
-      seenLinkIds.add(linkId);
-      links.push({
-        id: linkId,
-        source: quad.subject,
-        target: quad.object,
+    const edgeKey = `${quad.subject}|${quad.predicate}|${quad.object}`;
+    if (!graph.hasEdge(edgeKey)) {
+      graph.addEdgeWithKey(edgeKey, quad.subject, quad.object, {
         predicate: quad.predicate,
         dataset: quad.dataset,
         label: extractLabel(quad.predicate),
+        size: 1.5,
+        type: "arrow",
+        color: "#6B7280",
       });
     }
   }
-
-  return { nodes: Array.from(nodes.values()), links };
+  return graph;
 }
 
-export function mergeGraphData(
-  existing: GraphData,
-  incoming: GraphData,
-  expandedNodeId?: string
-): GraphData {
-  const nodeMap = new Map(existing.nodes.map((n) => [n.id, n]));
-  for (const node of incoming.nodes) {
-    if (!nodeMap.has(node.id)) {
-      nodeMap.set(node.id, { ...node });
-    } else if (node.isSubject) {
-      nodeMap.get(node.id)!.isSubject = true;
-    }
+function upsertNode(
+  graph: Graph<NodeAttributes, EdgeAttributes>,
+  id: string,
+  termType: RdfTermType,
+  isSubject: boolean,
+): void {
+  if (graph.hasNode(id)) {
+    if (isSubject) graph.setNodeAttribute(id, "isSubject", true);
+    return;
   }
-  if (expandedNodeId) {
-    const target = nodeMap.get(expandedNodeId);
-    if (target) target.expanded = true;
-  }
+  graph.addNode(id, {
+    label: extractLabel(id),
+    termType,
+    isSubject,
+    expanded: false,
+    size: termType === "LITERAL" ? 4 : 6,
+    color: NODE_COLORS[termType],
+    x: Math.random(),
+    y: Math.random(),
+  });
+}
 
-  const linkIds = new Set(existing.links.map((l) => l.id));
-  const merged: GraphEdge[] = [...existing.links];
-  for (const link of incoming.links) {
-    if (!linkIds.has(link.id)) {
-      merged.push(link);
-      linkIds.add(link.id);
+/**
+ * Filters a graph in place: drops subjects whose rdf:type triple does not match
+ * any of the allowed entityTypes. Edges to/from removed nodes are dropped by graphology.
+ */
+export function applyEntityTypeFilter(
+  graph: Graph<NodeAttributes, EdgeAttributes>,
+  entityTypes: string[],
+): void {
+  if (entityTypes.length === 0) return;
+  const allowed = new Set(entityTypes);
+  const allowedSubjects = new Set<string>();
+  graph.forEachEdge((edge, attrs) => {
+    if (attrs.predicate === RDF_TYPE && allowed.has(graph.target(edge))) {
+      allowedSubjects.add(graph.source(edge));
     }
-  }
-
-  return { nodes: Array.from(nodeMap.values()), links: merged };
+  });
+  const toDrop: string[] = [];
+  graph.forEachNode((node, attrs) => {
+    if (attrs.isSubject && !allowedSubjects.has(node)) toDrop.push(node);
+  });
+  for (const node of toDrop) graph.dropNode(node);
 }
