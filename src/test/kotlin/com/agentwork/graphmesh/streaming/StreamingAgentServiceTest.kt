@@ -57,7 +57,8 @@ class StreamingAgentServiceTest {
     @Test
     fun `queryStreaming emits answer when no tool call`() = runBlocking {
         every { promptExecutor.executeStreaming(any(), any(), any()) } returns flowOf(
-            StreamFrame.TextDelta("Hello world"),
+            StreamFrame.TextDelta("Hello "),
+            StreamFrame.TextDelta("world"),
             StreamFrame.End()
         )
 
@@ -68,13 +69,42 @@ class StreamingAgentServiceTest {
             allowedGroups = setOf("all")
         ).toList()
 
-        // Should have THOUGHT for text delta + ANSWER for end
-        val thought = tokens.first { it.type == StreamTokenType.THOUGHT }
-        assertEquals("Hello world", thought.content)
+        // Per-delta THOUGHTs are emitted live so the frontend can render progress.
+        val thoughts = tokens.filter { it.type == StreamTokenType.THOUGHT }
+        assertEquals(2, thoughts.size)
+        assertEquals("Hello ", thoughts[0].content)
+        assertEquals("world", thoughts[1].content)
 
+        // Final ANSWER carries the full buffered text (previously emitted as empty).
         val answer = tokens.first { it.type == StreamTokenType.ANSWER }
+        assertEquals("Hello world", answer.content)
         assertTrue(answer.endOfStream)
         assertTrue(answer.endOfMessage)
+    }
+
+    @Test
+    fun `tryParseTextualToolCall recovers tool call emitted as text`() {
+        val text = """knowledge_query({"question": "Was extrahiert GraphMesh?"})"""
+        val parsed = service.tryParseTextualToolCall(
+            text,
+            setOf("knowledge_query", "document_query")
+        )
+        assertEquals("knowledge_query", parsed?.first)
+        assertEquals("""{"question": "Was extrahiert GraphMesh?"}""", parsed?.second)
+    }
+
+    @Test
+    fun `tryParseTextualToolCall returns null for unknown tool`() {
+        val text = """foo_tool({"x": 1})"""
+        val parsed = service.tryParseTextualToolCall(text, setOf("knowledge_query"))
+        assertEquals(null, parsed)
+    }
+
+    @Test
+    fun `tryParseTextualToolCall handles surrounding whitespace and newlines`() {
+        val text = "\n  knowledge_query(\n  {\"question\": \"hi\"}\n)\nDone."
+        val parsed = service.tryParseTextualToolCall(text, setOf("knowledge_query"))
+        assertEquals("knowledge_query", parsed?.first)
     }
 
     @Test
