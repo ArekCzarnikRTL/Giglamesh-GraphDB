@@ -1,21 +1,40 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
+import Graph from "graphology";
+
+import { GRAPH_TRIPLES_QUERY, NODE_NEIGHBORS_QUERY } from "@/graphql/graph";
 import {
-  GRAPH_TRIPLES_QUERY,
-  NODE_NEIGHBORS_QUERY,
-} from "@/graphql/graph";
-import { GraphData, GraphFilter, QuadDto } from "@/types/graph";
-import { mergeGraphData, quadsToGraphData } from "@/lib/graph/transforms";
+  applyEntityTypeFilter,
+  createEmptyGraph,
+  quadsToGraphologyGraph,
+} from "@/lib/graph/transforms";
+import {
+  EdgeAttributes,
+  GraphFilter,
+  NodeAttributes,
+  QuadDto,
+} from "@/types/graph";
 
 const INITIAL_LIMIT = 500;
 const NEIGHBOR_LIMIT = 50;
-const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 
-export function useGraphData(collectionId: string) {
+export interface UseGraphDataResult {
+  graph: Graph<NodeAttributes, EdgeAttributes>;
+  version: number;
+  loadInitial: (filter: GraphFilter) => Promise<void>;
+  expandNode: (entityUri: string) => Promise<void>;
+  clear: () => void;
+}
+
+export function useGraphData(collectionId: string): UseGraphDataResult {
   const client = useApolloClient();
-  const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
+  const graphRef = useRef<Graph<NodeAttributes, EdgeAttributes>>();
+  if (!graphRef.current) graphRef.current = createEmptyGraph();
+  const [version, setVersion] = useState(0);
+
+  const bump = useCallback(() => setVersion((v) => v + 1), []);
 
   const loadInitial = useCallback(
     async (filter: GraphFilter): Promise<void> => {
@@ -32,13 +51,13 @@ export function useGraphData(collectionId: string) {
         },
         fetchPolicy: "network-only",
       });
-      let next = quadsToGraphData(data?.triples ?? []);
-      if (filter.entityTypes.length > 0) {
-        next = filterByEntityTypes(next, data?.triples ?? [], filter.entityTypes);
-      }
-      setGraphData(next);
+      const graph = graphRef.current!;
+      graph.clear();
+      quadsToGraphologyGraph(data?.triples ?? [], graph);
+      applyEntityTypeFilter(graph, filter.entityTypes);
+      bump();
     },
-    [client, collectionId]
+    [client, collectionId, bump],
   );
 
   const expandNode = useCallback(
@@ -52,43 +71,30 @@ export function useGraphData(collectionId: string) {
         variables: { collectionId, entityUri, limit: NEIGHBOR_LIMIT },
         fetchPolicy: "network-only",
       });
+      const graph = graphRef.current!;
       const all = [...(data?.asSubject ?? []), ...(data?.asObject ?? [])];
-      const incoming = quadsToGraphData(all);
-      setGraphData((prev) => mergeGraphData(prev, incoming, entityUri));
+      quadsToGraphologyGraph(all, graph);
+      if (graph.hasNode(entityUri)) {
+        graph.setNodeAttribute(entityUri, "expanded", true);
+      }
+      bump();
     },
-    [client, collectionId]
+    [client, collectionId, bump],
   );
 
   const clear = useCallback(() => {
-    setGraphData({ nodes: [], links: [] });
-  }, []);
+    graphRef.current?.clear();
+    bump();
+  }, [bump]);
 
-  return { graphData, loadInitial, expandNode, clear };
-}
-
-function filterByEntityTypes(
-  data: GraphData,
-  quads: QuadDto[],
-  entityTypes: string[]
-): GraphData {
-  const types = new Set(entityTypes);
-  const allowedSubjects = new Set(
-    quads.filter((q) => q.predicate === RDF_TYPE && types.has(q.object)).map((q) => q.subject)
+  return useMemo(
+    () => ({
+      graph: graphRef.current!,
+      version,
+      loadInitial,
+      expandNode,
+      clear,
+    }),
+    [version, loadInitial, expandNode, clear],
   );
-  if (allowedSubjects.size === 0) return data;
-
-  const resolveId = (ref: string | { id: string }): string =>
-    typeof ref === "string" ? ref : ref.id;
-  const links = data.links.filter((l) =>
-    allowedSubjects.has(resolveId(l.source as string | { id: string }))
-  );
-  const liveNodeIds = new Set<string>();
-  links.forEach((l) => {
-    liveNodeIds.add(resolveId(l.source as string | { id: string }));
-    liveNodeIds.add(resolveId(l.target as string | { id: string }));
-  });
-  // also keep allowed subjects even if they have no surviving edges (so the user sees them)
-  allowedSubjects.forEach((s) => liveNodeIds.add(s));
-  const nodes = data.nodes.filter((n) => liveNodeIds.has(n.id));
-  return { nodes, links };
 }

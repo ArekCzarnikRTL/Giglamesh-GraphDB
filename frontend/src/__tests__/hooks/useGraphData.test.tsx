@@ -57,20 +57,34 @@ const wrapper = (mocks: Parameters<typeof MockedProvider>[0]["mocks"]) => {
   return Wrapper;
 };
 
+const emptyFilter = { datasets: [], predicates: [], entityTypes: [] };
+
 describe("useGraphData", () => {
-  it("loadInitial populates graphData", async () => {
+  it("starts with an empty graph and version 0", () => {
+    const { result } = renderHook(() => useGraphData("c1"), {
+      wrapper: wrapper([]),
+    });
+    expect(result.current.graph.order).toBe(0);
+    expect(result.current.graph.size).toBe(0);
+    expect(result.current.version).toBe(0);
+  });
+
+  it("loadInitial populates the graph and bumps version", async () => {
     const { result } = renderHook(() => useGraphData("c1"), {
       wrapper: wrapper([initialMock]),
     });
 
     await act(async () => {
-      await result.current.loadInitial({ datasets: [], predicates: [], entityTypes: [] });
+      await result.current.loadInitial(emptyFilter);
     });
 
     await waitFor(() => {
-      expect(result.current.graphData.nodes.length).toBeGreaterThan(0);
+      expect(result.current.version).toBeGreaterThan(0);
     });
-    expect(result.current.graphData.nodes.map((n) => n.id).sort()).toEqual(["a", "b", "c"]);
+    expect(result.current.graph.order).toBe(3);
+    expect(result.current.graph.hasNode("a")).toBe(true);
+    expect(result.current.graph.hasNode("b")).toBe(true);
+    expect(result.current.graph.hasNode("c")).toBe(true);
   });
 
   it("expandNode merges neighbors without duplicates and marks expanded", async () => {
@@ -79,19 +93,44 @@ describe("useGraphData", () => {
     });
 
     await act(async () => {
-      await result.current.loadInitial({ datasets: [], predicates: [], entityTypes: [] });
+      await result.current.loadInitial(emptyFilter);
     });
     await act(async () => {
       await result.current.expandNode("b");
     });
 
     await waitFor(() => {
-      expect(result.current.graphData.nodes.find((n) => n.id === "b")?.expanded).toBe(true);
+      expect(result.current.graph.getNodeAttribute("b", "expanded")).toBe(true);
     });
-    expect(result.current.graphData.nodes.map((n) => n.id).sort()).toEqual(["a", "b", "c", "d"]);
-    const apb = result.current.graphData.links.filter(
-      (l) => l.source === "a" && l.predicate === "p" && l.target === "b"
-    );
-    expect(apb).toHaveLength(1);
+    expect(result.current.graph.order).toBe(4); // a, b, c, d
+    // The (a,p,b) triple appears in both initial and neighbor responses; it must not duplicate.
+    expect(result.current.graph.hasEdge("a|p|b")).toBe(true);
+    expect(result.current.graph.size).toBe(3); // (a,p,b), (a,p2,c), (b,p,d)
+  });
+
+  it("clear empties the graph and bumps version", async () => {
+    const { result } = renderHook(() => useGraphData("c1"), {
+      wrapper: wrapper([initialMock]),
+    });
+    await act(async () => {
+      await result.current.loadInitial(emptyFilter);
+    });
+    const versionBefore = result.current.version;
+    act(() => {
+      result.current.clear();
+    });
+    expect(result.current.graph.order).toBe(0);
+    expect(result.current.version).toBeGreaterThan(versionBefore);
+  });
+
+  it("loadInitial is a no-op when collectionId is empty", async () => {
+    const { result } = renderHook(() => useGraphData(""), {
+      wrapper: wrapper([]),
+    });
+    await act(async () => {
+      await result.current.loadInitial(emptyFilter);
+    });
+    expect(result.current.graph.order).toBe(0);
+    expect(result.current.version).toBe(0);
   });
 });
