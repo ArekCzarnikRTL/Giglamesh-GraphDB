@@ -13,6 +13,8 @@ spring:
       enabled: true
     schema:
       locations: classpath:graphql/
+    websocket:
+      path: /graphql
   ai:
     mcp:
       server:
@@ -48,13 +50,13 @@ spring:
 ai:
   koog:
     openai:
-      enabled: ${OPENAI_ENABLED:false}
+      enabled: ${OPENAI_ENABLED:true}
       api-key: ${OPENAI_API_KEY:}
     anthropic:
       enabled: ${ANTHROPIC_ENABLED:false}
       api-key: ${ANTHROPIC_API_KEY:}
     ollama:
-      enabled: true
+      enabled: false
       base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
 
 koog:
@@ -83,6 +85,6 @@ graphmesh:
     chunk-size: 2000
     overlap-size: 200
   extraction:
-    model: ${LLM_EXTRACTION_MODEL:llama3.2}
+    model: ${LLM_EXTRACTION_MODEL:gpt-4o-mini}
   embedding:
-    model: ${EMBEDDING_MODEL:nomic-embed-text}
+    model: ${EMBEDDING_MODEL:text-embedding-3-small}

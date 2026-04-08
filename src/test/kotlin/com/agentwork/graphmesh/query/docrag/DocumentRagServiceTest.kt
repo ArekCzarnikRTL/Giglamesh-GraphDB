@@ -50,7 +50,9 @@ class DocumentRagServiceTest {
     fun `DocumentRagQuery defaults are sensible`() {
         val query = DocumentRagQuery(question = "test", collectionId = "coll-1")
         assertEquals(10, query.topK)
-        assertEquals(0.5f, query.similarityThreshold)
+        // Lowered from 0.5f to 0.3f so that OpenAI text-embedding-3-small results
+        // (cosine ~0.25–0.5 for related content) are not filtered out.
+        assertEquals(0.3f, query.similarityThreshold)
     }
 
     // Standalone copy for testing without constructing the service

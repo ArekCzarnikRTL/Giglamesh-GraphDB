@@ -14,11 +14,14 @@ class DocumentRagController(
 
     @QueryMapping
     fun documentRag(@Argument input: DocumentRagInput): DocumentRagResult {
-        val query = DocumentRagQuery(
-            question = input.question,
-            collectionId = input.collectionId,
-            topK = input.topK ?: 10,
-            similarityThreshold = input.similarityThreshold ?: 0.5f
+        // Build the query using DocumentRagQuery's defaults so that any change to
+        // the default similarityThreshold (e.g. when switching embedding providers)
+        // automatically propagates here as well, instead of being shadowed by a
+        // hard-coded fallback.
+        val defaults = DocumentRagQuery(question = input.question, collectionId = input.collectionId)
+        val query = defaults.copy(
+            topK = input.topK ?: defaults.topK,
+            similarityThreshold = input.similarityThreshold ?: defaults.similarityThreshold
         )
         return documentRagService.query(query)
     }

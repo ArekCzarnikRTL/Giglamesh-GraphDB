@@ -95,12 +95,30 @@ class DocumentRagService(
         }
         val queryVector = FloatArray(embedding.size) { embedding[it].toFloat() }
 
+        logger.debug(
+            "Vector search: collection={}, embeddingDim={}, topK={}, threshold={}",
+            query.collectionId, queryVector.size, query.topK, query.similarityThreshold
+        )
+
         val searchResults = vectorStore.search(
             collection = query.collectionId,
             queryVector = queryVector,
             limit = query.topK,
             scoreThreshold = query.similarityThreshold
         )
+
+        // Surface the score distribution so operators can tell when the threshold is
+        // mis-tuned for their embedding provider (the #1 cause of "No relevant
+        // documents found" after switching between Ollama and OpenAI embeddings).
+        if (logger.isDebugEnabled) {
+            val scores = searchResults.map { it.score }
+            logger.debug(
+                "Vector search returned {} hits, score range=[{}..{}]",
+                searchResults.size,
+                scores.minOrNull(),
+                scores.maxOrNull()
+            )
+        }
 
         return searchResults.map { result ->
             val chunkId = result.id
