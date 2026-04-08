@@ -85,6 +85,19 @@ Abhaengigkeiten folgen einem DAG (Directed Acyclic Graph) — manche Features ko
 |----|------------------------------------------|------------------------------------------------------------------|----------------|---------|
 | 36 | Fix `GraphRagService.retrieveSubgraph`   | [36-fix-retrieveSubgraph.md](36-fix-retrieveSubgraph.md)         | 07, 13, 15, 29 | M       |
 
+### Phase 7: TrustGraph-inspirierte Erweiterungen
+
+Abgeleitet aus einer Analyse des TrustGraph-Projekts. Siehe Kommentar in den
+jeweiligen Feature-Docs fuer die Motivation.
+
+| #  | Feature                       | Datei                                                              | Abhaengig von              | Aufwand |
+|----|-------------------------------|--------------------------------------------------------------------|----------------------------|---------|
+| 37 | Context Cores                 | [37-context-cores.md](37-context-cores.md)                         | 02, 03, 04, 07, 08, 14, 20 | XL      |
+| 38 | Topic Extractor               | [38-topic-extractor.md](38-topic-extractor.md)                     | 01, 05, 07, 11, 29         | M       |
+| 39 | LLM Observability             | [39-llm-observability.md](39-llm-observability.md)                 | 05, (12, 15, 16, 25, 27)   | M       |
+| 40 | Prompt Template Registry      | [40-prompt-template-registry.md](40-prompt-template-registry.md)   | 02, 05, 06                 | L       |
+| 41 | Structured Row Embeddings     | [41-structured-row-embeddings.md](41-structured-row-embeddings.md) | 04, 05, 13, 14, 22         | L       |
+
 ## DAG-Visualisierung
 
 ```
