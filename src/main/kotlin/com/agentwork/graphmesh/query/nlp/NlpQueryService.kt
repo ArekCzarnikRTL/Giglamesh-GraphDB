@@ -6,6 +6,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import com.agentwork.graphmesh.query.CachedEmbeddingService
 import com.agentwork.graphmesh.query.CollectionContentTypeService
 import com.agentwork.graphmesh.query.docrag.DocumentRagQuery
 import com.agentwork.graphmesh.query.docrag.DocumentRagService
@@ -25,6 +26,7 @@ class NlpQueryService(
     private val graphRagService: GraphRagService,
     private val documentRagService: DocumentRagService,
     private val contentTypeService: CollectionContentTypeService,
+    private val cachedEmbeddingService: CachedEmbeddingService,
     private val quadStore: QuadStore,
     @Value("\${graphmesh.extraction.model:gpt-4o}") private val llmModelName: String
 ) {
@@ -173,9 +175,11 @@ class NlpQueryService(
     }
 
     private fun route(question: String, intent: QueryIntent, collectionId: String): Pair<String, List<String>> {
+        val embedding = cachedEmbeddingService.embed(question)
+
         return when (intent) {
             QueryIntent.GRAPH_QUERY -> {
-                val result = graphRagService.query(GraphRagQuery(question, collectionId))
+                val result = graphRagService.query(GraphRagQuery(question, collectionId, precomputedEmbedding = embedding))
                 val sources = result.selectedEdges.map { edge ->
                     "${edge.subject} --[${edge.predicate}]--> ${edge.objectValue}"
                 }
@@ -183,7 +187,7 @@ class NlpQueryService(
             }
 
             QueryIntent.DOCUMENT_QUERY -> {
-                val result = documentRagService.query(DocumentRagQuery(question, collectionId))
+                val result = documentRagService.query(DocumentRagQuery(question, collectionId, precomputedEmbedding = embedding))
                 val sources = result.sources.map { src ->
                     "${src.documentTitle} (page ${src.pageNumber ?: "?"})"
                 }
@@ -200,8 +204,8 @@ class NlpQueryService(
             }
 
             QueryIntent.HYBRID -> {
-                val graphResult = graphRagService.query(GraphRagQuery(question, collectionId))
-                val docResult = documentRagService.query(DocumentRagQuery(question, collectionId))
+                val graphResult = graphRagService.query(GraphRagQuery(question, collectionId, precomputedEmbedding = embedding))
+                val docResult = documentRagService.query(DocumentRagQuery(question, collectionId, precomputedEmbedding = embedding))
 
                 val answer = """
                     Based on the Knowledge Graph:

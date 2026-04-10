@@ -84,7 +84,7 @@ class DocumentRagService(
     }
 
     private fun retrieveChunks(query: DocumentRagQuery): List<RetrievedChunk> {
-        val queryVector = cachedEmbeddingService.embed(query.question)
+        val queryVector = query.precomputedEmbedding ?: cachedEmbeddingService.embed(query.question)
 
         logger.debug(
             "Vector search: collection={}, topK={}, threshold={}",

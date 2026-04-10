@@ -6,6 +6,7 @@ import java.util.UUID
 data class GraphRagQuery(
     val question: String,
     val collectionId: String,
+    val precomputedEmbedding: FloatArray? = null,
     val maxEdges: Int = 150,
     val maxDepth: Int = 2,
     val maxSelectedEdges: Int = 30

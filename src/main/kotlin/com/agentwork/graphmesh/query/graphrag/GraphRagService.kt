@@ -86,7 +86,7 @@ class GraphRagService(
     }
 
     private fun retrieveSubgraph(query: GraphRagQuery): List<StoredQuad> {
-        val queryVector = cachedEmbeddingService.embed(query.question)
+        val queryVector = query.precomputedEmbedding ?: cachedEmbeddingService.embed(query.question)
 
         val searchResults = vectorStore.search(
             collection = query.collectionId,

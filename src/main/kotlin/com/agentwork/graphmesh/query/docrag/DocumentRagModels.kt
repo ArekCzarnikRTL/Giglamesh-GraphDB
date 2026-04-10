@@ -5,6 +5,7 @@ import java.util.UUID
 data class DocumentRagQuery(
     val question: String,
     val collectionId: String,
+    val precomputedEmbedding: FloatArray? = null,
     val topK: Int = 10,
     /**
      * Minimum cosine similarity for a chunk to be considered a hit.
