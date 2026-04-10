@@ -64,6 +64,7 @@ dependencies {
     implementation(platform("software.amazon.awssdk:bom:2.42.28"))
     implementation("software.amazon.awssdk:s3")
     implementation("com.github.ajalt.clikt:clikt:5.0.1")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
     implementation("com.expediagroup:graphql-kotlin-ktor-client:8.2.1")
     implementation("io.ktor:ktor-client-cio:3.0.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

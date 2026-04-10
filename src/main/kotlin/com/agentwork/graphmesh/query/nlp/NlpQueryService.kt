@@ -6,6 +6,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import com.agentwork.graphmesh.query.CollectionContentTypeService
 import com.agentwork.graphmesh.query.docrag.DocumentRagQuery
 import com.agentwork.graphmesh.query.docrag.DocumentRagService
 import com.agentwork.graphmesh.query.graphrag.GraphRagQuery
@@ -23,6 +24,7 @@ class NlpQueryService(
     private val promptExecutor: PromptExecutor,
     private val graphRagService: GraphRagService,
     private val documentRagService: DocumentRagService,
+    private val contentTypeService: CollectionContentTypeService,
     private val quadStore: QuadStore,
     @Value("\${graphmesh.extraction.model:gpt-4o}") private val llmModelName: String
 ) {
@@ -33,11 +35,21 @@ class NlpQueryService(
         val startTime = System.currentTimeMillis()
 
         // Step 1: Intent Detection
-        val detectedIntent = if (query.forceIntent != null) {
-            DetectedIntent(query.forceIntent, 1.0, "Intent forced by caller")
-        } else {
-            logger.info("Detecting intent for: '{}'", query.question)
-            detectIntent(query.question)
+        val detectedIntent = when {
+            query.forceIntent != null ->
+                DetectedIntent(query.forceIntent, 1.0, "Intent forced by caller")
+            !contentTypeService.hasDocuments(query.collectionId) -> {
+                logger.info("Collection has only graph data, skipping intent detection")
+                DetectedIntent(QueryIntent.GRAPH_QUERY, 1.0, "Collection contains only graph data")
+            }
+            !contentTypeService.hasTriples(query.collectionId) -> {
+                logger.info("Collection has only documents, skipping intent detection")
+                DetectedIntent(QueryIntent.DOCUMENT_QUERY, 1.0, "Collection contains only documents")
+            }
+            else -> {
+                logger.info("Mixed collection, detecting intent for: '{}'", query.question)
+                detectIntent(query.question)
+            }
         }
         logger.info("Detected intent: {} (confidence: {})", detectedIntent.intent, detectedIntent.confidence)
 

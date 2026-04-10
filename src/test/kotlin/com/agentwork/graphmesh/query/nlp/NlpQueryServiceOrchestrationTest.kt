@@ -1,6 +1,7 @@
 package com.agentwork.graphmesh.query.nlp
 
 import ai.koog.prompt.executor.model.PromptExecutor
+import com.agentwork.graphmesh.query.CollectionContentTypeService
 import com.agentwork.graphmesh.query.docrag.DocumentRagResult
 import com.agentwork.graphmesh.query.docrag.DocumentRagService
 import com.agentwork.graphmesh.query.docrag.SourceAttribution
@@ -24,6 +25,7 @@ class NlpQueryServiceOrchestrationTest {
     private val promptExecutor: PromptExecutor = mockk()
     private val graphRagService: GraphRagService = mockk()
     private val documentRagService: DocumentRagService = mockk()
+    private val contentTypeService: CollectionContentTypeService = mockk()
     private val quadStore: QuadStore = mockk()
 
     private lateinit var service: NlpQueryService
@@ -34,6 +36,7 @@ class NlpQueryServiceOrchestrationTest {
             promptExecutor = promptExecutor,
             graphRagService = graphRagService,
             documentRagService = documentRagService,
+            contentTypeService = contentTypeService,
             quadStore = quadStore,
             llmModelName = "gpt-4o"
         )
