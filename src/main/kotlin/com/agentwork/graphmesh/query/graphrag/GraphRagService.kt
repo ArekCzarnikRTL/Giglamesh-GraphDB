@@ -101,47 +101,60 @@ class GraphRagService(
         }
         val queryVector = FloatArray(embedding.size) { embedding[it].toFloat() }
 
-        // Vector hits → bare chunk ids from the embedding payload
         val searchResults = vectorStore.search(
             collection = query.collectionId,
             queryVector = queryVector,
             limit = 50
         )
 
+        // Split results into chunk-based and entity-based hits
         val chunkUrns = searchResults
             .mapNotNull { it.payload["chunk_id"]?.toString() }
             .map { "urn:chunk:$it" }
             .distinct()
 
-        if (chunkUrns.isEmpty()) {
-            logger.debug("retrieveSubgraph: no chunk_ids in vector hits")
+        val entityUris = searchResults
+            .mapNotNull { it.payload["entity_uri"]?.toString() }
+            .distinct()
+
+        if (chunkUrns.isEmpty() && entityUris.isEmpty()) {
+            logger.debug("retrieveSubgraph: no chunk_ids or entity_uris in vector hits")
             return emptyList()
         }
 
-        // Phase 1: chunks → provenance subgraphs
-        val subgraphUris = quadStore.findSubgraphsForChunks(query.collectionId, chunkUrns)
-        if (subgraphUris.isEmpty()) {
-            logger.debug("retrieveSubgraph: no subgraphs for {} chunkUrns", chunkUrns.size)
-            return emptyList()
+        // Path 1: Chunk-based retrieval (existing provenance path)
+        val chunkTriples = if (chunkUrns.isNotEmpty()) {
+            val subgraphUris = quadStore.findSubgraphsForChunks(query.collectionId, chunkUrns)
+            if (subgraphUris.isNotEmpty()) {
+                quadStore.findQuotedTriplesForSubgraphs(query.collectionId, subgraphUris)
+            } else {
+                emptyList()
+            }
+        } else {
+            emptyList()
         }
 
-        // Phase 2: subgraphs → unpacked quoted triples (the actual knowledge edges)
-        val quotedTriples = quadStore.findQuotedTriplesForSubgraphs(query.collectionId, subgraphUris)
-
-        // Phase 3: 1-hop entity expansion
-        val entityUris = collectEntityUris(quotedTriples)
-        val expandedEdges = if (entityUris.isNotEmpty()) {
+        // Path 2: Entity-based retrieval (RDF import path)
+        val entityTriples = if (entityUris.isNotEmpty()) {
             quadStore.findByEntities(query.collectionId, entityUris)
         } else {
             emptyList()
         }
 
+        // 1-hop entity expansion on chunk triples (existing behavior)
+        val chunkEntityUris = collectEntityUris(chunkTriples)
+        val expandedEdges = if (chunkEntityUris.isNotEmpty()) {
+            quadStore.findByEntities(query.collectionId, chunkEntityUris)
+        } else {
+            emptyList()
+        }
+
         logger.debug(
-            "retrieveSubgraph: {} chunks → {} subgraphs → {} quoted triples → {} entities → {} expanded edges",
-            chunkUrns.size, subgraphUris.size, quotedTriples.size, entityUris.size, expandedEdges.size
+            "retrieveSubgraph: {} chunks -> {} chunk triples, {} entity URIs -> {} entity triples, {} expanded edges",
+            chunkUrns.size, chunkTriples.size, entityUris.size, entityTriples.size, expandedEdges.size
         )
 
-        return (quotedTriples + expandedEdges).distinct().take(query.maxEdges)
+        return (chunkTriples + entityTriples + expandedEdges).distinct().take(query.maxEdges)
     }
 
     /**

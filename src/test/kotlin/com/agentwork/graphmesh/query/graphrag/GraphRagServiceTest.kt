@@ -1,6 +1,7 @@
 package com.agentwork.graphmesh.query.graphrag
 
 import com.agentwork.graphmesh.storage.StoredQuad
+import com.agentwork.graphmesh.storage.vector.SearchResult
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -148,6 +149,22 @@ class GraphRagServiceTest {
 
         val result = collectEntityUrisCopy(triples)
         assertEquals(2, result.size)
+    }
+
+    @Test
+    fun `splitSearchResults separates chunk and entity hits`() {
+        val results = listOf(
+            SearchResult(id = "chunk-1", score = 0.9f, payload = mapOf("chunk_id" to "doc-1/p1/c1")),
+            SearchResult(id = "entity-1", score = 0.85f, payload = mapOf("entity_uri" to "http://example.org/Alice", "source" to "rdf-import")),
+            SearchResult(id = "chunk-2", score = 0.8f, payload = mapOf("chunk_id" to "doc-1/p1/c2")),
+            SearchResult(id = "entity-2", score = 0.75f, payload = mapOf("entity_uri" to "http://example.org/Bob", "source" to "rdf-import")),
+        )
+
+        val chunkIds = results.mapNotNull { it.payload["chunk_id"]?.toString() }
+        val entityUris = results.mapNotNull { it.payload["entity_uri"]?.toString() }
+
+        assertEquals(listOf("doc-1/p1/c1", "doc-1/p1/c2"), chunkIds)
+        assertEquals(listOf("http://example.org/Alice", "http://example.org/Bob"), entityUris)
     }
 
     // Standalone copy of GraphRagService.collectEntityUris for testing without
