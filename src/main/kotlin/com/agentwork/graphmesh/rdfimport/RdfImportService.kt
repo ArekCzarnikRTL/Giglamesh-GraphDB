@@ -1,9 +1,15 @@
 package com.agentwork.graphmesh.rdfimport
 
+import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
+import com.agentwork.graphmesh.extraction.embedding.EmbeddingConfig
+import com.agentwork.graphmesh.llm.resolveLlmModel
 import com.agentwork.graphmesh.ontology.JenaAdapter
 import com.agentwork.graphmesh.storage.ObjectType
 import com.agentwork.graphmesh.storage.QuadStore
 import com.agentwork.graphmesh.storage.StoredQuad
+import com.agentwork.graphmesh.storage.vector.VectorPoint
+import com.agentwork.graphmesh.storage.vector.VectorStore
+import kotlinx.coroutines.runBlocking
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.RDFNode
 import org.slf4j.LoggerFactory
@@ -13,6 +19,9 @@ import org.springframework.stereotype.Service
 class RdfImportService(
     private val jenaAdapter: JenaAdapter,
     private val quadStore: QuadStore,
+    private val embeddingProvider: LLMEmbeddingProvider,
+    private val vectorStore: VectorStore,
+    private val embeddingConfig: EmbeddingConfig,
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -69,6 +78,11 @@ class RdfImportService(
             quadStore.insertBatch(collectionId, quads)
         }
 
+        var embeddingsGenerated = 0
+        if (generateEmbeddings && quads.isNotEmpty()) {
+            embeddingsGenerated = generateEntityEmbeddings(collectionId, quads)
+        }
+
         logger.info("RDF import into collection '{}': {} triples, {} skipped, {}ms",
             collectionId, imported, skipped, System.currentTimeMillis() - start)
 
@@ -76,6 +90,7 @@ class RdfImportService(
             tripleCount = imported,
             skippedCount = skipped,
             durationMs = System.currentTimeMillis() - start,
+            embeddingsGenerated = embeddingsGenerated,
         )
     }
 
@@ -91,6 +106,60 @@ class RdfImportService(
         val datatype: String,
         val language: String,
     )
+
+    private fun generateEntityEmbeddings(collectionId: String, quads: List<StoredQuad>): Int {
+        val bySubject = quads.groupBy { it.subject }
+        val model = resolveLlmModel(embeddingConfig.model)
+
+        val points = mutableListOf<VectorPoint>()
+        for ((subjectUri, triples) in bySubject) {
+            val text = buildEntityText(subjectUri, triples)
+            if (text.isBlank()) continue
+            try {
+                val embedding = runBlocking { embeddingProvider.embed(text, model) }
+                val vector = FloatArray(embedding.size) { embedding[it].toFloat() }
+                points += VectorPoint(
+                    id = subjectUri,
+                    vector = vector,
+                    payload = mapOf(
+                        "entity_uri" to subjectUri,
+                        "source" to "rdf-import",
+                        "collection" to collectionId,
+                    )
+                )
+            } catch (e: Exception) {
+                logger.warn("Failed to embed entity '{}': {}", subjectUri, e.message)
+            }
+        }
+
+        if (points.isNotEmpty()) {
+            vectorStore.upsert(collectionId, points)
+        }
+
+        logger.info("Generated {} entity embeddings for collection '{}'", points.size, collectionId)
+        return points.size
+    }
+
+    companion object {
+        fun buildEntityText(subjectUri: String, triples: List<StoredQuad>): String {
+            val localName = extractLocalName(subjectUri)
+            return triples.joinToString(". ") { quad ->
+                val predName = extractLocalName(quad.predicate)
+                val objName = if (quad.objectType == ObjectType.URI) {
+                    extractLocalName(quad.objectValue)
+                } else {
+                    quad.objectValue
+                }
+                "$localName $predName $objName"
+            }
+        }
+
+        fun extractLocalName(uri: String): String {
+            val fragment = uri.substringAfterLast('#', "")
+            if (fragment.isNotEmpty()) return fragment
+            return uri.substringAfterLast('/')
+        }
+    }
 
     private fun resolveObject(node: RDFNode): ResolvedObject = when {
         node.isURIResource -> ResolvedObject(
