@@ -1,0 +1,24 @@
+enum RdfFormat {
+    TURTLE
+    RDFXML
+    NTRIPLES
+}
+
+input ImportRdfInput {
+    collectionId: ID!
+    content: String!
+    format: RdfFormat!
+    dataset: String
+    generateEmbeddings: Boolean = false
+}
+
+type ImportRdfResult {
+    tripleCount: Int!
+    skippedCount: Int!
+    durationMs: Int!
+    embeddingsGenerated: Int!
+}
+
+extend type Mutation {
+    importRdf(input: ImportRdfInput!): ImportRdfResult!
+}
