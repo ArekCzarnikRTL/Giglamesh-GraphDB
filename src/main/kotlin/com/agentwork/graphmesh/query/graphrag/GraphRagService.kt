@@ -3,12 +3,9 @@ package com.agentwork.graphmesh.query.graphrag
 import com.agentwork.graphmesh.llm.resolveLlmModel
 
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.llm.LLModel
-import com.agentwork.graphmesh.extraction.embedding.EmbeddingConfig
 import com.agentwork.graphmesh.messaging.ExplainabilityEventProducer
+import com.agentwork.graphmesh.query.CachedEmbeddingService
 import com.agentwork.graphmesh.provenance.query.SelectedEdgeExplanation
 import com.agentwork.graphmesh.storage.QuadStore
 import com.agentwork.graphmesh.storage.StoredQuad
@@ -22,11 +19,10 @@ import java.util.UUID
 @OptIn(kotlin.time.ExperimentalTime::class)
 @Service
 class GraphRagService(
-    private val embeddingProvider: LLMEmbeddingProvider,
+    private val cachedEmbeddingService: CachedEmbeddingService,
     private val vectorStore: VectorStore,
     private val quadStore: QuadStore,
     private val promptExecutor: PromptExecutor,
-    private val embeddingConfig: EmbeddingConfig,
     @Value("\${graphmesh.extraction.model:gpt-4o}") private val llmModelName: String,
     private val explainabilityProducer: ExplainabilityEventProducer
 ) {
@@ -90,12 +86,7 @@ class GraphRagService(
     }
 
     private fun retrieveSubgraph(query: GraphRagQuery): List<StoredQuad> {
-        val embeddingModel = resolveLlmModel(embeddingConfig.model)
-
-        val embedding = runBlocking {
-            embeddingProvider.embed(query.question, embeddingModel)
-        }
-        val queryVector = FloatArray(embedding.size) { embedding[it].toFloat() }
+        val queryVector = cachedEmbeddingService.embed(query.question)
 
         val searchResults = vectorStore.search(
             collection = query.collectionId,

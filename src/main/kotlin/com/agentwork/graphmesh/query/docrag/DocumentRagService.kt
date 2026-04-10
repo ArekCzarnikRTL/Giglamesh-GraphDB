@@ -3,12 +3,9 @@ package com.agentwork.graphmesh.query.docrag
 import com.agentwork.graphmesh.llm.resolveLlmModel
 
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.llm.LLModel
-import com.agentwork.graphmesh.extraction.embedding.EmbeddingConfig
 import com.agentwork.graphmesh.librarian.LibrarianService
+import com.agentwork.graphmesh.query.CachedEmbeddingService
 import com.agentwork.graphmesh.messaging.ExplainabilityEventProducer
 import com.agentwork.graphmesh.storage.vector.VectorStore
 import kotlinx.coroutines.runBlocking
@@ -20,11 +17,10 @@ import java.util.UUID
 @OptIn(kotlin.time.ExperimentalTime::class)
 @Service
 class DocumentRagService(
-    private val embeddingProvider: LLMEmbeddingProvider,
+    private val cachedEmbeddingService: CachedEmbeddingService,
     private val vectorStore: VectorStore,
     private val librarianService: LibrarianService,
     private val promptExecutor: PromptExecutor,
-    private val embeddingConfig: EmbeddingConfig,
     @Value("\${graphmesh.extraction.model:gpt-4o}") private val llmModelName: String,
     private val explainabilityProducer: ExplainabilityEventProducer
 ) {
@@ -88,16 +84,11 @@ class DocumentRagService(
     }
 
     private fun retrieveChunks(query: DocumentRagQuery): List<RetrievedChunk> {
-        val embeddingModel = resolveLlmModel(embeddingConfig.model)
-
-        val embedding = runBlocking {
-            embeddingProvider.embed(query.question, embeddingModel)
-        }
-        val queryVector = FloatArray(embedding.size) { embedding[it].toFloat() }
+        val queryVector = cachedEmbeddingService.embed(query.question)
 
         logger.debug(
-            "Vector search: collection={}, embeddingDim={}, topK={}, threshold={}",
-            query.collectionId, queryVector.size, query.topK, query.similarityThreshold
+            "Vector search: collection={}, topK={}, threshold={}",
+            query.collectionId, query.topK, query.similarityThreshold
         )
 
         val searchResults = vectorStore.search(
