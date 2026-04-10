@@ -14,6 +14,8 @@ import com.agentwork.graphmesh.query.graphrag.GraphRagQuery
 import com.agentwork.graphmesh.query.graphrag.GraphRagService
 import com.agentwork.graphmesh.storage.QuadQuery
 import com.agentwork.graphmesh.storage.QuadStore
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -36,21 +38,31 @@ class NlpQueryService(
     fun query(query: NlpQuery): NlpQueryResult {
         val startTime = System.currentTimeMillis()
 
-        // Step 1: Intent Detection
-        val detectedIntent = when {
-            query.forceIntent != null ->
-                DetectedIntent(query.forceIntent, 1.0, "Intent forced by caller")
+        // Step 1: Intent Detection + Embedding (parallel when MIXED)
+        val (detectedIntent, precomputedEmbedding) = when {
+            query.forceIntent != null -> {
+                DetectedIntent(query.forceIntent, 1.0, "Intent forced by caller") to
+                    cachedEmbeddingService.embed(query.question)
+            }
             !contentTypeService.hasDocuments(query.collectionId) -> {
                 logger.info("Collection has only graph data, skipping intent detection")
-                DetectedIntent(QueryIntent.GRAPH_QUERY, 1.0, "Collection contains only graph data")
+                DetectedIntent(QueryIntent.GRAPH_QUERY, 1.0, "Collection contains only graph data") to
+                    cachedEmbeddingService.embed(query.question)
             }
             !contentTypeService.hasTriples(query.collectionId) -> {
                 logger.info("Collection has only documents, skipping intent detection")
-                DetectedIntent(QueryIntent.DOCUMENT_QUERY, 1.0, "Collection contains only documents")
+                DetectedIntent(QueryIntent.DOCUMENT_QUERY, 1.0, "Collection contains only documents") to
+                    cachedEmbeddingService.embed(query.question)
             }
             else -> {
-                logger.info("Mixed collection, detecting intent for: '{}'", query.question)
-                detectIntent(query.question)
+                logger.info("Mixed collection, detecting intent in parallel with embedding")
+                runBlocking {
+                    coroutineScope {
+                        val intentDeferred = async { detectIntent(query.question) }
+                        val embeddingDeferred = async { cachedEmbeddingService.embed(query.question) }
+                        intentDeferred.await() to embeddingDeferred.await()
+                    }
+                }
             }
         }
         logger.info("Detected intent: {} (confidence: {})", detectedIntent.intent, detectedIntent.confidence)
@@ -69,8 +81,8 @@ class NlpQueryService(
             logger.info("Question reformulated: '{}' -> '{}'", query.question, effectiveQuestion)
         }
 
-        // Step 3: Route to appropriate service
-        val (answer, sources) = route(effectiveQuestion, detectedIntent.intent, query.collectionId)
+        // Step 3: Route to appropriate service (embedding already computed)
+        val (answer, sources) = route(effectiveQuestion, detectedIntent.intent, query.collectionId, precomputedEmbedding)
 
         val durationMs = System.currentTimeMillis() - startTime
         logger.info("NLP query completed in {} ms via {}", durationMs, detectedIntent.intent)
@@ -174,12 +186,15 @@ class NlpQueryService(
         return DetectedIntent(effectiveIntent, confidence, reasoning)
     }
 
-    private fun route(question: String, intent: QueryIntent, collectionId: String): Pair<String, List<String>> {
-        val embedding = cachedEmbeddingService.embed(question)
-
+    private fun route(
+        question: String,
+        intent: QueryIntent,
+        collectionId: String,
+        precomputedEmbedding: FloatArray
+    ): Pair<String, List<String>> {
         return when (intent) {
             QueryIntent.GRAPH_QUERY -> {
-                val result = graphRagService.query(GraphRagQuery(question, collectionId, precomputedEmbedding = embedding))
+                val result = graphRagService.query(GraphRagQuery(question, collectionId, precomputedEmbedding = precomputedEmbedding))
                 val sources = result.selectedEdges.map { edge ->
                     "${edge.subject} --[${edge.predicate}]--> ${edge.objectValue}"
                 }
@@ -187,7 +202,7 @@ class NlpQueryService(
             }
 
             QueryIntent.DOCUMENT_QUERY -> {
-                val result = documentRagService.query(DocumentRagQuery(question, collectionId, precomputedEmbedding = embedding))
+                val result = documentRagService.query(DocumentRagQuery(question, collectionId, precomputedEmbedding = precomputedEmbedding))
                 val sources = result.sources.map { src ->
                     "${src.documentTitle} (page ${src.pageNumber ?: "?"})"
                 }
@@ -204,8 +219,17 @@ class NlpQueryService(
             }
 
             QueryIntent.HYBRID -> {
-                val graphResult = graphRagService.query(GraphRagQuery(question, collectionId, precomputedEmbedding = embedding))
-                val docResult = documentRagService.query(DocumentRagQuery(question, collectionId, precomputedEmbedding = embedding))
+                val (graphResult, docResult) = runBlocking {
+                    coroutineScope {
+                        val graph = async {
+                            graphRagService.query(GraphRagQuery(question, collectionId, precomputedEmbedding = precomputedEmbedding))
+                        }
+                        val doc = async {
+                            documentRagService.query(DocumentRagQuery(question, collectionId, precomputedEmbedding = precomputedEmbedding))
+                        }
+                        graph.await() to doc.await()
+                    }
+                }
 
                 val answer = """
                     Based on the Knowledge Graph:
