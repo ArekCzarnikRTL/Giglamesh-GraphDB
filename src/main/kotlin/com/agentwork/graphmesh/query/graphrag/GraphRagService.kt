@@ -61,14 +61,10 @@ class GraphRagService(
             )
         }
 
-        // Phase 2: Edge Selection
-        logger.info("Phase 2: Edge selection from {} edges", subgraph.size)
-        val selectedEdges = selectEdges(query.question, subgraph, query.maxSelectedEdges)
-        logger.info("{} edges selected", selectedEdges.size)
-
-        // Phase 3: Answer Synthesis
-        logger.info("Phase 3: Answer synthesis")
-        val answer = synthesizeAnswer(query.question, selectedEdges)
+        // Phase 2+3: Combined selection and synthesis
+        logger.info("Phase 2+3: Select and synthesize from {} edges", subgraph.size)
+        val (answer, selectedEdges) = selectAndSynthesize(query.question, subgraph, query.maxSelectedEdges)
+        logger.info("{} edges selected, answer generated", selectedEdges.size)
 
         val durationMs = System.currentTimeMillis() - startTime
         logger.info("Graph RAG pipeline completed in {} ms", durationMs)
@@ -240,6 +236,68 @@ class GraphRagService(
                     relevanceScore = 1.0 - (index.toDouble() / edges.size)
                 )
             }
+    }
+
+    internal fun parseSelectAndSynthesize(llmResponse: String, edges: List<StoredQuad>): Pair<String, List<SelectedEdge>> {
+        val edgesMarker = "EDGES:"
+        val answerMarker = "ANSWER:"
+        val edgesIdx = llmResponse.indexOf(edgesMarker)
+        val rawAnswer = if (edgesIdx >= 0) llmResponse.substring(0, edgesIdx) else llmResponse
+        val cleanAnswer = rawAnswer.removePrefix(answerMarker).trim()
+        val edgeSection = if (edgesIdx >= 0) llmResponse.substring(edgesIdx + edgesMarker.length) else ""
+        val selectedEdges = edgeSection.lines()
+            .map { it.trim() }
+            .filter { it.isNotBlank() && it.contains("|") }
+            .mapNotNull { line ->
+                val parts = line.split("|", limit = 2)
+                if (parts.size != 2) return@mapNotNull null
+                val index = parts[0].trim().toIntOrNull() ?: return@mapNotNull null
+                val reasoning = parts[1].trim()
+                if (index !in edges.indices || reasoning.isBlank()) return@mapNotNull null
+                val quad = edges[index]
+                SelectedEdge(subject = quad.subject, predicate = quad.predicate, objectValue = quad.objectValue,
+                    dataset = quad.dataset, reasoning = reasoning, relevanceScore = 1.0 - (index.toDouble() / edges.size))
+            }
+        return cleanAnswer to selectedEdges
+    }
+
+    private fun selectAndSynthesize(
+        question: String,
+        edges: List<StoredQuad>,
+        maxSelected: Int
+    ): Pair<String, List<SelectedEdge>> {
+        val edgeList = edges.mapIndexed { index, quad ->
+            "$index|${quad.subject}|${quad.predicate}|${quad.objectValue}"
+        }.joinToString("\n")
+
+        val combinedPrompt = prompt("select-and-synthesize") {
+            system("""
+                You are a knowledge assistant. Answer the user's question based ONLY on the
+                provided knowledge graph facts. Do not make up information beyond what the facts state.
+                If the facts don't contain enough information, say so.
+
+                After your answer, list the fact numbers you used with a brief reason.
+                Select at most $maxSelected facts. Only cite truly relevant facts.
+
+                Knowledge graph facts:
+                $edgeList
+
+                Respond in this exact format:
+                ANSWER:
+                <your answer here>
+
+                EDGES:
+                <index>|<why this fact was relevant>
+            """.trimIndent())
+            user(question)
+        }
+
+        val llmModel = resolveLlmModel(llmModelName)
+        val response = runBlocking {
+            promptExecutor.execute(combinedPrompt, llmModel)
+        }
+
+        return parseSelectAndSynthesize(response.first().content, edges)
     }
 
     private fun synthesizeAnswer(question: String, selectedEdges: List<SelectedEdge>): String {

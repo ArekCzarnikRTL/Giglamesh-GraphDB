@@ -167,6 +167,52 @@ class GraphRagServiceTest {
         assertEquals(listOf("http://example.org/Alice", "http://example.org/Bob"), entityUris)
     }
 
+    @Test
+    fun `parseSelectAndSynthesize extracts answer and edges`() {
+        val response = """
+            ANSWER:
+            Alice works at Acme Corp in Berlin.
+
+            EDGES:
+            0|Alice works at Acme Corp, directly relevant
+            2|Location info helps contextualize
+        """.trimIndent()
+
+        val (answer, edges) = parseSelectAndSynthesizeCopy(response, testEdges)
+        assertEquals("Alice works at Acme Corp in Berlin.", answer)
+        assertEquals(2, edges.size)
+        assertEquals("Alice", edges[0].subject)
+        assertEquals("Acme Corp", edges[1].subject)
+    }
+
+    @Test
+    fun `parseSelectAndSynthesize handles missing EDGES marker`() {
+        val response = "Alice works at Acme Corp."
+
+        val (answer, edges) = parseSelectAndSynthesizeCopy(response, testEdges)
+        assertEquals("Alice works at Acme Corp.", answer)
+        assertTrue(edges.isEmpty())
+    }
+
+    @Test
+    fun `parseSelectAndSynthesize handles ANSWER marker only`() {
+        val response = "ANSWER:\nSome answer text without edges."
+
+        val (answer, edges) = parseSelectAndSynthesizeCopy(response, testEdges)
+        assertEquals("Some answer text without edges.", answer)
+        assertTrue(edges.isEmpty())
+    }
+
+    @Test
+    fun `parseSelectAndSynthesize handles empty answer section`() {
+        val response = "ANSWER:\n\nEDGES:\n0|Alice works at Acme Corp"
+
+        val (answer, edges) = parseSelectAndSynthesizeCopy(response, testEdges)
+        assertEquals("", answer)
+        assertEquals(1, edges.size)
+        assertEquals("Alice", edges[0].subject)
+    }
+
     // Standalone copy of GraphRagService.collectEntityUris for testing without
     // having to construct the full service (which needs LLM/vector collaborators).
     private fun collectEntityUrisCopy(quotedTriples: List<StoredQuad>): List<String> {
@@ -174,6 +220,31 @@ class GraphRagServiceTest {
             .flatMap { listOf(it.subject, it.objectValue) }
             .filter { it.startsWith("http://graphmesh.io/entity/") }
             .distinct()
+    }
+
+    // Standalone copy of GraphRagService.parseSelectAndSynthesize for testing without
+    // having to construct the full service.
+    private fun parseSelectAndSynthesizeCopy(llmResponse: String, edges: List<StoredQuad>): Pair<String, List<SelectedEdge>> {
+        val edgesMarker = "EDGES:"
+        val answerMarker = "ANSWER:"
+        val edgesIdx = llmResponse.indexOf(edgesMarker)
+        val rawAnswer = if (edgesIdx >= 0) llmResponse.substring(0, edgesIdx) else llmResponse
+        val cleanAnswer = rawAnswer.removePrefix(answerMarker).trim()
+        val edgeSection = if (edgesIdx >= 0) llmResponse.substring(edgesIdx + edgesMarker.length) else ""
+        val selectedEdges = edgeSection.lines()
+            .map { it.trim() }
+            .filter { it.isNotBlank() && it.contains("|") }
+            .mapNotNull { line ->
+                val parts = line.split("|", limit = 2)
+                if (parts.size != 2) return@mapNotNull null
+                val index = parts[0].trim().toIntOrNull() ?: return@mapNotNull null
+                val reasoning = parts[1].trim()
+                if (index !in edges.indices || reasoning.isBlank()) return@mapNotNull null
+                val quad = edges[index]
+                SelectedEdge(subject = quad.subject, predicate = quad.predicate, objectValue = quad.objectValue,
+                    dataset = quad.dataset, reasoning = reasoning, relevanceScore = 1.0 - (index.toDouble() / edges.size))
+            }
+        return cleanAnswer to selectedEdges
     }
 
     // Standalone copy of parsing logic for testing
