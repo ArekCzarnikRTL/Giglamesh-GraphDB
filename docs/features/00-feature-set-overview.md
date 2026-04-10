@@ -105,6 +105,12 @@ jeweiligen Feature-Docs fuer die Motivation.
 | 43 | RDF Data Import               | [43-rdf-import.md](43-rdf-import.md)                 | 02, 07, 08, 14     | M       |
 | 44 | Ontology Import API           | [44-ontology-import-api.md](44-ontology-import-api.md) | 14, 20           | S       |
 
+### Phase 9: Performance
+
+| #  | Feature                       | Datei                                                          | Abhaengig von      | Aufwand |
+|----|-------------------------------|----------------------------------------------------------------|---------------------|---------|
+| 45 | Query Performance Optimierung | [45-query-performance.md](45-query-performance.md)             | 15, 16, 18         | L       |
+
 ## DAG-Visualisierung
 
 ```
@@ -152,4 +158,6 @@ Phase 6 (Fixes):    07,13,15,29 ──▶ 36(FixRetrieveSubgraph)
 
 Phase 8 (Import):      02,07,08,14 ──▶ 43(RdfImport)
                                 14,20 ──▶ 44(OntologyImportApi)
+
+Phase 9 (Perf):         15,16,18 ──▶ 45(QueryPerformance)
 ```
