@@ -107,6 +107,8 @@ class GraphRagService(
             limit = 50
         )
 
+        logger.info("Vector search returned {} hits for collection {}", searchResults.size, query.collectionId)
+
         // Split results into chunk-based and entity-based hits
         val chunkUrns = searchResults
             .mapNotNull { it.payload["chunk_id"]?.toString() }
@@ -118,8 +120,8 @@ class GraphRagService(
             .distinct()
 
         if (chunkUrns.isEmpty() && entityUris.isEmpty()) {
-            logger.debug("retrieveSubgraph: no chunk_ids or entity_uris in vector hits")
-            return emptyList()
+            logger.info("No vector hits, falling back to quad store scan for collection {}", query.collectionId)
+            return fallbackQuadStoreScan(query)
         }
 
         // Path 1: Chunk-based retrieval (existing provenance path)
@@ -155,6 +157,16 @@ class GraphRagService(
         )
 
         return (chunkTriples + entityTriples + expandedEdges).distinct().take(query.maxEdges)
+    }
+
+    /**
+     * Fallback when no embeddings exist: load all quads from the collection
+     * directly from Cassandra and let the LLM select the relevant edges.
+     */
+    private fun fallbackQuadStoreScan(query: GraphRagQuery): List<StoredQuad> {
+        val allQuads = quadStore.query(query.collectionId, com.agentwork.graphmesh.storage.QuadQuery())
+        logger.info("Fallback quad store scan: {} quads in collection {}", allQuads.size, query.collectionId)
+        return allQuads.take(query.maxEdges)
     }
 
     /**

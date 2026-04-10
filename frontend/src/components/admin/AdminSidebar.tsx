@@ -10,6 +10,7 @@ const ADMIN_NAV = [
   { href: "/admin/collections", label: "Collections", exact: false },
   { href: "/admin/config", label: "Konfiguration", exact: false },
   { href: "/admin/pipeline", label: "Pipeline", exact: false },
+  { href: "/admin/ontologies", label: "Ontologien", exact: false },
 ];
 
 export function AdminSidebar() {

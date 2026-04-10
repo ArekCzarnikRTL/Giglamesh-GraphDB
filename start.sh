@@ -31,17 +31,17 @@ trap cleanup INT TERM EXIT
 truncate_log
 echo "Log geleert: $LOG_FILE"
 
-echo "Starte Backend (Spring Boot) auf :8080..."
+echo "Starte Backend (Spring Boot) auf :8083..."
 ./gradlew bootRun &
 BACKEND_PID=$!
 
-echo "Starte Frontend (Next.js) auf :3000..."
+echo "Starte Frontend (Next.js) auf :3002..."
 pnpm -C frontend dev &
 FRONTEND_PID=$!
 
 echo
-echo "Backend  PID: $BACKEND_PID  -> http://localhost:8080"
-echo "Frontend PID: $FRONTEND_PID  -> http://localhost:3000"
+echo "Backend  PID: $BACKEND_PID  -> http://localhost:8083"
+echo "Frontend PID: $FRONTEND_PID  -> http://localhost:3002"
 echo "Strg+C zum Beenden."
 echo
 

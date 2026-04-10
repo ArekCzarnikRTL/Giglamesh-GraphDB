@@ -1,0 +1,43 @@
+@prefix ex:   <http://example.org/> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# --- Personen ---
+
+ex:Alice a ex:Person ;
+    ex:name "Alice Müller"@de ;
+    ex:email "alice@example.org" ;
+    ex:arbeitetBei ex:Acme .
+
+ex:Bob a ex:Person ;
+    ex:name "Bob Schmidt"@de ;
+    ex:email "bob@example.org" ;
+    ex:arbeitetBei ex:Acme ;
+    ex:leitet ex:ProjectX .
+
+ex:Carol a ex:Person ;
+    ex:name "Carol Weber"@de ;
+    ex:arbeitetBei ex:TechCorp .
+
+# --- Organisationen ---
+
+ex:Acme a ex:Organisation ;
+    ex:name "Acme GmbH"@de ;
+    ex:gruendungsjahr "2010"^^xsd:integer .
+
+ex:TechCorp a ex:Organisation ;
+    ex:name "TechCorp AG"@de ;
+    ex:gruendungsjahr "2015"^^xsd:integer .
+
+# --- Projekte ---
+
+ex:ProjectX a ex:Projekt ;
+    ex:name "Projekt X"@de ;
+    ex:gehoertZu ex:Acme ;
+    ex:startdatum "2024-01-15"^^xsd:date .
+
+# --- Beziehungen ---
+
+ex:Alice ex:knows ex:Bob .
+ex:Bob ex:knows ex:Carol .
+ex:Alice ex:leitet ex:ProjectX .

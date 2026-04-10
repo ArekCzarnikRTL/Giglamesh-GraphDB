@@ -177,4 +177,16 @@ class JenaAdapterTest {
         assertEquals(1, result.objectProperties.size)
         assertTrue(result.objectProperties.containsKey("knows"))
     }
+
+    @Test
+    fun `parseNTriples parses N-Triples format`() {
+        val ntriples = """
+            <http://example.org/Alice> <http://example.org/knows> <http://example.org/Bob> .
+            <http://example.org/Alice> <http://example.org/name> "Alice" .
+        """.trimIndent()
+
+        val model = adapter.parseNTriples(ntriples)
+
+        assertEquals(2, model.size())
+    }
 }

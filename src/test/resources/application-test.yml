@@ -5,7 +5,7 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
     properties:
-      schema.registry.url: http://localhost:8081
+      schema.registry.url: http://localhost:8181
   cassandra:
     contact-points: localhost
     port: 9042

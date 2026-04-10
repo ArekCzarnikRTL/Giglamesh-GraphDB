@@ -20,7 +20,7 @@ import com.github.ajalt.clikt.parameters.types.enum
 class GraphMeshCli : SuspendingCliktCommand(name = "graphmesh") {
 
     private val endpoint by option("--endpoint", "-e", help = "GraphQL endpoint URL")
-        .default(System.getenv("GRAPHMESH_ENDPOINT") ?: "http://localhost:8080/graphql")
+        .default(System.getenv("GRAPHMESH_ENDPOINT") ?: "http://localhost:8083/graphql")
 
     private val token by option("--token", "-t", help = "Bearer token for authentication")
         .default(System.getenv("GRAPHMESH_TOKEN") ?: "")

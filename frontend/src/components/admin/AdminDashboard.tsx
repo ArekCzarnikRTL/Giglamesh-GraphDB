@@ -7,6 +7,7 @@ import { ADMIN_COLLECTIONS_QUERY } from "@/graphql/admin";
 import { AdminCollection } from "@/types/admin";
 import { MetricCard } from "./MetricCard";
 import { CollectionStatsRow } from "./CollectionStatsRow";
+import { PurgePanel } from "./PurgePanel";
 import {
   Table,
   TableBody,
@@ -104,6 +105,8 @@ export function AdminDashboard() {
           </TableBody>
         </Table>
       )}
+
+      <PurgePanel />
     </div>
   );
 }

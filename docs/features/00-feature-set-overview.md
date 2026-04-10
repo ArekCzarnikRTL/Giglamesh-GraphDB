@@ -98,6 +98,13 @@ jeweiligen Feature-Docs fuer die Motivation.
 | 40 | Prompt Template Registry      | [40-prompt-template-registry.md](40-prompt-template-registry.md)   | 02, 05, 06                 | L       |
 | 41 | Structured Row Embeddings     | [41-structured-row-embeddings.md](41-structured-row-embeddings.md) | 04, 05, 13, 14, 22         | L       |
 
+### Phase 8: Data Import
+
+| #  | Feature                       | Datei                                                | Abhaengig von      | Aufwand |
+|----|-------------------------------|------------------------------------------------------|---------------------|---------|
+| 43 | RDF Data Import               | [43-rdf-import.md](43-rdf-import.md)                 | 02, 07, 08, 14     | M       |
+| 44 | Ontology Import API           | [44-ontology-import-api.md](44-ontology-import-api.md) | 14, 20           | S       |
+
 ## DAG-Visualisierung
 
 ```
@@ -142,4 +149,7 @@ Phase 5 (Extend):   05,15,16,17 ──▶ 25(Agent)
                            06,08,14 ──▶ 35(AdminUI)
 
 Phase 6 (Fixes):    07,13,15,29 ──▶ 36(FixRetrieveSubgraph)
+
+Phase 8 (Import):      02,07,08,14 ──▶ 43(RdfImport)
+                                14,20 ──▶ 44(OntologyImportApi)
 ```

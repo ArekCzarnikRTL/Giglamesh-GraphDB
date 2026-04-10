@@ -4,11 +4,11 @@
 # ist hochgefahren. `jq` und `curl` muessen installiert sein.
 #
 # Aufruf:  ./smoke-test.sh
-# Optional: BACKEND_URL=http://localhost:8080 ./smoke-test.sh
+# Optional: BACKEND_URL=http://localhost:8083 ./smoke-test.sh
 
 set -uo pipefail
 
-BACKEND_URL="${BACKEND_URL:-http://localhost:8080}"
+BACKEND_URL="${BACKEND_URL:-http://localhost:8083}"
 GRAPHQL_URL="$BACKEND_URL/graphql"
 TEST_PDF="${TEST_PDF:-test-pdf.pdf}"
 EXTRACTION_TIMEOUT="${EXTRACTION_TIMEOUT:-300}"  # max Sekunden, die wir auf Extraction warten

@@ -204,6 +204,14 @@ class JenaAdapter {
         return writer.toString()
     }
 
+    fun parseNTriples(content: String): Model {
+        val model = ModelFactory.createDefaultModel()
+        ByteArrayInputStream(content.toByteArray()).use { stream ->
+            RDFDataMgr.read(model, stream, Lang.NTRIPLES)
+        }
+        return model
+    }
+
     fun parseRdfXml(content: String): Model {
         val model = ModelFactory.createDefaultModel()
         ByteArrayInputStream(content.toByteArray()).use { stream ->

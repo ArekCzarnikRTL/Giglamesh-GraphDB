@@ -40,7 +40,7 @@ class DocumentIngestedIntegrationTest {
             "bootstrap.servers" to "localhost:9092",
             "group.id" to "test-${UUID.randomUUID()}",
             "auto.offset.reset" to "earliest",
-            "schema.registry.url" to "http://localhost:8081",
+            "schema.registry.url" to "http://localhost:8181",
             "key.deserializer" to "org.apache.kafka.common.serialization.StringDeserializer",
             "value.deserializer" to "io.confluent.kafka.serializers.KafkaAvroDeserializer"
         )
@@ -75,7 +75,7 @@ class DocumentIngestedIntegrationTest {
             "bootstrap.servers" to "localhost:9092",
             "group.id" to "test-headers-${UUID.randomUUID()}",
             "auto.offset.reset" to "earliest",
-            "schema.registry.url" to "http://localhost:8081",
+            "schema.registry.url" to "http://localhost:8181",
             "key.deserializer" to "org.apache.kafka.common.serialization.StringDeserializer",
             "value.deserializer" to "io.confluent.kafka.serializers.KafkaAvroDeserializer"
         )

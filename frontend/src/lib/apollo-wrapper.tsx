@@ -12,7 +12,7 @@ import {
 
 function makeClient() {
   const httpUri =
-    process.env.NEXT_PUBLIC_GRAPHQL_URL ?? "http://localhost:8080/graphql";
+    process.env.NEXT_PUBLIC_GRAPHQL_URL ?? "http://localhost:8083/graphql";
   const wsUri =
     process.env.NEXT_PUBLIC_GRAPHQL_WS_URL ??
     httpUri.replace(/^http/, "ws");

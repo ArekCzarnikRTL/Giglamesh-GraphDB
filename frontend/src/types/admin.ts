@@ -50,3 +50,21 @@ export interface PipelineDocument {
   state: "UPLOADED" | "PROCESSING" | "EXTRACTED" | "FAILED";
   createdAt: string;
 }
+
+export interface PurgeResult {
+  collectionsDeleted: number;
+  documentsDeleted: number;
+  ontologiesDeleted: number;
+  kafkaTopicsDeleted: number;
+  durationMs: number;
+}
+
+export interface OntologyInfo {
+  key: string;
+  name: string;
+  namespace: string;
+  version: string;
+  classCount: number;
+  objectPropertyCount: number;
+  datatypePropertyCount: number;
+}

@@ -1,0 +1,33 @@
+enum OntologyFormat {
+    TURTLE
+    RDFXML
+}
+
+input ImportOntologyInput {
+    key:       String!
+    content:   String!
+    format:    OntologyFormat!
+    name:      String!
+    namespace: String!
+    version:   String = "1.0"
+}
+
+type OntologyInfo {
+    key:                   String!
+    name:                  String!
+    namespace:             String!
+    version:               String!
+    classCount:            Int!
+    objectPropertyCount:   Int!
+    datatypePropertyCount: Int!
+}
+
+extend type Query {
+    listOntologies: [OntologyInfo!]!
+    ontology(key: String!): OntologyInfo
+}
+
+extend type Mutation {
+    importOntology(input: ImportOntologyInput!): OntologyInfo!
+    deleteOntology(key: String!): Boolean!
+}

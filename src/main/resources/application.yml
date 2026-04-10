@@ -5,6 +5,9 @@ logging:
     com.agentwork.graphmesh: DEBUG
     ai.koog: DEBUG
 
+server:
+  port: 8083
+
 spring:
   application:
     name: GraphMesh
@@ -39,7 +42,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
     properties:
-      schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
+      schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8181}
       specific.avro.reader: false
   cassandra:
     contact-points: ${CASSANDRA_CONTACT_POINTS:localhost}

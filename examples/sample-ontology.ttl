@@ -1,0 +1,70 @@
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex:   <http://example.org/ontology/> .
+
+ex: a owl:Ontology ;
+    rdfs:label "Beispiel-Ontologie" ;
+    owl:versionInfo "1.0" .
+
+# --- Klassen ---
+
+ex:Person a owl:Class ;
+    rdfs:label "Person"@de , "Person"@en ;
+    rdfs:comment "Eine natuerliche Person" .
+
+ex:Organisation a owl:Class ;
+    rdfs:label "Organisation"@de , "Organization"@en ;
+    rdfs:comment "Ein Unternehmen, Verein oder eine Behoerde" .
+
+ex:Projekt a owl:Class ;
+    rdfs:label "Projekt"@de , "Project"@en ;
+    rdfs:comment "Ein zeitlich begrenztes Vorhaben" .
+
+ex:Dokument a owl:Class ;
+    rdfs:label "Dokument"@de , "Document"@en .
+
+# --- Object Properties ---
+
+ex:arbeitetBei a owl:ObjectProperty ;
+    rdfs:label "arbeitet bei"@de , "works at"@en ;
+    rdfs:domain ex:Person ;
+    rdfs:range ex:Organisation .
+
+ex:leitet a owl:ObjectProperty ;
+    rdfs:label "leitet"@de , "manages"@en ;
+    rdfs:domain ex:Person ;
+    rdfs:range ex:Projekt .
+
+ex:gehoertZu a owl:ObjectProperty ;
+    rdfs:label "gehoert zu"@de , "belongs to"@en ;
+    rdfs:domain ex:Projekt ;
+    rdfs:range ex:Organisation .
+
+ex:hatAutor a owl:ObjectProperty ;
+    rdfs:label "hat Autor"@de , "has author"@en ;
+    rdfs:domain ex:Dokument ;
+    rdfs:range ex:Person .
+
+# --- Datatype Properties ---
+
+ex:name a owl:DatatypeProperty ;
+    rdfs:label "Name"@de , "name"@en ;
+    rdfs:domain ex:Person ;
+    rdfs:range xsd:string .
+
+ex:email a owl:DatatypeProperty ;
+    rdfs:label "E-Mail"@de , "email"@en ;
+    rdfs:domain ex:Person ;
+    rdfs:range xsd:string .
+
+ex:gruendungsjahr a owl:DatatypeProperty ;
+    rdfs:label "Gruendungsjahr"@de , "founding year"@en ;
+    rdfs:domain ex:Organisation ;
+    rdfs:range xsd:integer .
+
+ex:startdatum a owl:DatatypeProperty ;
+    rdfs:label "Startdatum"@de , "start date"@en ;
+    rdfs:domain ex:Projekt ;
+    rdfs:range xsd:date .

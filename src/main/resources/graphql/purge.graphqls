@@ -1,0 +1,11 @@
+type PurgeResult {
+    collectionsDeleted: Int!
+    documentsDeleted: Int!
+    ontologiesDeleted: Int!
+    kafkaTopicsDeleted: Int!
+    durationMs: Int!
+}
+
+extend type Mutation {
+    purgeAllData: PurgeResult!
+}
