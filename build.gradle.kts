@@ -160,6 +160,12 @@ tasks.named("compileKotlin") {
     dependsOn(tasks.named("graphqlGenerateClient"))
 }
 
+tasks.bootRun {
+    if (project.hasProperty("args")) {
+        project.properties["args"]?.toString()?.split(",")?.let { args(it) }
+    }
+}
+
 tasks.register<JavaExec>("cliRun") {
     group = "cli"
     description = "Runs the GraphMesh CLI. Usage: ./gradlew cliRun --args=\"collection list\""
