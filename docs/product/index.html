@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GraphMesh — KI-Knowledge-Graph-Plattform</title>
+<title>GraphMesh - KI-Knowledge-Graph-Plattform</title>
 <meta name="description" content="GraphMesh Produktdokumentation: Automatische Wissensextraktion, Knowledge Graph, semantische Suche und KI-Agenten.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -568,6 +568,8 @@ a, button, input, select { transition: all var(--transition-interactive); }
       <li><a href="#graph">Graph</a></li>
       <li><a href="#agent">Agent</a></li>
       <li><a href="#admin">Admin</a></li>
+      <li><a href="#troubleshooting">Hilfe</a></li>
+      <li><a href="#changelog">Changelog</a></li>
     </ul>
     <div class="nav-actions">
       <button class="theme-toggle" id="themeToggle" aria-label="Theme wechseln">
@@ -1166,6 +1168,157 @@ graphmesh query graphrag <span class="str">"Welche Risiken bestehen?"</span> \
 graphmesh config list --type llm
 graphmesh config set model-name <span class="str">"gpt-4o"</span> --type llm</pre>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 09 · TROUBLESHOOTING ═══════ -->
+<section id="troubleshooting" class="section" style="border-top: 1px solid var(--color-divider);">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-label">09 &middot; Fehlerbehebung</div>
+        <h2 class="section-title">Troubleshooting</h2>
+      </div>
+    </div>
+    <p class="section-desc">Haeufige Probleme bei der Nutzung von GraphMesh und deren Loesungen.</p>
+
+    <div class="card-grid">
+      <!-- LLM -->
+      <div class="feature-card">
+        <div class="feature-card-title">LLM-Verbindung</div>
+        <p class="feature-card-problem"><strong>API-Key nicht konfiguriert:</strong> Extraktion schlaegt fehl, Fehlermeldung zur LLM-Verbindung im Log.</p>
+        <p class="feature-card-solution"><strong>Loesung:</strong> Umgebungsvariable <code>OPENAI_API_KEY</code> bzw. <code>ANTHROPIC_API_KEY</code> setzen. In <code>application.yml</code> pruefen, ob der Provider aktiviert ist. Anwendung neu starten.</p>
+        <p class="feature-card-problem" style="margin-top: var(--space-3);"><strong>Provider antwortet nicht:</strong> Extraktion haengt oder bricht mit Timeout ab.</p>
+        <p class="feature-card-solution"><strong>Loesung:</strong> Internetverbindung und Provider-Status pruefen. Modellname validieren (Standard: <code>gpt-4o-mini</code>). Bei Ollama: Server unter <code>http://localhost:11434</code> erreichbar?</p>
+      </div>
+
+      <!-- Upload -->
+      <div class="feature-card">
+        <div class="feature-card-title">Dokument-Upload</div>
+        <p class="feature-card-problem"><strong>PDF-Dekodierung fehlgeschlagen:</strong> Dokument bleibt im Status &ldquo;Fehler&rdquo;.</p>
+        <p class="feature-card-solution"><strong>Loesung:</strong> PDF in Standard-Viewer pruefen. Kein Passwortschutz? Gescannte Dokumente benoetigen OCR-Vorverarbeitung.</p>
+        <p class="feature-card-problem" style="margin-top: var(--space-3);"><strong>Dokument nicht gefunden:</strong> &ldquo;Document not found&rdquo; nach Upload.</p>
+        <p class="feature-card-solution"><strong>Loesung:</strong> Verarbeitung laeuft asynchron &mdash; wenige Sekunden warten. Status im Admin-Dashboard pruefen.</p>
+      </div>
+
+      <!-- Abfragen -->
+      <div class="feature-card">
+        <div class="feature-card-title">Abfrage-Probleme</div>
+        <p class="feature-card-problem"><strong>Keine Ergebnisse:</strong> NLP-Abfrage liefert nichts oder irrelevante Treffer.</p>
+        <p class="feature-card-solution"><strong>Loesung:</strong> Dokumente vorhanden und verarbeitet? Embeddings erzeugt? Abfrage praezisieren. Embedding-Modell pruefen (<code>EMBEDDING_MODEL</code>).</p>
+        <p class="feature-card-problem" style="margin-top: var(--space-3);"><strong>Timeout:</strong> Abfragen brechen bei grossen Collections ab.</p>
+        <p class="feature-card-solution"><strong>Loesung:</strong> <code>limit</code>-Parameter verwenden. Qdrant-Service pruefen. Kleinere, praezisere Fragen formulieren.</p>
+      </div>
+
+      <!-- Infrastruktur -->
+      <div class="feature-card">
+        <div class="feature-card-title">Infrastruktur</div>
+        <p class="feature-card-problem"><strong>Services nicht erreichbar:</strong> Cassandra, Qdrant, Kafka oder MinIO sind nicht gestartet.</p>
+        <p class="feature-card-solution"><strong>Loesung:</strong> <code>docker compose up -d</code> startet alle Dienste. Einzeln pruefen:</p>
+        <ul style="font-size: var(--text-sm); color: var(--color-text-muted); margin-top: var(--space-2); padding-left: var(--space-5); line-height: 1.8;">
+          <li>Cassandra: Port <code>9042</code></li>
+          <li>Qdrant: <code>curl http://localhost:6333/healthz</code></li>
+          <li>Kafka: Port <code>9092</code></li>
+          <li>MinIO: <code>curl http://localhost:9000/minio/health/live</code></li>
+        </ul>
+      </div>
+
+      <!-- Frontend -->
+      <div class="feature-card">
+        <div class="feature-card-title">Frontend</div>
+        <p class="feature-card-problem"><strong>Keine Daten in der UI:</strong> Netzwerkfehler oder leere Seiten.</p>
+        <p class="feature-card-solution"><strong>Loesung:</strong> Backend unter <code>http://localhost:8083/graphiql</code> erreichbar? Falls anderer Port: <code>NEXT_PUBLIC_GRAPHQL_URL</code> setzen.</p>
+        <p class="feature-card-problem" style="margin-top: var(--space-3);"><strong>Streaming bricht ab:</strong> WebSocket-Verbindung schlaegt fehl.</p>
+        <p class="feature-card-solution"><strong>Loesung:</strong> WebSocket-Endpunkt <code>ws://localhost:8083/graphql</code> pruefen. Bei Reverse-Proxy: WebSocket-Upgrade weiterleiten.</p>
+      </div>
+
+      <!-- Allgemein -->
+      <div class="feature-card">
+        <div class="feature-card-title">Allgemeine Tipps</div>
+        <p class="feature-card-solution">
+          <strong>Logs:</strong> <code>logs/graphmesh.log</code> (Level: DEBUG)<br>
+          <strong>Alle Services starten:</strong> <code>docker compose up -d</code><br>
+          <strong>GraphiQL:</strong> <code>http://localhost:8083/graphiql</code> fuer interaktive API-Tests<br>
+          <strong>Konfiguration:</strong> Alle Werte ueber Umgebungsvariablen setzbar (Defaults in <code>application.yml</code>)
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 10 · CHANGELOG ═══════ -->
+<section id="changelog" class="section" style="border-top: 1px solid var(--color-divider);">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-label">10 &middot; Aenderungshistorie</div>
+        <h2 class="section-title">Changelog</h2>
+      </div>
+    </div>
+    <p class="section-desc">Nutzerrelevante Aenderungen in GraphMesh, nach Monat gruppiert.</p>
+
+    <!-- April 2026 -->
+    <h3 style="font-size: var(--text-base); font-weight: 700; margin: var(--space-8) 0 var(--space-4); color: var(--gm-primary);">April 2026</h3>
+    <div style="display: grid; gap: var(--space-3); margin-bottom: var(--space-6);">
+      <div style="padding: var(--space-3) var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); border-left: 3px solid var(--gm-emerald);">
+        <span style="font-size: var(--text-xs); font-weight: 600; color: var(--gm-emerald); text-transform: uppercase; letter-spacing: 0.06em;">Neu</span>
+        <p style="font-size: var(--text-sm); color: var(--color-text); margin-top: var(--space-1);">Automatische Themenextraktion aus Dokumenten &mdash; Themen und Schlagwoerter werden per LLM erkannt und als SKOS-Konzepte gespeichert.</p>
+      </div>
+      <div style="padding: var(--space-3) var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); border-left: 3px solid var(--gm-emerald);">
+        <span style="font-size: var(--text-xs); font-weight: 600; color: var(--gm-emerald); text-transform: uppercase; letter-spacing: 0.06em;">Neu</span>
+        <p style="font-size: var(--text-sm); color: var(--color-text); margin-top: var(--space-1);">SKOS-Taxonomie-Unterstuetzung &mdash; hierarchische Begriffssysteme verwalten und ueber die API abfragen.</p>
+      </div>
+      <div style="padding: var(--space-3) var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); border-left: 3px solid var(--color-warning);">
+        <span style="font-size: var(--text-xs); font-weight: 600; color: var(--color-warning); text-transform: uppercase; letter-spacing: 0.06em;">Fix</span>
+        <p style="font-size: var(--text-sm); color: var(--color-text); margin-top: var(--space-1);">Themenextraktion: korrekte Konfigurationsschluessel, keine doppelten Eintraege mehr.</p>
+      </div>
+    </div>
+
+    <!-- Maerz 2026 -->
+    <h3 style="font-size: var(--text-base); font-weight: 700; margin: var(--space-8) 0 var(--space-4); color: var(--gm-primary);">Maerz 2026</h3>
+    <div style="display: grid; gap: var(--space-3); margin-bottom: var(--space-6);">
+      <div style="padding: var(--space-3) var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); border-left: 3px solid var(--gm-emerald);">
+        <span style="font-size: var(--text-xs); font-weight: 600; color: var(--gm-emerald); text-transform: uppercase; letter-spacing: 0.06em;">Neu</span>
+        <p style="font-size: var(--text-sm); color: var(--color-text); margin-top: var(--space-1);">RDF-Datenimport in Turtle, RDF/XML und N-Triples &mdash; mit optionaler Embedding-Erzeugung.</p>
+      </div>
+      <div style="padding: var(--space-3) var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); border-left: 3px solid var(--gm-emerald);">
+        <span style="font-size: var(--text-xs); font-weight: 600; color: var(--gm-emerald); text-transform: uppercase; letter-spacing: 0.06em;">Neu</span>
+        <p style="font-size: var(--text-sm); color: var(--color-text); margin-top: var(--space-1);">Admin-Dashboard mit Collection-Verwaltung, Konfigurationseditor und Pipeline-Status.</p>
+      </div>
+      <div style="padding: var(--space-3) var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); border-left: 3px solid var(--gm-emerald);">
+        <span style="font-size: var(--text-xs); font-weight: 600; color: var(--gm-emerald); text-transform: uppercase; letter-spacing: 0.06em;">Neu</span>
+        <p style="font-size: var(--text-sm); color: var(--color-text); margin-top: var(--space-1);">Graph-Explorer mit Sigma.js &mdash; fluessigere Darstellung, bessere Navigation und Entity-Suche.</p>
+      </div>
+      <div style="padding: var(--space-3) var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); border-left: 3px solid var(--gm-primary);">
+        <span style="font-size: var(--text-xs); font-weight: 600; color: var(--gm-primary); text-transform: uppercase; letter-spacing: 0.06em;">Verbessert</span>
+        <p style="font-size: var(--text-sm); color: var(--color-text); margin-top: var(--space-1);">Abfrage-Performance: parallele Intent-Erkennung, Embedding-Caching, zusammengefasste LLM-Aufrufe.</p>
+      </div>
+      <div style="padding: var(--space-3) var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); border-left: 3px solid var(--gm-primary);">
+        <span style="font-size: var(--text-xs); font-weight: 600; color: var(--gm-primary); text-transform: uppercase; letter-spacing: 0.06em;">Verbessert</span>
+        <p style="font-size: var(--text-sm); color: var(--color-text); margin-top: var(--space-1);">Neues dunkles Design-System fuer die gesamte Weboberflaeche.</p>
+      </div>
+      <div style="padding: var(--space-3) var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); border-left: 3px solid var(--color-warning);">
+        <span style="font-size: var(--text-xs); font-weight: 600; color: var(--color-warning); text-transform: uppercase; letter-spacing: 0.06em;">Fix</span>
+        <p style="font-size: var(--text-sm); color: var(--color-text); margin-top: var(--space-1);">Streaming: Textbasierte Tool-Aufrufe werden korrekt erkannt. Admin-UI Apollo-v4-Kompatibilitaet. Graph-Explorer Entity-Deep-Links.</p>
+      </div>
+    </div>
+
+    <!-- Februar 2026 -->
+    <h3 style="font-size: var(--text-base); font-weight: 700; margin: var(--space-8) 0 var(--space-4); color: var(--gm-primary);">Februar 2026</h3>
+    <div style="display: grid; gap: var(--space-3); margin-bottom: var(--space-6);">
+      <div style="padding: var(--space-3) var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); border-left: 3px solid var(--gm-emerald);">
+        <span style="font-size: var(--text-xs); font-weight: 600; color: var(--gm-emerald); text-transform: uppercase; letter-spacing: 0.06em;">Neu</span>
+        <p style="font-size: var(--text-sm); color: var(--color-text); margin-top: var(--space-1);">Graph-Explorer UI mit interaktiver Visualisierung, Entitaetssuche, Knotendetails und Filtern.</p>
+      </div>
+      <div style="padding: var(--space-3) var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); border-left: 3px solid var(--gm-emerald);">
+        <span style="font-size: var(--text-xs); font-weight: 600; color: var(--gm-emerald); text-transform: uppercase; letter-spacing: 0.06em;">Neu</span>
+        <p style="font-size: var(--text-sm); color: var(--color-text); margin-top: var(--space-1);">Subgraph-Abfragen und Entity-Suche ueber die GraphQL-API.</p>
+      </div>
+      <div style="padding: var(--space-3) var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); border-left: 3px solid var(--color-warning);">
+        <span style="font-size: var(--text-xs); font-weight: 600; color: var(--color-warning); text-transform: uppercase; letter-spacing: 0.06em;">Fix</span>
+        <p style="font-size: var(--text-sm); color: var(--color-text); margin-top: var(--space-1);">Graph-RAG Subgraph-Traversierung, S3-Verbindungsleck, Kafka Avro-Deserialisierung.</p>
       </div>
     </div>
   </div>
