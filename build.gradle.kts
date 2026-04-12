@@ -46,6 +46,7 @@ dependencies {
     implementation("org.springframework.ai:spring-ai-tika-document-reader")
     implementation("org.springframework.modulith:spring-modulith-starter-core")
     implementation("tools.jackson.module:jackson-module-kotlin")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("ai.koog:koog-agents-jvm:$koogVersion")
     implementation("ai.koog:koog-spring-boot-starter:$koogVersion")
     implementation("ai.koog:prompt-executor-openai-client:$koogVersion")
