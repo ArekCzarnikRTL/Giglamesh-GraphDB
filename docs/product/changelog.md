@@ -19,7 +19,7 @@ Uebersicht der nutzerrelevanten Aenderungen in GraphMesh, nach Monat gruppiert.
 ## Maerz 2026
 
 ### Neue Features
-- RDF-Datenimport: Bestehende RDF-Daten in den Formaten Turtle, RDF/XML und N-Triples koennen nun direkt importiert werden — inklusive optionaler Embedding-Erzeugung fuer semantische Suche.
+- RDF-Datenimport: Bestehende RDF-Daten in den Formaten Turtle, RDF/XML und N-Triples koennen nun direkt importiert werden - inklusive optionaler Embedding-Erzeugung fuer semantische Suche.
 - Admin-Dashboard: Neue Verwaltungsoberflaeche mit Uebersicht ueber Collections, Systemmetriken, Konfigurationseditor und Pipeline-Status (Verarbeitungsfortschritt und Fehlerlisten).
 - Graph-Explorer mit Sigma.js: Der Graph-Explorer wurde auf Sigma.js umgestellt und bietet nun fluessigere Darstellung, bessere Navigation und Entity-Suche.
 

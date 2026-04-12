@@ -53,7 +53,7 @@ Dieses Dokument beschreibt haeufige Probleme bei der Nutzung von GraphMesh und d
 **Ursache:** Die Verarbeitung des Dokuments ist noch nicht abgeschlossen, oder der Upload ist fehlgeschlagen.
 
 **Loesung:**
-1. Wenige Sekunden warten — die Verarbeitung laeuft asynchron ueber Kafka.
+1. Wenige Sekunden warten - die Verarbeitung laeuft asynchron ueber Kafka.
 2. Im Admin-Dashboard den Verarbeitungsstatus des Dokuments pruefen.
 3. Logs auf Fehlermeldungen des `PdfDecoderConsumer` oder `ChunkerConsumer` pruefen.
 
@@ -70,7 +70,7 @@ Dieses Dokument beschreibt haeufige Probleme bei der Nutzung von GraphMesh und d
 **Loesung:**
 1. Sicherstellen, dass Dokumente in der gewaehlten Collection vorhanden und vollstaendig verarbeitet sind.
 2. Im Admin-Dashboard pruefen, ob Embeddings fuer die Collection erzeugt wurden.
-3. Abfrage praezisieren — spezifischere Begriffe verwenden.
+3. Abfrage praezisieren - spezifischere Begriffe verwenden.
 4. Pruefen, ob das Embedding-Modell korrekt konfiguriert ist (`EMBEDDING_MODEL`, Standard: `text-embedding-3-small`).
 
 ### Collection nicht gefunden
@@ -80,7 +80,7 @@ Dieses Dokument beschreibt haeufige Probleme bei der Nutzung von GraphMesh und d
 **Ursache:** Die angegebene Collection-ID existiert nicht oder gehoert zu einem anderen Mandanten.
 
 **Loesung:**
-1. Collection-ID pruefen — im Admin-Dashboard die vorhandenen Collections einsehen.
+1. Collection-ID pruefen - im Admin-Dashboard die vorhandenen Collections einsehen.
 2. Sicherstellen, dass der korrekte Mandant (Tenant) im Request-Header gesetzt ist.
 3. Neue Collection anlegen, falls die gewuenschte nicht existiert.
 
@@ -157,7 +157,7 @@ Dieses Dokument beschreibt haeufige Probleme bei der Nutzung von GraphMesh und d
 
 **Loesung:**
 1. Pruefen, ob das Backend laeuft und unter `http://localhost:8083/graphql` erreichbar ist.
-2. GraphiQL im Browser oeffnen: `http://localhost:8083/graphiql` — wenn diese Seite laedt, ist das Backend erreichbar.
+2. GraphiQL im Browser oeffnen: `http://localhost:8083/graphiql` - wenn diese Seite laedt, ist das Backend erreichbar.
 3. Falls das Backend auf einem anderen Port laeuft: Umgebungsvariable `NEXT_PUBLIC_GRAPHQL_URL` im Frontend setzen (z.B. `http://localhost:8083/graphql`).
 
 ### WebSocket-Verbindung fuer Streaming bricht ab
