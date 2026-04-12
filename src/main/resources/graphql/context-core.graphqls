@@ -1,0 +1,65 @@
+type ContextCore {
+    coreId: String!
+    version: String!
+    parentVersion: String
+    sourceCollection: String!
+    createdAt: String!
+    createdBy: String!
+    description: String
+    tags: [String!]!
+    stats: ContextCoreStats!
+    embeddingModel: String!
+    embeddingDimension: Int!
+    checksum: String!
+}
+
+type ContextCoreStats {
+    quadCount: Int!
+    entityCount: Int!
+    chunkEmbeddingCount: Int!
+    ontologyAxiomCount: Int!
+}
+
+type ImportResultDto {
+    coreId: String!
+    version: String!
+    quadsImported: Int!
+    embeddingsImported: Int!
+}
+
+enum ConflictStrategy {
+    FAIL
+    MERGE
+    REPLACE
+}
+
+extend type Query {
+    contextCores: [ContextCore!]!
+    contextCore(coreId: String!, version: String!): ContextCore
+    contextCoreByTag(coreId: String!, tag: String!): ContextCore
+}
+
+extend type Mutation {
+    buildContextCore(
+        coreId: String!
+        version: String!
+        sourceCollection: String!
+        description: String
+        tags: [String!]
+        embeddingModel: String
+        embeddingDimension: Int
+        ontologyKey: String
+    ): ContextCore!
+
+    importContextCore(
+        coreId: String!
+        version: String!
+        targetCollection: String!
+        strategy: ConflictStrategy! = FAIL
+        namespaceFrom: String
+        namespaceTo: String
+    ): ImportResultDto!
+
+    tagContextCore(coreId: String!, version: String!, tag: String!): ContextCore!
+    deleteContextCore(coreId: String!, version: String!): Boolean!
+}
