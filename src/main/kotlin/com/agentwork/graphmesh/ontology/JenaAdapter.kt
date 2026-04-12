@@ -1,5 +1,7 @@
 package com.agentwork.graphmesh.ontology
 
+import com.agentwork.graphmesh.skos.SkosConcept
+import com.agentwork.graphmesh.skos.SkosConceptScheme
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.rdf.model.Resource
@@ -8,6 +10,7 @@ import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.vocabulary.OWL2
 import org.apache.jena.vocabulary.RDF
 import org.apache.jena.vocabulary.RDFS
+import org.apache.jena.vocabulary.SKOS
 import org.apache.jena.vocabulary.XSD
 import org.springframework.stereotype.Component
 import java.io.ByteArrayInputStream
@@ -225,6 +228,57 @@ class JenaAdapter {
         RDFDataMgr.write(writer, model, Lang.RDFXML)
         return writer.toString()
     }
+
+    fun extractSkosSchemes(model: Model): List<SkosConceptScheme> {
+        val schemes = mutableListOf<SkosConceptScheme>()
+        val schemeResources = model.listResourcesWithProperty(RDF.type, SKOS.ConceptScheme)
+        while (schemeResources.hasNext()) {
+            val resource = schemeResources.next()
+            val uri = resource.uri ?: continue
+            val prefLabels = extractSkosLabels(model, resource, SKOS.prefLabel)
+            val topConcepts = model.listStatements(resource, SKOS.hasTopConcept, null as Resource?)
+                .toList().mapNotNull { it.`object`.asResource().uri }
+            schemes.add(SkosConceptScheme(uri = uri, prefLabels = prefLabels, topConcepts = topConcepts))
+        }
+        return schemes
+    }
+
+    fun extractSkosConcepts(model: Model): List<SkosConcept> {
+        val concepts = mutableListOf<SkosConcept>()
+        val conceptResources = model.listResourcesWithProperty(RDF.type, SKOS.Concept)
+        while (conceptResources.hasNext()) {
+            val resource = conceptResources.next()
+            val uri = resource.uri ?: continue
+            val broader = model.listStatements(resource, SKOS.broader, null as Resource?)
+                .toList().mapNotNull { it.`object`.asResource().uri }
+            val narrower = model.listStatements(resource, SKOS.narrower, null as Resource?)
+                .toList().mapNotNull { it.`object`.asResource().uri }
+            val related = model.listStatements(resource, SKOS.related, null as Resource?)
+                .toList().mapNotNull { it.`object`.asResource().uri }
+            val inScheme = model.listStatements(resource, SKOS.inScheme, null as Resource?)
+                .toList().firstOrNull()?.`object`?.asResource()?.uri
+            val scopeNote = model.listStatements(resource, SKOS.scopeNote, null as org.apache.jena.rdf.model.RDFNode?)
+                .toList().firstOrNull()?.`object`?.asLiteral()?.string
+            val definition = model.listStatements(resource, SKOS.definition, null as org.apache.jena.rdf.model.RDFNode?)
+                .toList().firstOrNull()?.`object`?.asLiteral()?.string
+            concepts.add(SkosConcept(
+                uri = uri,
+                prefLabels = extractSkosLabels(model, resource, SKOS.prefLabel),
+                altLabels = extractSkosLabels(model, resource, SKOS.altLabel),
+                broader = broader, narrower = narrower, related = related,
+                inScheme = inScheme, scopeNote = scopeNote, definition = definition
+            ))
+        }
+        return concepts
+    }
+
+    private fun extractSkosLabels(model: Model, resource: Resource, property: org.apache.jena.rdf.model.Property): List<LangLabel> =
+        model.listStatements(resource, property, null as org.apache.jena.rdf.model.RDFNode?)
+            .toList()
+            .map { stmt ->
+                val literal = stmt.`object`.asLiteral()
+                LangLabel(value = literal.string, lang = literal.language.ifEmpty { "en" })
+            }
 
     private fun extractId(uri: String): String {
         val fragment = uri.substringAfterLast('#', "")
