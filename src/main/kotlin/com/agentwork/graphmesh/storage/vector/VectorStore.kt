@@ -36,4 +36,7 @@ interface VectorStore {
     fun delete(collection: String, dimension: Int, ids: List<String>)
     fun deleteCollection(collection: String)
     fun collectionExists(collection: String, dimension: Int): Boolean
+
+    /** Scrolls all points from [collection]. Use for export only. */
+    fun scroll(collection: String): List<VectorPoint>
 }

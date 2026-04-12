@@ -135,6 +135,49 @@ class QdrantVectorStore(
         knownCollections.add(physicalName)
     }
 
+    override fun scroll(collection: String): List<VectorPoint> {
+        val result = mutableListOf<VectorPoint>()
+        var offset: io.qdrant.client.grpc.Points.PointId? = null
+
+        while (true) {
+            val scrollRequest = io.qdrant.client.grpc.Points.ScrollPoints.newBuilder()
+                .setCollectionName(collection)
+                .setLimit(1000)
+                .setWithPayload(WithPayloadSelectorFactory.enable(true))
+                .setWithVectors(io.qdrant.client.grpc.Points.WithVectorsSelector.newBuilder().setEnable(true).build())
+
+            if (offset != null) {
+                scrollRequest.setOffset(offset)
+            }
+
+            val response = client.scrollAsync(scrollRequest.build()).get()
+            val points = response.resultList
+
+            if (points.isEmpty()) break
+
+            points.forEach { point ->
+                val id = point.id.uuid.ifEmpty { point.id.num.toString() }
+                val vector = point.vectors.vector.dataList.map { it }.toFloatArray()
+                val payload = point.payloadMap.mapValues { (_, v) ->
+                    when {
+                        v.hasStringValue() -> v.stringValue
+                        v.hasIntegerValue() -> v.integerValue
+                        v.hasDoubleValue() -> v.doubleValue
+                        v.hasBoolValue() -> v.boolValue
+                        else -> v.stringValue
+                    } as Any
+                }
+                result.add(VectorPoint(id = id, vector = vector, payload = payload))
+            }
+
+            offset = response.nextPageOffset
+            if (!response.hasNextPageOffset()) break
+        }
+
+        log.debug("Scrolled {} points from {}", result.size, collection)
+        return result
+    }
+
     private fun deterministicUuid(id: String): UUID =
         UUID.nameUUIDFromBytes(id.toByteArray())
 
