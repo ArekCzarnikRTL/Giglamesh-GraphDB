@@ -2,7 +2,7 @@
 
 ## Was ist GraphMesh?
 
-GraphMesh ist eine Enterprise-Plattform zur automatischen Wissensextraktion aus Dokumenten. Die Plattform analysiert Dokumente mithilfe von KI-Sprachmodellen, extrahiert strukturiertes Wissen als Wissensgraph (Subjekt-Praedikat-Objekt-Tripel) und ermoeglicht semantische Suche sowie intelligente Abfragen ueber den gesamten Wissensbestand.
+GraphMesh ist eine KI-Knowledge-Graph-Plattform zur automatischen Wissensextraktion aus Dokumenten. Die Plattform analysiert Dokumente mithilfe von KI-Sprachmodellen, extrahiert strukturiertes Wissen als Wissensgraph (Subjekt-Praedikat-Objekt-Tripel) und ermoeglicht semantische Suche sowie intelligente Abfragen ueber den gesamten Wissensbestand.
 
 Der zentrale Gedanke: Unstrukturiertes Wissen in Dokumenten wird automatisch in einen durchsuchbaren, verknuepften Wissensgraphen ueberfuehrt -- ohne manuelle Verschlagwortung oder Modellierung.
 
