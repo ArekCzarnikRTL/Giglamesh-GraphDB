@@ -58,5 +58,27 @@ class CassandraSchemaInitializer(
                 PRIMARY KEY (collection, d, s, p, o, otype, dtype, lang)
             )
         """.trimIndent())
+
+        session.execute("""
+            CREATE TABLE IF NOT EXISTS $keyspace.context_cores (
+                core_id          text,
+                version          text,
+                parent_version   text,
+                source_collection text,
+                created_at       timestamp,
+                created_by       text,
+                description      text,
+                tags             set<text>,
+                embedding_model  text,
+                embedding_dim    int,
+                quad_count       bigint,
+                entity_count     bigint,
+                chunk_embedding_count bigint,
+                ontology_axiom_count bigint,
+                checksum         text,
+                blob_key         text,
+                PRIMARY KEY (core_id, version)
+            ) WITH CLUSTERING ORDER BY (version DESC)
+        """.trimIndent())
     }
 }
