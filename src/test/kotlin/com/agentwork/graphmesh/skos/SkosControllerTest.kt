@@ -7,7 +7,6 @@ import io.mockk.verify
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 class SkosControllerTest {
 
@@ -17,7 +16,8 @@ class SkosControllerTest {
     private val sampleScheme = SkosConceptScheme(
         uri = "http://ex.org/scheme",
         prefLabels = listOf(LangLabel("Test Scheme", "en")),
-        topConcepts = listOf("http://ex.org/A")
+        topConcepts = listOf("http://ex.org/A"),
+        collectionId = "col-1"
     )
 
     private val sampleConcept = SkosConcept(
@@ -26,7 +26,8 @@ class SkosControllerTest {
         broader = listOf("http://ex.org/B"),
         narrower = listOf("http://ex.org/C"),
         related = listOf("http://ex.org/D"),
-        inScheme = "http://ex.org/scheme"
+        inScheme = "http://ex.org/scheme",
+        collectionId = "col-1"
     )
 
     @Test
@@ -69,43 +70,43 @@ class SkosControllerTest {
     }
 
     @Test
-    fun `topConcepts SchemaMapping delegates to service`() {
+    fun `topConcepts SchemaMapping uses collectionId from parent`() {
         every { service.getTopConcepts("col-1", "http://ex.org/scheme") } returns listOf(sampleConcept)
-        val result = controller.topConcepts("col-1", sampleScheme)
+        val result = controller.topConcepts(sampleScheme)
         assertEquals(1, result.size)
         assertEquals("http://ex.org/A", result[0].uri)
     }
 
     @Test
-    fun `conceptCount SchemaMapping delegates to service`() {
+    fun `conceptCount SchemaMapping uses collectionId from parent`() {
         every { service.countConcepts("col-1", "http://ex.org/scheme") } returns 5
-        val result = controller.conceptCount("col-1", sampleScheme)
+        val result = controller.conceptCount(sampleScheme)
         assertEquals(5, result)
     }
 
     @Test
-    fun `broader SchemaMapping delegates to service`() {
+    fun `broader SchemaMapping uses collectionId from parent`() {
         val broaderConcept = sampleConcept.copy(uri = "http://ex.org/B")
         every { service.getBroader("col-1", "http://ex.org/A") } returns listOf(broaderConcept)
-        val result = controller.broader("col-1", sampleConcept)
+        val result = controller.broader(sampleConcept)
         assertEquals(1, result.size)
         assertEquals("http://ex.org/B", result[0].uri)
     }
 
     @Test
-    fun `narrower SchemaMapping delegates to service`() {
+    fun `narrower SchemaMapping uses collectionId from parent`() {
         val narrowerConcept = sampleConcept.copy(uri = "http://ex.org/C")
         every { service.getNarrower("col-1", "http://ex.org/A") } returns listOf(narrowerConcept)
-        val result = controller.narrower("col-1", sampleConcept)
+        val result = controller.narrower(sampleConcept)
         assertEquals(1, result.size)
         assertEquals("http://ex.org/C", result[0].uri)
     }
 
     @Test
-    fun `related SchemaMapping delegates to service`() {
+    fun `related SchemaMapping uses collectionId from parent`() {
         val relatedConcept = sampleConcept.copy(uri = "http://ex.org/D")
         every { service.getRelated("col-1", "http://ex.org/A") } returns listOf(relatedConcept)
-        val result = controller.related("col-1", sampleConcept)
+        val result = controller.related(sampleConcept)
         assertEquals(1, result.size)
         assertEquals("http://ex.org/D", result[0].uri)
     }

@@ -88,7 +88,7 @@ class SkosService(private val quadStore: QuadStore) {
             .map { LangLabel(value = it.objectValue, lang = it.language.ifEmpty { "en" }) }
         val topConcepts = quads.filter { it.predicate == SkosTypes.HAS_TOP_CONCEPT }
             .map { it.objectValue }
-        return SkosConceptScheme(uri = uri, prefLabels = prefLabels, topConcepts = topConcepts)
+        return SkosConceptScheme(uri = uri, prefLabels = prefLabels, topConcepts = topConcepts, collectionId = collectionId)
     }
 
     private fun buildConcept(collectionId: String, uri: String): SkosConcept? {
@@ -105,7 +105,8 @@ class SkosService(private val quadStore: QuadStore) {
             related = quads.extractUris(SkosTypes.RELATED),
             inScheme = quads.firstOrNull { it.predicate == SkosTypes.IN_SCHEME }?.objectValue,
             scopeNote = quads.firstOrNull { it.predicate == SkosTypes.SCOPE_NOTE }?.objectValue,
-            definition = quads.firstOrNull { it.predicate == SkosTypes.DEFINITION }?.objectValue
+            definition = quads.firstOrNull { it.predicate == SkosTypes.DEFINITION }?.objectValue,
+            collectionId = collectionId
         )
     }
 

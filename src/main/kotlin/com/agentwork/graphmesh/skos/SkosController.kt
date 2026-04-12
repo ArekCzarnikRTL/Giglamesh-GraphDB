@@ -25,22 +25,22 @@ class SkosController(private val skosService: SkosService) {
         skosService.findByLabel(collectionId, label)
 
     @SchemaMapping(typeName = "SkosConceptScheme", field = "topConcepts")
-    fun topConcepts(@Argument collectionId: String, scheme: SkosConceptScheme): List<SkosConcept> =
-        skosService.getTopConcepts(collectionId, scheme.uri)
+    fun topConcepts(scheme: SkosConceptScheme): List<SkosConcept> =
+        skosService.getTopConcepts(scheme.collectionId, scheme.uri)
 
     @SchemaMapping(typeName = "SkosConceptScheme", field = "conceptCount")
-    fun conceptCount(@Argument collectionId: String, scheme: SkosConceptScheme): Int =
-        skosService.countConcepts(collectionId, scheme.uri)
+    fun conceptCount(scheme: SkosConceptScheme): Int =
+        skosService.countConcepts(scheme.collectionId, scheme.uri)
 
     @SchemaMapping(typeName = "SkosConcept", field = "broader")
-    fun broader(@Argument collectionId: String, concept: SkosConcept): List<SkosConcept> =
-        skosService.getBroader(collectionId, concept.uri)
+    fun broader(concept: SkosConcept): List<SkosConcept> =
+        skosService.getBroader(concept.collectionId, concept.uri)
 
     @SchemaMapping(typeName = "SkosConcept", field = "narrower")
-    fun narrower(@Argument collectionId: String, concept: SkosConcept): List<SkosConcept> =
-        skosService.getNarrower(collectionId, concept.uri)
+    fun narrower(concept: SkosConcept): List<SkosConcept> =
+        skosService.getNarrower(concept.collectionId, concept.uri)
 
     @SchemaMapping(typeName = "SkosConcept", field = "related")
-    fun related(@Argument collectionId: String, concept: SkosConcept): List<SkosConcept> =
-        skosService.getRelated(collectionId, concept.uri)
+    fun related(concept: SkosConcept): List<SkosConcept> =
+        skosService.getRelated(concept.collectionId, concept.uri)
 }

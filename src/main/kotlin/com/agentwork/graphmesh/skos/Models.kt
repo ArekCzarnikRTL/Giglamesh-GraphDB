@@ -11,11 +11,13 @@ data class SkosConcept(
     val related: List<String> = emptyList(),
     val inScheme: String? = null,
     val scopeNote: String? = null,
-    val definition: String? = null
+    val definition: String? = null,
+    val collectionId: String = ""
 )
 
 data class SkosConceptScheme(
     val uri: String,
     val prefLabels: List<LangLabel>,
-    val topConcepts: List<String> = emptyList()
+    val topConcepts: List<String> = emptyList(),
+    val collectionId: String = ""
 )
