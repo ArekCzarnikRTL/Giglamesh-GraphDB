@@ -2,7 +2,7 @@
 
 ## Problem
 
-Wissen, das aus Dokumenten extrahiert wurde -- Ontologien, Entitaeten, Relationen, Embeddings,
+Wissen, das aus Dokumenten und RDF extrahiert wurde -- Ontologien, Entitaeten, Relationen, Embeddings,
 Provenance -- existiert in GraphMesh derzeit nur als verteilter Live-Zustand in Cassandra,
 Qdrant und MinIO. Es gibt keinen Mechanismus, einen kuratierten Wissensstand als
 versionierbares, portables Artefakt zu paketieren, in einem anderen Environment zu
@@ -16,7 +16,7 @@ In der Praxis fehlen damit drei Dinge:
 3. **Promotion-Workflow** -- Es gibt kein "build / test / pin / promote / rollback" fuer
    Wissen, wie man es von Code-Artefakten kennt.
 
-TrustGraph bezeichnet das Konzept als *Context Core*: ein versioniertes Bundle aus
+XGraph bezeichnet das Konzept als *Context Core*: ein versioniertes Bundle aus
 Ontologie + Entity-Triples + Embeddings + Evidence + Retrieval-Policies, das wie ein
 Build-Artefakt behandelt wird.
 

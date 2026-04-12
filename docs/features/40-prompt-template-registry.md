@@ -18,7 +18,7 @@ erfordert einen Re-Deploy. Das hat mehrere Konsequenzen:
 5. **Kein Response-Type-Contract** -- jede Antwort wird ad-hoc als JSONL oder Text
    geparst; keine zentrale Stelle sagt "dieser Prompt liefert strukturiertes JSON".
 
-TrustGraph verwendet ein zentrales, Jinja-aehnliches Template-System mit Global Terms,
+XGraph verwendet ein zentrales, Jinja-aehnliches Template-System mit Global Terms,
 Prompt-spezifischen Terms und einer Response-Type-Deklaration. Das holen wir uns
 nach -- Kotlin-idiomatisch und Spring-nativ.
 

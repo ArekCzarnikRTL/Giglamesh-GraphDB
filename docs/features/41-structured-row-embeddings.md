@@ -18,7 +18,7 @@ semantische Fragen:
 4. **RAG ueber Strukturdaten** -- DocRAG/GraphRAG kennt nur Text/Triples; strukturierte
    Zeilen sind "unsichtbar" fuer den Retrieval-Schritt.
 
-TrustGraph loest das mit "Row/Structured Embeddings": jede Zeile wird zu einem Embedding
+XGraph loest das mit "Row/Structured Embeddings": jede Zeile wird zu einem Embedding
 serialisiert und in einer separaten Vector-Collection abgelegt. GraphMesh hat die
 Bausteine (Qdrant, `EmbeddingService`, `StructuredDataService`), aber keinen
 dedizierten Row-Embedding-Pfad.

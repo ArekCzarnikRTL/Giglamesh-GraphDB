@@ -16,7 +16,7 @@ Themen ("Topics") sind keine Entitaeten, sondern abstrakte Konzepte -- "Insolven
 3. **GraphRAG-Navigation** -- Topics als Einstiegspunkte in den Graphen
 4. **Summarization** -- "Worum geht es in Collection Y insgesamt?"
 
-TrustGraph hat hierfuer einen dedizierten `kg-extract-topics`-Prozessor. In GraphMesh
+XGraph hat hierfuer einen dedizierten `kg-extract-topics`-Prozessor. In GraphMesh
 existiert das Konzept bislang nicht.
 
 ## Ziel

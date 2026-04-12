@@ -85,9 +85,9 @@ Abhaengigkeiten folgen einem DAG (Directed Acyclic Graph) — manche Features ko
 |----|------------------------------------------|------------------------------------------------------------------|----------------|---------|
 | 36 | Fix `GraphRagService.retrieveSubgraph`   | [36-fix-retrieveSubgraph.md](36-fix-retrieveSubgraph.md)         | 07, 13, 15, 29 | M       |
 
-### Phase 7: TrustGraph-inspirierte Erweiterungen
+### Phase 7: XGraph-inspirierte Erweiterungen
 
-Abgeleitet aus einer Analyse des TrustGraph-Projekts. Siehe Kommentar in den
+Abgeleitet aus einer Analyse des XGraph-Projekts. Siehe Kommentar in den
 jeweiligen Feature-Docs fuer die Motivation.
 
 | #  | Feature                       | Datei                                                              | Abhaengig von              | Aufwand |
