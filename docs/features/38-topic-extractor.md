@@ -19,6 +19,12 @@ Themen ("Topics") sind keine Entitaeten, sondern abstrakte Konzepte -- "Insolven
 XGraph hat hierfuer einen dedizierten `kg-extract-topics`-Prozessor. In GraphMesh
 existiert das Konzept bislang nicht.
 
+Seit der Implementierung von Feature 43 (RDF Import) und Feature 44 (Ontology Import API)
+koennen Nutzer nun auch externe SKOS-Taxonomien und OWL-Ontologien importieren. Der
+Topic Extractor kann diese importierten Strukturen als **kontrolliertes Vokabular**
+nutzen, um LLM-extrahierte Topics gegen bekannte Konzepte abzugleichen und so die
+Konsistenz der Topic-Vergabe zu erhoehen.
+
 ## Ziel
 
 Implementierung eines `TopicExtractorService`, der Textchunks auf Themen untersucht und
@@ -33,6 +39,10 @@ Knowledge Graph verankert.
 4. **Deduplikation** -- Gleiche Topic-Label (case/whitespace-normalisiert) fuehren zur
    selben `EntityIdGenerator`-ID.
 5. **Provenance** -- Jede Topic-Zuordnung traegt ein Evidenz-Quad im `SOURCE`-Graph.
+6. **Ontologie-gestuetztes Mapping (optional)** -- Wenn eine Ontologie fuer die Collection
+   hinterlegt ist, werden LLM-Topics gegen OWL-Klassen und importierte SKOS-Konzepte
+   abgeglichen. Matches fuehren zur Wiederverwendung bestehender Topic-URIs statt neuer
+   Generierung.
 
 ## Voraussetzungen
 
@@ -42,7 +52,11 @@ Knowledge Graph verankert.
 | Feature 05: LLM Provider Abstraction (`PromptExecutor`, `resolveLlmModel`)| Vorhanden | Ja       |
 | Feature 07: RDF Graph Model (`Quad`, `RdfTerm`, `EntityIdGenerator`)      | Vorhanden | Ja       |
 | Feature 11: Document Chunker (`graphmesh.chunk.created`)                  | Vorhanden | Ja       |
+| Feature 20: Ontology System (`OntologyService`, `OntologyCache`)          | Vorhanden | Nein     |
 | Feature 29: Extraction-Time Provenance (`ProvenanceService`)              | Vorhanden | Ja       |
+| Feature 43: RDF Data Import (`RdfImportService`, `JenaAdapter`)           | Vorhanden | Nein     |
+| Feature 44: Ontology Import API (`OntologyController`, GraphQL)           | Vorhanden | Nein     |
+| Feature 46: SKOS Taxonomy Support (`SkosService`, `SkosTypes`)            | Geplant   | Nein     |
 
 ## Architektur
 
@@ -243,6 +257,37 @@ class TopicExtractorService(
 }
 ```
 
+### Ontologie-gestuetztes Topic-Mapping (optional)
+
+Wenn fuer eine Collection eine Ontologie hinterlegt ist (Feature 20/44), kann der
+`TopicExtractorService` die LLM-extrahierten Topics gegen bekannte Konzepte abgleichen:
+
+1. **OWL-Klassen als Topics** -- OWL-Klassen aus importierten Ontologien (`OntologyService.get()`)
+   werden als kontrolliertes Vokabular bereitgestellt. Das LLM erhaelt die Klassenliste im
+   Prompt und wird angewiesen, bevorzugt existierende Konzepte zu verwenden.
+2. **SKOS-Import via RDF Import** -- Per `RdfImportService` (Feature 43) koennen SKOS-Taxonomien
+   (`skos:ConceptScheme` + `skos:Concept`) direkt in den QuadStore importiert werden. Der
+   TopicExtractor prueft vor der Neuanlage eines Topics, ob bereits ein `skos:Concept` mit
+   identischem normalisierten Label existiert, und verlinkt ggf. darauf.
+3. **Fallback** -- Ohne Ontologie oder bei Topics, die keinem bekannten Konzept entsprechen,
+   greift die bisherige Logik (freie LLM-Extraktion + `EntityIdGenerator`).
+
+```kotlin
+// Pseudocode fuer ontologie-gestuetztes Mapping
+fun resolveOrCreateTopic(label: String, collectionId: String): RdfTerm.Uri {
+    val normalized = normalize(label)
+    // 1. Pruefe ob SKOS-Concept mit diesem Label bereits existiert
+    val existing = quadStore.findByPredicateAndObject(
+        collectionId, RdfTerm.Uri(RDFS_LABEL), RdfTerm.Literal(normalized)
+    ).firstOrNull { quad ->
+        quadStore.exists(collectionId, quad.subject, RdfTerm.Uri(RDF_TYPE), RdfTerm.Uri(SKOS_CONCEPT))
+    }
+    if (existing != null) return existing.subject as RdfTerm.Uri
+    // 2. Fallback: neues Topic generieren
+    return EntityIdGenerator.generate(normalized)
+}
+```
+
 ### TopicExtractorConsumer
 
 ```kotlin
@@ -297,8 +342,10 @@ graphmesh:
   extraction:
     model: gpt-4o
     topic:
-      minConfidence: 0.5    # Topics darunter werden verworfen
-      maxTopicsPerChunk: 5  # LLM-seitig im Prompt ebenfalls genannt
+      minConfidence: 0.5        # Topics darunter werden verworfen
+      maxTopicsPerChunk: 5      # LLM-seitig im Prompt ebenfalls genannt
+      useOntologyHints: true    # OWL-Klassen als Hinweise im LLM-Prompt (erfordert Feature 20/44)
+      reuseImportedConcepts: true  # Bestehende SKOS-Concepts aus RDF Import wiederverwenden
 ```
 
 ## Betroffene Dateien
@@ -311,6 +358,7 @@ graphmesh:
 | `src/main/kotlin/com/agentwork/graphmesh/extraction/topic/TopicExtractorConsumer.kt`     | NEU - Kafka-Consumer auf `chunk.created`     |
 | `src/main/kotlin/com/agentwork/graphmesh/extraction/topic/TopicPromptTemplate.kt`        | NEU - Prompt mit Topic-vs-Entity-Regeln      |
 | `src/main/kotlin/com/agentwork/graphmesh/extraction/topic/TopicExtractorModels.kt`       | NEU - `TopicResult`, `TopicExtractionResult` |
+| `src/main/kotlin/com/agentwork/graphmesh/extraction/topic/TopicOntologyMatcher.kt`       | NEU - Ontologie-gestuetztes Topic-Mapping    |
 | `src/main/resources/application.yml`                                                     | UPDATE - `graphmesh.extraction.topic.*`      |
 
 ### Frontend
@@ -328,6 +376,7 @@ graphmesh:
 | `src/test/kotlin/com/agentwork/graphmesh/extraction/topic/TopicPromptTemplateTest.kt`        | NEU - Template-Konsistenz                       |
 | `src/test/kotlin/com/agentwork/graphmesh/extraction/topic/TopicJsonlParsingTest.kt`          | NEU - JSONL-Edge-Cases (Truncation, ungueltig)  |
 | `src/test/kotlin/com/agentwork/graphmesh/extraction/topic/TopicDeduplicationTest.kt`         | NEU - Normalisierung + Deduplikation            |
+| `src/test/kotlin/com/agentwork/graphmesh/extraction/topic/TopicOntologyMatcherTest.kt`      | NEU - Matching gegen importierte SKOS/OWL-Konzepte |
 
 ## Platform-Einschraenkungen
 
@@ -346,5 +395,10 @@ graphmesh:
 - [ ] Confidence wird als Quoted Triple `<<chunk dct:subject topic>> graphmesh:topicConfidence "0.87"` im Default-Graph abgelegt.
 - [ ] Provenance-Quads im Source-Graph via `ProvenanceService.buildSubgraphQuads`.
 - [ ] Quads vor `insertBatch` dedupliziert (Subject|Predicate|Object|Graph).
+- [ ] Wenn eine Ontologie hinterlegt ist, werden OWL-Klassen als Hinweise im LLM-Prompt mitgegeben.
+- [ ] Vor Neuanlage eines Topics wird geprueft, ob ein `skos:Concept` mit identischem normalisierten Label bereits existiert (via RDF Import oder Ontologie).
+- [ ] Bei Match auf bestehendes Konzept wird dessen URI wiederverwendet statt eine neue zu generieren.
+- [ ] Ohne Ontologie/importierte SKOS-Konzepte funktioniert die bisherige freie Extraktion unveraendert.
 - [ ] Frontend-TopicFacet zeigt Top-N Topics einer Collection mit Count und erlaubt Filter-Anwendung.
 - [ ] Integrationstest: nach Ingest von 3 Beispielchunks existieren die erwarteten `skos:Concept`-Triples.
+- [ ] Integrationstest: bei importierter SKOS-Taxonomie werden bestehende Concept-URIs wiederverwendet.
