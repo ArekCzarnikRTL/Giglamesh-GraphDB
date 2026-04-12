@@ -2,6 +2,9 @@
 
 GraphMesh organisiert Dokumente in **Collections** (thematische Sammlungen) und verarbeitet hochgeladene Dateien automatisch: Texterkennung, Aufteilung in semantische Abschnitte und Vorbereitung fuer die Wissensextraktion.
 
+![Collection-Verwaltung im Admin-Bereich](images/admin-area-visuale.png)
+*Collection-Verwaltung im Admin-Bereich*
+
 ---
 
 ## Collections

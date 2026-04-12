@@ -2,6 +2,9 @@
 
 GraphMesh stellt extrahiertes Wissen als interaktiven Wissensgraphen dar. Entitaeten und ihre Beziehungen lassen sich visuell erkunden, filtern und schrittweise erweitern.
 
+![Graph Explorer: Interaktive Wissensgraph-Visualisierung](images/graph-visual.png)
+*Graph Explorer mit Sigma.js: Entitaeten und Beziehungen als interaktives Netzwerk*
+
 ---
 
 ## Uebersicht

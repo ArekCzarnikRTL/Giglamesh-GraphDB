@@ -2,6 +2,9 @@
 
 GraphMesh bietet verschiedene Wege, Wissen aus Ihren Dokumenten und dem Knowledge Graph abzufragen -- von gezielten Graph-Abfragen ueber semantische Dokumentensuche bis hin zu automatisch optimierten Freitext-Fragen.
 
+![Beispiel einer natuerlichsprachlichen Abfrage](images/query-visuale.png)
+*Beispielabfrage mit Ergebnis und Quellenangaben*
+
 ---
 
 ## Graph RAG
