@@ -1,0 +1,30 @@
+type LangLabel {
+    value: String!
+    lang: String!
+}
+
+type SkosConcept {
+    uri: String!
+    prefLabels: [LangLabel!]!
+    altLabels: [LangLabel!]!
+    broader: [SkosConcept!]!
+    narrower: [SkosConcept!]!
+    related: [SkosConcept!]!
+    inScheme: String
+    scopeNote: String
+    definition: String
+}
+
+type SkosConceptScheme {
+    uri: String!
+    prefLabels: [LangLabel!]!
+    topConcepts: [SkosConcept!]!
+    conceptCount: Int!
+}
+
+extend type Query {
+    skosConceptSchemes(collectionId: ID!): [SkosConceptScheme!]!
+    skosConcepts(collectionId: ID!, schemeUri: String!): [SkosConcept!]!
+    skosConcept(collectionId: ID!, conceptUri: String!): SkosConcept
+    skosSearch(collectionId: ID!, label: String!): [SkosConcept!]!
+}
