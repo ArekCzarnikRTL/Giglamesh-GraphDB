@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GraphMesh — Enterprise Knowledge Graph Platform</title>
+<meta name="description" content="GraphMesh Produktdokumentation: Automatische Wissensextraktion, Knowledge Graph, semantische Suche und KI-Agenten.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300..700&display=swap" rel="stylesheet">
+
+<style>
+/* ─── DESIGN TOKENS ─────────────────────────────────────────── */
+:root {
+  --text-xs:   clamp(0.75rem,  0.7rem  + 0.25vw, 0.875rem);
+  --text-sm:   clamp(0.875rem, 0.8rem  + 0.35vw, 1rem);
+  --text-base: clamp(1rem,     0.95rem + 0.25vw, 1.125rem);
+  --text-lg:   clamp(1.125rem, 1rem    + 0.75vw, 1.5rem);
+  --text-xl:   clamp(1.5rem,   1.2rem  + 1.25vw, 2.25rem);
+
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.25rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  --transition-interactive: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  --font-body:    'Inter', 'Helvetica Neue', sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+  /* GraphMesh Brand Accents */
+  --gm-primary:       #7b93ff;
+  --gm-primary-dim:   #5b73ef;
+  --gm-primary-bg:    rgba(123,147,255,0.1);
+  --gm-primary-border:rgba(123,147,255,0.3);
+
+  --gm-emerald:       #10b981;
+  --gm-emerald-dim:   #059669;
+  --gm-emerald-bg:    rgba(16,185,129,0.1);
+  --gm-emerald-border:rgba(16,185,129,0.3);
+}
+
+/* ─── LIGHT MODE ──────────────────────────────────────────────── */
+:root, [data-theme="light"] {
+  --color-bg:              #f4f5f7;
+  --color-surface:         #ffffff;
+  --color-surface-2:       #f9fafc;
+  --color-surface-offset:  #eef0f4;
+  --color-divider:         #dde0e8;
+  --color-border:          #cdd0da;
+  --color-text:            #1a1e2e;
+  --color-text-muted:      #5a617a;
+  --color-text-faint:      #9aa0b8;
+  --color-primary:         #3b5bdb;
+  --color-primary-hover:   #2f4ac4;
+  --color-success:         #2b7a3e;
+  --color-warning:         #b45309;
+  --color-error:           #c0392b;
+  --shadow-sm:  0 1px 3px rgba(26,30,46,0.08);
+  --shadow-md:  0 4px 16px rgba(26,30,46,0.10);
+  --shadow-lg:  0 12px 36px rgba(26,30,46,0.14);
+}
+
+/* ─── DARK MODE ─────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --color-bg:              #0d0f18;
+  --color-surface:         #131622;
+  --color-surface-2:       #191c2e;
+  --color-surface-offset:  #1e2135;
+  --color-divider:         #252840;
+  --color-border:          #2e3354;
+  --color-text:            #e2e6f0;
+  --color-text-muted:      #8892a8;
+  --color-text-faint:      #4a5070;
+  --color-primary:         #7b93ff;
+  --color-primary-hover:   #5b73ef;
+  --color-success:         #4caf7a;
+  --color-warning:         #f59e0b;
+  --color-error:           #f06060;
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md:  0 4px 16px rgba(0,0,0,0.5);
+  --shadow-lg:  0 12px 36px rgba(0,0,0,0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color-bg:              #0d0f18;
+    --color-surface:         #131622;
+    --color-surface-2:       #191c2e;
+    --color-surface-offset:  #1e2135;
+    --color-divider:         #252840;
+    --color-border:          #2e3354;
+    --color-text:            #e2e6f0;
+    --color-text-muted:      #8892a8;
+    --color-text-faint:      #4a5070;
+    --color-primary:         #7b93ff;
+    --color-primary-hover:   #5b73ef;
+    --color-success:         #4caf7a;
+    --color-warning:         #f59e0b;
+    --color-error:           #f06060;
+    --shadow-sm:  0 1px 3px rgba(0,0,0,0.4);
+    --shadow-md:  0 4px 16px rgba(0,0,0,0.5);
+    --shadow-lg:  0 12px 36px rgba(0,0,0,0.6);
+  }
+}
+
+/* ─── BASE RESET ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--space-16);
+}
+body {
+  min-height: 100dvh;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  line-height: 1.6;
+}
+img, svg { display: block; max-width: 100%; }
+button { cursor: pointer; background: none; border: none; font: inherit; color: inherit; }
+table { border-collapse: collapse; width: 100%; }
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+a, button, input, select { transition: all var(--transition-interactive); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ─── TYPOGRAPHY ─────────────────────────────────────────────── */
+.mono { font-family: var(--font-mono); }
+.text-muted { color: var(--color-text-muted); }
+.text-faint { color: var(--color-text-faint); }
+
+/* ─── LAYOUT ─────────────────────────────────────────────────── */
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+}
+.section {
+  padding: clamp(var(--space-10), 5vw, var(--space-16)) 0;
+}
+
+/* ─── NAV ────────────────────────────────────────────────────── */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-sm);
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-decoration: none;
+  color: var(--color-text);
+}
+.nav-logo-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-logo-text {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.nav-logo-text span {
+  color: var(--gm-emerald);
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  list-style: none;
+  overflow-x: auto;
+}
+.nav-links a {
+  text-decoration: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  white-space: nowrap;
+}
+.nav-links a:hover { color: var(--color-text); background: var(--color-surface-offset); }
+.nav-links a.active { color: var(--color-text); background: var(--color-surface-offset); }
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.theme-toggle {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+}
+.theme-toggle:hover { background: var(--color-surface-offset); color: var(--color-text); }
+
+/* ─── HERO ───────────────────────────────────────────────────── */
+.hero {
+  padding: clamp(var(--space-12), 7vw, var(--space-16)) 0 var(--space-10);
+  border-bottom: 1px solid var(--color-border);
+  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-surface-2) 50%, var(--color-bg) 100%);
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(123,147,255,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-inner {
+  position: relative;
+  z-index: 1;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-surface-offset);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-5);
+  letter-spacing: 0.03em;
+}
+.hero-badge-dot {
+  width: 6px; height: 6px;
+  background: var(--gm-emerald);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+.hero h1 {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-4);
+}
+.hero h1 .brand-primary { color: var(--gm-primary); }
+.hero h1 .brand-emerald { color: var(--gm-emerald); }
+.hero-sub {
+  font-size: var(--text-base);
+  color: var(--color-text-muted);
+  max-width: 640px;
+  margin-bottom: var(--space-8);
+  line-height: 1.7;
+}
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  align-items: center;
+}
+.hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.hero-stat-val {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: -0.02em;
+}
+.hero-stat-val.primary { color: var(--gm-primary); }
+.hero-stat-val.emerald { color: var(--gm-emerald); }
+.hero-stat-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.hero-divider {
+  width: 1px; height: 36px;
+  background: var(--color-border);
+}
+
+/* ─── SECTION HEADERS ─────────────────────────────────────────── */
+.section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+  flex-wrap: wrap;
+}
+.section-label {
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-2);
+}
+.section-title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.section-desc {
+  color: var(--color-text-muted);
+  max-width: 720px;
+  line-height: 1.7;
+  margin-bottom: var(--space-8);
+}
+
+/* ─── FEATURE CARDS ──────────────────────────────────────────── */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 560px), 1fr));
+  gap: var(--space-6);
+}
+.feature-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--gm-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-interactive), border-color var(--transition-interactive);
+}
+.feature-card:hover {
+  box-shadow: var(--shadow-md);
+}
+.feature-card.emerald-accent {
+  border-left-color: var(--gm-emerald);
+}
+.feature-card-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  margin-bottom: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.feature-card-title .card-icon {
+  font-size: var(--text-sm);
+  opacity: 0.7;
+}
+.feature-card-problem {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-3);
+  line-height: 1.6;
+}
+.feature-card-solution {
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  margin-bottom: var(--space-4);
+}
+
+/* ─── CODE BLOCKS ────────────────────────────────────────────── */
+.code-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--gm-primary);
+  cursor: pointer;
+  padding: var(--space-2) 0;
+  user-select: none;
+  border: none;
+  background: none;
+}
+.code-toggle:hover { color: var(--gm-primary-dim); }
+.code-toggle .chevron {
+  display: inline-block;
+  transition: transform var(--transition-interactive);
+  font-size: 0.7em;
+}
+.code-toggle .chevron.open {
+  transform: rotate(90deg);
+}
+.code-wrapper {
+  display: none;
+  position: relative;
+  margin-top: var(--space-2);
+}
+.code-wrapper.open {
+  display: block;
+}
+.code-block {
+  background: #0d0f18;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.7;
+  color: #c8cdd8;
+}
+[data-theme="light"] .code-block {
+  background: #1e2135;
+  color: #c8cdd8;
+}
+.code-block .kw { color: #c678dd; }
+.code-block .fn { color: #61afef; }
+.code-block .str { color: #98c379; }
+.code-block .cm { color: #5c6370; font-style: italic; }
+.code-block .num { color: #d19a66; }
+.copy-btn {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--color-text-faint);
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  z-index: 2;
+}
+.copy-btn:hover { color: var(--color-text); background: rgba(0,0,0,0.5); }
+
+/* ─── DATA TABLE ─────────────────────────────────────────────── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+.data-table th {
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-offset);
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--color-border);
+}
+.data-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-divider);
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table .type-badge {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+}
+.type-thought { background: rgba(123,147,255,0.15); color: #7b93ff; }
+.type-action  { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.type-observation { background: rgba(168,85,247,0.15); color: #a855f7; }
+.type-answer  { background: rgba(16,185,129,0.15); color: #10b981; }
+.type-error   { background: rgba(240,96,96,0.15); color: #f06060; }
+.type-text    { background: rgba(138,146,168,0.15); color: #8a92a8; }
+
+/* ─── GRAPH VIS ──────────────────────────────────────────────── */
+.vis-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+.vis-item {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  font-size: var(--text-sm);
+}
+.vis-item strong {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+/* ─── FOOTER ─────────────────────────────────────────────────── */
+.footer {
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-8) 0;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-faint);
+}
+
+/* ─── MOBILE ─────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .card-grid { grid-template-columns: 1fr; }
+  .hero-meta { gap: var(--space-4); }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ═══════ NAVIGATION ═══════ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <circle cx="5" cy="6" r="2"/>
+          <circle cx="19" cy="6" r="2"/>
+          <circle cx="5" cy="18" r="2"/>
+          <circle cx="19" cy="18" r="2"/>
+          <line x1="9.5" y1="10.5" x2="6.5" y2="7.5"/>
+          <line x1="14.5" y1="10.5" x2="17.5" y2="7.5"/>
+          <line x1="9.5" y1="13.5" x2="6.5" y2="16.5"/>
+          <line x1="14.5" y1="13.5" x2="17.5" y2="16.5"/>
+        </svg>
+      </div>
+      <div class="nav-logo-text">Graph<span>Mesh</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#ueberblick">Ueberblick</a></li>
+      <li><a href="#dokumente">Dokumente</a></li>
+      <li><a href="#extraktion">Extraktion</a></li>
+      <li><a href="#abfragen">Abfragen</a></li>
+      <li><a href="#modellierung">Modellierung</a></li>
+      <li><a href="#graph">Graph</a></li>
+      <li><a href="#agent">Agent</a></li>
+      <li><a href="#admin">Admin</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="theme-toggle" id="themeToggle" aria-label="Theme wechseln">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sun">
+          <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-moon" style="display:none;">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════ HERO ═══════ -->
+<header class="hero">
+  <div class="container hero-inner">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      Produktdokumentation v1.0
+    </div>
+    <h1><span class="brand-primary">Graph</span><span class="brand-emerald">Mesh</span></h1>
+    <p class="hero-sub">Enterprise Knowledge Graph Platform &mdash; Automatische Wissensextraktion aus Dokumenten, semantische Suche und KI-gestuetzte Abfragen ueber verknuepftes Wissen.</p>
+    <div class="hero-meta">
+      <div class="hero-stat">
+        <div class="hero-stat-val primary">23</div>
+        <div class="hero-stat-label">Features</div>
+      </div>
+      <div class="hero-divider"></div>
+      <div class="hero-stat">
+        <div class="hero-stat-val emerald">5</div>
+        <div class="hero-stat-label">Interfaces</div>
+      </div>
+      <div class="hero-divider"></div>
+      <div class="hero-stat">
+        <div class="hero-stat-val primary">7</div>
+        <div class="hero-stat-label">Themengebiete</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════ 01 · UEBERBLICK ═══════ -->
+<section id="ueberblick" class="section">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-label">01 &middot; Ueberblick</div>
+        <h2 class="section-title">Was ist GraphMesh?</h2>
+      </div>
+    </div>
+    <p class="section-desc">
+      GraphMesh ist eine Enterprise-Plattform zur automatischen Wissensextraktion aus Dokumenten. Die Plattform analysiert Dokumente mithilfe von KI-Sprachmodellen, extrahiert strukturiertes Wissen als Wissensgraph (Subjekt-Praedikat-Objekt-Tripel) und ermoeglicht semantische Suche sowie intelligente Abfragen ueber den gesamten Wissensbestand.
+    </p>
+    <p class="section-desc" style="margin-top: calc(-1 * var(--space-4));">
+      Der zentrale Gedanke: Unstrukturiertes Wissen in Dokumenten wird automatisch in einen durchsuchbaren, verknuepften Wissensgraphen ueberfuehrt &mdash; ohne manuelle Verschlagwortung oder Modellierung.
+    </p>
+    <div class="card-grid">
+      <div class="feature-card">
+        <div class="feature-card-title">Wissen in Dokumenten ist unzugaenglich</div>
+        <p class="feature-card-solution">Informationen stecken in PDFs, Reports und Texten, die nur durch manuelles Lesen erschlossen werden koennen. GraphMesh extrahiert Wissen automatisch und macht es sofort durchsuchbar.</p>
+      </div>
+      <div class="feature-card emerald-accent">
+        <div class="feature-card-title">Manuelle Wissensextraktion skaliert nicht</div>
+        <p class="feature-card-solution">Das haendische Erfassen von Zusammenhaengen aus Hunderten von Dokumenten ist zeitaufwaendig und fehleranfaellig. KI-gestuetzte Extraktion arbeitet automatisch und konsistent.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-title">Stichwortsuche reicht nicht</div>
+        <p class="feature-card-solution">Klassische Volltextsuche findet keine semantischen Zusammenhaenge und versteht keine natuerlichsprachlichen Fragen. GraphMesh bietet Graph RAG, Document RAG und NLP-Abfragen.</p>
+      </div>
+      <div class="feature-card emerald-accent">
+        <div class="feature-card-title">Keine Nachvollziehbarkeit</div>
+        <p class="feature-card-solution">Bei klassischen KI-Antworten ist unklar, woher die Information stammt. GraphMesh liefert Quellenangaben, Relevanz-Scores und Erklaerungen zu jeder Antwort.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 02 · DOKUMENTENVERWALTUNG ═══════ -->
+<section id="dokumente" class="section" style="border-top: 1px solid var(--color-divider);">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-label">02 &middot; Dokumentenverwaltung</div>
+        <h2 class="section-title">Upload, Verarbeitung und Organisation</h2>
+      </div>
+    </div>
+    <p class="section-desc">GraphMesh organisiert Dokumente in Collections (thematische Sammlungen) und verarbeitet hochgeladene Dateien automatisch: Texterkennung, Aufteilung in semantische Abschnitte und Vorbereitung fuer die Wissensextraktion.</p>
+
+    <div class="card-grid">
+      <!-- Collections -->
+      <div class="feature-card">
+        <div class="feature-card-title">Collections</div>
+        <p class="feature-card-problem">Ohne Struktur landen alle Dokumente in einem grossen Topf &mdash; Suchergebnisse werden ungenau, Zugriffssteuerung ist unmoeglich.</p>
+        <p class="feature-card-solution">Collections buendeln zusammengehoerige Dokumente unter einem Namen mit optionaler Beschreibung und Tags. Jede Abfrage (Suche, RAG, Graph) arbeitet auf genau einer Collection.</p>
+        <button class="code-toggle" onclick="toggleCode(this)">
+          <span class="chevron">&#9654;</span> GraphQL-Beispiel anzeigen
+        </button>
+        <div class="code-wrapper">
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <pre class="code-block"><span class="cm"># Alle Collections auflisten (optional nach Tags filtern)</span>
+<span class="kw">query</span> {
+  <span class="fn">collections</span>(tags: [<span class="str">"forschung"</span>]) {
+    id
+    name
+    description
+    tags
+  }
+}
+
+<span class="cm"># Neue Collection anlegen</span>
+<span class="kw">mutation</span> {
+  <span class="fn">createCollection</span>(input: {
+    name: <span class="str">"Forschungsberichte"</span>
+    description: <span class="str">"..."</span>
+    tags: [<span class="str">"forschung"</span>]
+  }) {
+    id
+    name
+  }
+}</pre>
+        </div>
+      </div>
+
+      <!-- Document Upload -->
+      <div class="feature-card emerald-accent">
+        <div class="feature-card-title">Dokumenten-Upload</div>
+        <p class="feature-card-problem">Dokumente muessen einzeln und manuell verarbeitet werden &mdash; es gibt keinen einheitlichen Einstiegspunkt fuer verschiedene Formate.</p>
+        <p class="feature-card-solution">GraphMesh nimmt Dokumente per GraphQL-API, Frontend oder CLI entgegen. Nach dem Upload startet die Verarbeitungspipeline automatisch: PDF-Decode, Chunking, Embedding und Extraktion.</p>
+        <button class="code-toggle" onclick="toggleCode(this)">
+          <span class="chevron">&#9654;</span> GraphQL-Beispiel anzeigen
+        </button>
+        <div class="code-wrapper">
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <pre class="code-block"><span class="cm"># Dokument hochladen</span>
+<span class="kw">mutation</span> {
+  <span class="fn">uploadDocument</span>(input: {
+    collectionId: <span class="str">"col-123"</span>
+    title: <span class="str">"Jahresbericht"</span>
+    mimeType: <span class="str">"application/pdf"</span>
+    content: <span class="str">"..."</span>
+  }) {
+    id
+    title
+    state
+  }
+}
+
+<span class="cm"># Dokumente auflisten und filtern</span>
+<span class="kw">query</span> {
+  <span class="fn">documents</span>(
+    collectionId: <span class="str">"col-123"</span>
+    filter: { type: SOURCE state: EXTRACTED }
+    page: <span class="num">0</span>
+    pageSize: <span class="num">20</span>
+  ) {
+    items { id title state }
+    totalCount
+  }
+}</pre>
+        </div>
+      </div>
+
+      <!-- PDF Decode -->
+      <div class="feature-card">
+        <div class="feature-card-title">PDF-Decode</div>
+        <p class="feature-card-problem">PDF-Dateien enthalten Texte in komplexen Layouts &mdash; Spalten, Tabellen, Kopf-/Fusszeilen erschweren die maschinelle Verarbeitung.</p>
+        <p class="feature-card-solution">GraphMesh extrahiert Text seitenweise aus PDFs und wandelt ihn in strukturierte Textdokumente um. Die Pipeline erkennt Seitengrenzen und erzeugt ein Dokument pro Seite als Grundlage fuer das Chunking.</p>
+      </div>
+
+      <!-- Chunking -->
+      <div class="feature-card emerald-accent">
+        <div class="feature-card-title">Semantisches Chunking</div>
+        <p class="feature-card-problem">Ganze Dokumente sind zu lang fuer LLM-Verarbeitung. Willkuerliches Aufteilen zerstoert Zusammenhaenge.</p>
+        <p class="feature-card-solution">GraphMesh teilt Dokumente in semantisch sinnvolle Abschnitte (Chunks) auf. Die Chunk-Groesse und Ueberlappung sind konfigurierbar. Jeder Chunk wird mit Vektor-Embeddings versehen und ist einzeln durchsuchbar.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 03 · WISSENSEXTRAKTION ═══════ -->
+<section id="extraktion" class="section" style="border-top: 1px solid var(--color-divider);">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-label">03 &middot; Wissensextraktion</div>
+        <h2 class="section-title">Automatische Extraktion von Wissen mittels KI</h2>
+      </div>
+    </div>
+    <p class="section-desc">Nach dem Upload verarbeitet GraphMesh Dokumente automatisch: Der Text wird in Abschnitte aufgeteilt, und aus jedem Abschnitt extrahiert das System strukturiertes Wissen. Die Extraktion laeuft im Hintergrund, sobald ein Dokument hochgeladen wurde.</p>
+
+    <div class="card-grid">
+      <div class="feature-card">
+        <div class="feature-card-title">Beziehungsextraktion</div>
+        <p class="feature-card-problem">In Freitexten stecken Fakten und Zusammenhaenge, die fuer Suche und Analyse nur nutzbar sind, wenn sie strukturiert vorliegen.</p>
+        <p class="feature-card-solution">GraphMesh erkennt automatisch Beziehungen in Textabschnitten und speichert sie als Subjekt-Praedikat-Objekt-Tripel (z.B. "Firma X" &mdash; "hat Hauptsitz in" &mdash; "Berlin"). Diese Tripel bilden den Knowledge Graph.</p>
+      </div>
+
+      <div class="feature-card emerald-accent">
+        <div class="feature-card-title">Ontologie-gestuetzte Extraktion</div>
+        <p class="feature-card-problem">Ohne Vorgaben nutzt die KI inkonsistente Bezeichnungen &mdash; "Firmensitz", "Hauptsitz" und "Standort" meinen dasselbe, werden aber als verschiedene Praedikate gespeichert.</p>
+        <p class="feature-card-solution">Durch den Import einer Ontologie erhaelt die Extraktion einen Leitfaden. Die KI bevorzugt Begriffe aus der Ontologie und erzeugt konsistentere, besser verknuepfte Tripel.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-card-title">Strukturierte Extraktion</div>
+        <p class="feature-card-problem">Neben freien Beziehungen werden haeufig konkrete Datentypen benoetigt &mdash; Zahlen, Datumsangaben, Klassifikationen.</p>
+        <p class="feature-card-solution">GraphMesh unterstuetzt Datatype Properties, die Entitaeten mit typisierten Werten verknuepfen. So werden neben Beziehungen auch konkrete Fakten wie Mitarbeiterzahl oder Gruendungsdatum erfasst.</p>
+      </div>
+
+      <div class="feature-card emerald-accent">
+        <div class="feature-card-title">Agenten-basierte Extraktion</div>
+        <p class="feature-card-problem">Einfache Prompt-basierte Extraktion erreicht bei komplexen Dokumenten ihre Grenzen &mdash; Kontext geht verloren, Ambiguitaeten werden nicht aufgeloest.</p>
+        <p class="feature-card-solution">Der Extraktions-Agent arbeitet in einer Denk-Handlungs-Schleife: Er analysiert den Text, konsultiert die Ontologie, loest Mehrdeutigkeiten auf und prueft die Konsistenz extrahierter Tripel.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-card-title">Themenextraktion</div>
+        <p class="feature-card-problem">Einzelne Tripel zeigen Detailwissen, aber nicht das uebergeordnete Thema eines Dokuments oder Abschnitts.</p>
+        <p class="feature-card-solution">GraphMesh erkennt automatisch Themen und Schlagwoerter aus Dokumenten-Chunks und ordnet sie in die SKOS-Taxonomie ein. So lassen sich Dokumente nach Themengebieten filtern und navigieren.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 04 · SUCHE & ABFRAGEN ═══════ -->
+<section id="abfragen" class="section" style="border-top: 1px solid var(--color-divider);">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-label">04 &middot; Suche &amp; Abfragen</div>
+        <h2 class="section-title">Semantische Suche und RAG-Abfragen</h2>
+      </div>
+    </div>
+    <p class="section-desc">GraphMesh bietet verschiedene Wege, Wissen aus Ihren Dokumenten und dem Knowledge Graph abzufragen &mdash; von gezielten Graph-Abfragen ueber semantische Dokumentensuche bis hin zu automatisch optimierten Freitext-Fragen.</p>
+
+    <div class="card-grid">
+      <!-- Graph RAG -->
+      <div class="feature-card">
+        <div class="feature-card-title">Graph RAG</div>
+        <p class="feature-card-problem">Traditionelle Suchsysteme finden nur Dokumente mit bestimmten Begriffen. Zusammenhaenge zwischen Konzepten bleiben verborgen.</p>
+        <p class="feature-card-solution">Graph RAG durchsucht den Knowledge Graph nach relevanten Wissens-Beziehungen und generiert eine Antwort, die auf konkreten Fakten (Tripeln) basiert. Jede Antwort nennt die verwendeten Beziehungen mit Relevanz-Score.</p>
+        <button class="code-toggle" onclick="toggleCode(this)">
+          <span class="chevron">&#9654;</span> GraphQL-Beispiel anzeigen
+        </button>
+        <div class="code-wrapper">
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <pre class="code-block"><span class="kw">query</span> {
+  <span class="fn">graphRag</span>(input: {
+    question: <span class="str">"Welche Technologien nutzt Projekt Alpha?"</span>
+    collectionId: <span class="str">"..."</span>
+    maxEdges: <span class="num">150</span>
+    maxDepth: <span class="num">2</span>
+  }) {
+    answer
+    selectedEdges {
+      subject
+      predicate
+      objectValue
+      relevanceScore
+    }
+  }
+}</pre>
+        </div>
+      </div>
+
+      <!-- Document RAG -->
+      <div class="feature-card emerald-accent">
+        <div class="feature-card-title">Document RAG</div>
+        <p class="feature-card-problem">Bei grossen Dokumentenbestaenden ist es schwierig, die relevante Textstelle zu finden. Volltextsuche versagt bei umformulierten Fragen oder Synonymen.</p>
+        <p class="feature-card-solution">Document RAG sucht semantisch in Dokumenten-Chunks und generiert eine quellenbasierte Antwort. Jede Antwort verweist auf die konkreten Dokumente, Seiten und Textausschnitte.</p>
+        <button class="code-toggle" onclick="toggleCode(this)">
+          <span class="chevron">&#9654;</span> GraphQL-Beispiel anzeigen
+        </button>
+        <div class="code-wrapper">
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <pre class="code-block"><span class="kw">query</span> {
+  <span class="fn">documentRag</span>(input: {
+    question: <span class="str">"..."</span>
+    collectionId: <span class="str">"..."</span>
+    topK: <span class="num">10</span>
+  }) {
+    answer
+    sources {
+      documentTitle
+      pageNumber
+      score
+      snippet
+    }
+  }
+}</pre>
+        </div>
+      </div>
+
+      <!-- NLP Query -->
+      <div class="feature-card">
+        <div class="feature-card-title">NLP Query</div>
+        <p class="feature-card-problem">Nutzer muessen wissen, ob sie Graph RAG oder Document RAG nutzen sollen &mdash; die optimale Suchstrategie haengt von der Frage ab.</p>
+        <p class="feature-card-solution">NLP Query analysiert die Frage automatisch, erkennt die Absicht (Intent) und waehlt die passende Suchstrategie. Das Ergebnis enthaelt die erkannte Absicht mit Konfidenz-Score.</p>
+        <button class="code-toggle" onclick="toggleCode(this)">
+          <span class="chevron">&#9654;</span> GraphQL-Beispiel anzeigen
+        </button>
+        <div class="code-wrapper">
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <pre class="code-block"><span class="kw">query</span> {
+  <span class="fn">nlpQuery</span>(input: {
+    question: <span class="str">"..."</span>
+    collectionId: <span class="str">"..."</span>
+  }) {
+    answer
+    detectedIntent {
+      intent
+      confidence
+    }
+  }
+}</pre>
+        </div>
+      </div>
+
+      <!-- Explainability -->
+      <div class="feature-card emerald-accent">
+        <div class="feature-card-title">Explainability</div>
+        <p class="feature-card-problem">KI-generierte Antworten sind oft intransparent &mdash; der Nutzer weiss nicht, auf welcher Grundlage die Antwort basiert.</p>
+        <p class="feature-card-solution">Jede GraphMesh-Antwort enthaelt Quellenangaben: Bei Graph RAG die verwendeten Tripel mit Relevanz-Score und Begruendung, bei Document RAG die Quelldokumente mit Seitenzahl und Textausschnitt.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 05 · WISSENSMODELLIERUNG ═══════ -->
+<section id="modellierung" class="section" style="border-top: 1px solid var(--color-divider);">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-label">05 &middot; Wissensmodellierung</div>
+        <h2 class="section-title">Ontologien, Taxonomien und RDF-Import</h2>
+      </div>
+    </div>
+    <p class="section-desc">GraphMesh ermoeglicht die Strukturierung von Wissen durch Ontologien, kontrollierte Vokabulare (Taxonomien) und den Import bestehender Wissensdaten. Diese Werkzeuge definieren, wie Wissen organisiert, klassifiziert und miteinander verknuepft wird.</p>
+
+    <div class="card-grid">
+      <div class="feature-card">
+        <div class="feature-card-title">Ontology System</div>
+        <p class="feature-card-problem">Ohne definierte Struktur extrahiert ein LLM Wissen in beliebigen Formaten &mdash; "Mitarbeiter arbeitet-bei Firma" und "Person ist-angestellt-bei Unternehmen" beschreiben dasselbe, werden aber als unterschiedlich behandelt.</p>
+        <p class="feature-card-solution">Ontologien definieren die erlaubten Klassen (z.B. Person, Organisation, Projekt) und Beziehungstypen (z.B. arbeitetBei, gehoertZu). GraphMesh nutzt diese Definitionen, um Wissen konsistent zu extrahieren und zu speichern.</p>
+      </div>
+
+      <div class="feature-card emerald-accent">
+        <div class="feature-card-title">SKOS-Taxonomien</div>
+        <p class="feature-card-problem">Freitext-Schlagwoerter fuehren zu inkonsistenter Verschlagwortung &mdash; "KI", "Kuenstliche Intelligenz" und "AI" meinen dasselbe.</p>
+        <p class="feature-card-solution">SKOS (Simple Knowledge Organization System) bietet hierarchische Begriffssysteme mit Synonymen, Ober- und Unterbegriffen. GraphMesh nutzt SKOS-Taxonomien zur einheitlichen Klassifikation von Wissen.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-card-title">RDF-Import</div>
+        <p class="feature-card-problem">Bestehendes strukturiertes Wissen (aus Datenbanken, Linked-Data-Quellen) muss manuell neu erfasst werden.</p>
+        <p class="feature-card-solution">GraphMesh importiert RDF-Daten in Standardformaten (Turtle, RDF/XML, N-Triples). Bestehende Wissensgraphen koennen direkt in das System uebernommen und mit extrahiertem Wissen kombiniert werden.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 06 · GRAPH-VISUALISIERUNG ═══════ -->
+<section id="graph" class="section" style="border-top: 1px solid var(--color-divider);">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-label">06 &middot; Graph-Visualisierung</div>
+        <h2 class="section-title">Interaktive Exploration des Wissensgraphen</h2>
+      </div>
+    </div>
+    <p class="section-desc">GraphMesh stellt extrahiertes Wissen als interaktiven Wissensgraphen dar. Entitaeten und ihre Beziehungen lassen sich visuell erkunden, filtern und schrittweise erweitern.</p>
+
+    <div class="card-grid" style="grid-template-columns: 1fr;">
+      <div class="feature-card">
+        <div class="feature-card-title">Graph Explorer</div>
+        <p class="feature-card-problem">Tabellarische Listen von Wissenseintraegen zeigen keine Zusammenhaenge. Nutzer koennen nicht erkennen, wie Entitaeten miteinander verbunden sind.</p>
+        <p class="feature-card-solution">Der Graph Explorer auf der <code>/graph</code>-Seite stellt Entitaeten als Knoten und Beziehungen als gerichtete Kanten dar. Das Layout ordnet sich automatisch per Force-Directed-Algorithmus an und passt sich dynamisch an.</p>
+      </div>
+    </div>
+
+    <h3 style="font-size: var(--text-base); font-weight: 600; margin: var(--space-8) 0 var(--space-4);">Bedienelemente und Interaktion</h3>
+    <div class="vis-list">
+      <div class="vis-item">
+        <strong>Collection-Auswahl</strong>
+        Aktive Wissens-Collection in der Kopfzeile waehlen
+      </div>
+      <div class="vis-item">
+        <strong>Entity-Suche</strong>
+        Autovervollstaendigung ab 3 Zeichen fuer schnelle Navigation
+      </div>
+      <div class="vis-item">
+        <strong>Filter</strong>
+        Einschraenkung nach Dataset, Praedikat und Entitaetstyp
+      </div>
+      <div class="vis-item">
+        <strong>Zoom &amp; Vollbild</strong>
+        Zoom-Regler und Vollbild-Modus fuer grosse Graphen
+      </div>
+      <div class="vis-item">
+        <strong>Klick auf Knoten</strong>
+        Waehlt Entitaet aus und zeigt Details im Seitenpanel
+      </div>
+      <div class="vis-item">
+        <strong>Rechtsklick</strong>
+        Laedt Nachbarn nach (Subgraph-Erweiterung)
+      </div>
+      <div class="vis-item">
+        <strong>Hover</strong>
+        Hebt Entitaet und direkte Nachbarn hervor
+      </div>
+      <div class="vis-item">
+        <strong>Minimap</strong>
+        Uebersichtskarte zur Orientierung in grossen Graphen
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 07 · AGENT & STREAMING ═══════ -->
+<section id="agent" class="section" style="border-top: 1px solid var(--color-divider);">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-label">07 &middot; Agent &amp; Streaming</div>
+        <h2 class="section-title">KI-Agenten mit Werkzeugen und Echtzeit-Streaming</h2>
+      </div>
+    </div>
+    <p class="section-desc">GraphMesh bietet KI-Agenten, die komplexe Fragen ueber den Wissensgraphen beantworten. Die Agenten nutzen Werkzeuge in einer Denk-Handlungs-Schleife (ReAct) und liefern Antworten in Echtzeit per Streaming.</p>
+
+    <div class="card-grid">
+      <!-- Agent System -->
+      <div class="feature-card">
+        <div class="feature-card-title">Agent-System</div>
+        <p class="feature-card-problem">Einfache Suchanfragen genuegen nicht, wenn die Antwort aus mehreren Wissensquellen zusammengesetzt werden muss.</p>
+        <p class="feature-card-solution">GraphMesh-Agenten arbeiten in einer ReAct-Schleife: Sie analysieren die Frage, waehlen passende Werkzeuge, fuehren Aktionen aus, beobachten die Ergebnisse und wiederholen bis die Frage beantwortet ist.</p>
+        <button class="code-toggle" onclick="toggleCode(this)">
+          <span class="chevron">&#9654;</span> GraphQL-Beispiel anzeigen
+        </button>
+        <div class="code-wrapper">
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <pre class="code-block"><span class="kw">mutation</span> {
+  <span class="fn">askAgent</span>(input: {
+    question: <span class="str">"..."</span>
+    collectionId: <span class="str">"..."</span>
+    maxIterations: <span class="num">10</span>
+  }) {
+    sessionId
+    answer
+    durationMs
+  }
+}</pre>
+        </div>
+      </div>
+
+      <!-- Tool Groups -->
+      <div class="feature-card emerald-accent">
+        <div class="feature-card-title">Tool-Gruppen</div>
+        <p class="feature-card-problem">Nicht jede Frage erfordert alle verfuegbaren Werkzeuge. Irrelevante Tools erhoehen die Antwortzeit und koennen den Agenten ablenken.</p>
+        <p class="feature-card-solution">Werkzeuge sind in logische Gruppen organisiert (z.B. "Graph-Suche", "Dokumenten-Suche", "Vektor-Suche"). Bei jeder Anfrage kann festgelegt werden, welche Tool-Gruppen der Agent nutzen darf.</p>
+      </div>
+
+      <!-- Streaming -->
+      <div class="feature-card" style="grid-column: 1 / -1;">
+        <div class="feature-card-title">Echtzeit-Streaming</div>
+        <p class="feature-card-problem">Agent-Anfragen koennen mehrere Sekunden dauern. Ohne Streaming sieht der Nutzer nur einen Ladebalken und erhaelt die Antwort erst am Ende.</p>
+        <p class="feature-card-solution">GraphMesh streamt den gesamten Agenten-Prozess in Echtzeit. Jedes Token traegt einen Typ, der den aktuellen Schritt des Agenten kennzeichnet. Im Frontend wird eine farbcodierte Timeline dargestellt.</p>
+        <button class="code-toggle" onclick="toggleCode(this)">
+          <span class="chevron">&#9654;</span> GraphQL-Subscription anzeigen
+        </button>
+        <div class="code-wrapper">
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <pre class="code-block"><span class="kw">subscription</span> {
+  <span class="fn">agentStream</span>(input: {
+    question: <span class="str">"..."</span>
+    collectionId: <span class="str">"..."</span>
+  }) {
+    content
+    type
+    endOfMessage
+    endOfStream
+  }
+}</pre>
+        </div>
+
+        <!-- Token Type Table -->
+        <h4 style="font-size: var(--text-sm); font-weight: 600; margin: var(--space-6) 0 var(--space-3);">Token-Typen</h4>
+        <div style="border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Typ</th>
+                <th>Bedeutung</th>
+                <th>Farbe</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="type-badge type-text">TEXT</span></td>
+                <td>Allgemeiner Text</td>
+                <td>Grau</td>
+              </tr>
+              <tr>
+                <td><span class="type-badge type-thought">THOUGHT</span></td>
+                <td>Denkschritt des Agenten</td>
+                <td>Blau</td>
+              </tr>
+              <tr>
+                <td><span class="type-badge type-action">ACTION</span></td>
+                <td>Werkzeug-Aufruf</td>
+                <td>Gelb/Orange</td>
+              </tr>
+              <tr>
+                <td><span class="type-badge type-observation">OBSERVATION</span></td>
+                <td>Ergebnis eines Werkzeugs</td>
+                <td>Violett</td>
+              </tr>
+              <tr>
+                <td><span class="type-badge type-answer">ANSWER</span></td>
+                <td>Finale Antwort</td>
+                <td>Gruen</td>
+              </tr>
+              <tr>
+                <td><span class="type-badge type-error">ERROR</span></td>
+                <td>Fehlermeldung</td>
+                <td>Rot</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 08 · ADMINISTRATION ═══════ -->
+<section id="admin" class="section" style="border-top: 1px solid var(--color-divider);">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-label">08 &middot; Administration</div>
+        <h2 class="section-title">Konfiguration, Mandanten und CLI</h2>
+      </div>
+    </div>
+    <p class="section-desc">GraphMesh verwendet ein typisiertes Konfigurationssystem mit versionierten Eintraegen. Die Plattform ist mandantenfaehig und bietet neben der Web-Oberflaeche auch ein Kommandozeilen-Tool fuer die Verwaltung.</p>
+
+    <div class="card-grid">
+      <div class="feature-card">
+        <div class="feature-card-title">Konfigurationsverwaltung</div>
+        <p class="feature-card-problem">Anwendungseinstellungen sind ueber Konfigurationsdateien verstreut und erfordern bei jeder Aenderung einen Neustart.</p>
+        <p class="feature-card-solution">GraphMesh bietet ein zentrales Konfigurationssystem mit typisierten Eintraegen (LLM, Extraction, Embedding, Pipeline). Aenderungen werden versioniert und sind sofort wirksam &mdash; per Frontend (<code>/admin/config</code>), CLI oder GraphQL.</p>
+      </div>
+
+      <div class="feature-card emerald-accent">
+        <div class="feature-card-title">Multi-Tenancy</div>
+        <p class="feature-card-problem">Verschiedene Teams oder Abteilungen muessen ihre Daten voneinander getrennt verwalten koennen.</p>
+        <p class="feature-card-solution">GraphMesh unterstuetzt Mandantenfaehigkeit: Jeder Mandant hat eigene Collections, Dokumente und Wissensgraphen. Die Trennung erfolgt auf Datenebene &mdash; kein Mandant sieht die Daten eines anderen.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-card-title">CLI-Referenz</div>
+        <p class="feature-card-problem">Nicht alle Verwaltungsaufgaben lassen sich effizient ueber die Web-Oberflaeche erledigen &mdash; Batch-Operationen und Automatisierung erfordern ein Kommandozeilen-Tool.</p>
+        <p class="feature-card-solution">Das <code>graphmesh</code>-CLI bietet Befehle fuer alle Kernfunktionen: Collection-Verwaltung, Dokumenten-Upload, Abfragen, Konfiguration und Ontologie-Import. Ideal fuer Scripting und CI/CD-Pipelines.</p>
+        <button class="code-toggle" onclick="toggleCode(this)">
+          <span class="chevron">&#9654;</span> CLI-Beispiele anzeigen
+        </button>
+        <div class="code-wrapper">
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <pre class="code-block"><span class="cm"># Collections verwalten</span>
+graphmesh collection list
+graphmesh collection create <span class="str">"Forschungsberichte"</span> --tag forschung
+
+<span class="cm"># Dokument hochladen</span>
+graphmesh document upload report.pdf --collection col-123
+
+<span class="cm"># Abfragen</span>
+graphmesh query graphrag <span class="str">"Welche Risiken bestehen?"</span> \
+  --collection meine-sammlung
+
+<span class="cm"># Konfiguration</span>
+graphmesh config list --type llm
+graphmesh config set model-name <span class="str">"gpt-4o"</span> --type llm</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ FOOTER ═══════ -->
+<footer class="footer">
+  <div class="container">
+    GraphMesh Documentation &middot; April 2026
+  </div>
+</footer>
+
+<script>
+/* ─── THEME TOGGLE ──────────────────────────────────────────── */
+const html = document.documentElement;
+const toggle = document.getElementById('themeToggle');
+const iconSun = toggle.querySelector('.icon-sun');
+const iconMoon = toggle.querySelector('.icon-moon');
+
+function setTheme(theme) {
+  html.setAttribute('data-theme', theme);
+  if (theme === 'dark') {
+    iconSun.style.display = 'block';
+    iconMoon.style.display = 'none';
+  } else {
+    iconSun.style.display = 'none';
+    iconMoon.style.display = 'block';
+  }
+}
+
+toggle.addEventListener('click', () => {
+  const current = html.getAttribute('data-theme') || 'dark';
+  setTheme(current === 'dark' ? 'light' : 'dark');
+});
+
+/* ─── COLLAPSIBLE CODE BLOCKS ───────────────────────────────── */
+function toggleCode(btn) {
+  const wrapper = btn.nextElementSibling;
+  const chevron = btn.querySelector('.chevron');
+  const isOpen = wrapper.classList.contains('open');
+
+  if (isOpen) {
+    wrapper.classList.remove('open');
+    chevron.classList.remove('open');
+    btn.innerHTML = '<span class="chevron">&#9654;</span> ' + btn.textContent.trim().replace(/^[^ ]+ /, '');
+  } else {
+    wrapper.classList.add('open');
+    chevron.classList.add('open');
+  }
+}
+
+/* ─── COPY BUTTON ───────────────────────────────────────────── */
+function copyCode(btn) {
+  const pre = btn.parentElement.querySelector('.code-block');
+  const text = pre.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Kopiert!';
+    setTimeout(() => { btn.textContent = orig; }, 1500);
+  });
+}
+
+/* ─── SMOOTH SCROLL NAV HIGHLIGHT ───────────────────────────── */
+const navLinks = document.querySelectorAll('.nav-links a');
+const sections = document.querySelectorAll('section[id]');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + entry.target.id);
+      });
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+
+sections.forEach(section => observer.observe(section));
+</script>
+
+</body>
+</html>
