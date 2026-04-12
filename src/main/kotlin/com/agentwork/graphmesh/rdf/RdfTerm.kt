@@ -51,3 +51,22 @@ object XsdTypes {
 object RdfTypes {
     const val LANG_STRING = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"
 }
+
+object SkosTypes {
+    private const val NS = "http://www.w3.org/2004/02/skos/core#"
+
+    const val CONCEPT = "${NS}Concept"
+    const val CONCEPT_SCHEME = "${NS}ConceptScheme"
+    const val IN_SCHEME = "${NS}inScheme"
+    const val HAS_TOP_CONCEPT = "${NS}hasTopConcept"
+    const val TOP_CONCEPT_OF = "${NS}topConceptOf"
+    const val PREF_LABEL = "${NS}prefLabel"
+    const val ALT_LABEL = "${NS}altLabel"
+    const val HIDDEN_LABEL = "${NS}hiddenLabel"
+    const val BROADER = "${NS}broader"
+    const val NARROWER = "${NS}narrower"
+    const val RELATED = "${NS}related"
+    const val NOTE = "${NS}note"
+    const val SCOPE_NOTE = "${NS}scopeNote"
+    const val DEFINITION = "${NS}definition"
+}
