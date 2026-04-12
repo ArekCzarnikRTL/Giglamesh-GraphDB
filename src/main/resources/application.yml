@@ -89,5 +89,7 @@ graphmesh:
     overlap-size: 200
   extraction:
     model: ${LLM_EXTRACTION_MODEL:gpt-4o-mini}
+    topic:
+      minConfidence: 0.5
   embedding:
     model: ${EMBEDDING_MODEL:text-embedding-3-small}
