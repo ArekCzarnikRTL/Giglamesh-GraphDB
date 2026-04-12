@@ -28,7 +28,7 @@ class TopicExtractorService(
     private val provenanceService: ProvenanceService,
     private val ontologyMatcher: TopicOntologyMatcher,
     @Value("\${graphmesh.extraction.model:gpt-4o}") private val modelName: String,
-    @Value("\${graphmesh.extraction.topic.minConfidence:0.5}") private val minConfidence: Double
+    @Value("\${graphmesh.extraction.topic.min-confidence:0.5}") private val minConfidence: Double
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -77,11 +77,11 @@ class TopicExtractorService(
 
             knowledgeQuads += Quad(topicId, RdfTerm.Uri(RDF_TYPE), RdfTerm.Uri(SkosTypes.CONCEPT), NamedGraph.DEFAULT)
             knowledgeQuads += Quad(topicId, RdfTerm.Uri(RDFS_LABEL), RdfTerm.Literal(t.topic), NamedGraph.DEFAULT)
-            knowledgeQuads += Quad(chunkUri, RdfTerm.Uri(DCT_SUBJECT), topicId, NamedGraph.DEFAULT)
+            val subjectQuad = Quad(chunkUri, RdfTerm.Uri(DCT_SUBJECT), topicId, NamedGraph.DEFAULT)
+            knowledgeQuads += subjectQuad
 
-            val assignment = Quad(chunkUri, RdfTerm.Uri(DCT_SUBJECT), topicId, NamedGraph.DEFAULT)
             knowledgeQuads += Quad(
-                subject = RdfTerm.QuotedTriple(assignment.triple),
+                subject = RdfTerm.QuotedTriple(subjectQuad.triple),
                 predicate = RdfTerm.Uri(TOPIC_CONFIDENCE),
                 objectTerm = RdfTerm.Literal(t.confidence.toString()),
                 graph = NamedGraph.DEFAULT
