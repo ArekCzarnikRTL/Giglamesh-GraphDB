@@ -208,6 +208,14 @@ class CassandraQuadStore(
             .toList()
     }
 
+    override fun scrollAll(collection: String): List<StoredQuad> {
+        return query(collection, QuadQuery())
+    }
+
+    override fun isEmpty(collection: String): Boolean {
+        return query(collection, QuadQuery(), limit = 1).isEmpty()
+    }
+
     override fun aggregateMetadata(collection: String): GraphMetadataView {
         val all = query(collection, QuadQuery(), limit = null)
         val datasets = all.map { it.dataset }.distinct().sorted().take(200)

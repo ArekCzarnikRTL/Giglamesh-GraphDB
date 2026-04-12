@@ -26,6 +26,12 @@ interface QuadStore {
      */
     fun aggregateMetadata(collection: String): GraphMetadataView
 
+    /** Returns all quads in [collection]. Use for export only. */
+    fun scrollAll(collection: String): List<StoredQuad>
+
+    /** Returns true if [collection] has no quads. */
+    fun isEmpty(collection: String): Boolean
+
     fun findByEntities(collection: String, entityIds: List<String>): List<StoredQuad> {
         return entityIds.flatMap { id ->
             query(collection, QuadQuery(subject = id)) +

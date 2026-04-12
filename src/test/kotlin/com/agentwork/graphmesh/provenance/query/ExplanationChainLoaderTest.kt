@@ -38,6 +38,10 @@ private class InMemoryQuadStore : QuadStore {
     override fun findSubjects(collection: String, substringMatch: String, limit: Int): List<String> = emptyList()
     override fun aggregateMetadata(collection: String): GraphMetadataView =
         GraphMetadataView(emptyList(), emptyList(), emptyList())
+    override fun scrollAll(collection: String): List<StoredQuad> =
+        (store[collection] ?: emptyList()).toList()
+    override fun isEmpty(collection: String): Boolean =
+        store[collection]?.isEmpty() ?: true
 }
 
 class ExplanationChainLoaderTest {

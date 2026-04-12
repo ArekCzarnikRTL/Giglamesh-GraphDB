@@ -62,4 +62,12 @@ class InMemoryQuadStore : QuadStore {
             .toList()
         return GraphMetadataView(datasets, predicates, entityTypes)
     }
+
+    override fun scrollAll(collection: String): List<StoredQuad> {
+        return byCollection[collection]?.toList() ?: emptyList()
+    }
+
+    override fun isEmpty(collection: String): Boolean {
+        return byCollection[collection]?.isEmpty() ?: true
+    }
 }

@@ -28,6 +28,10 @@ private class CapturingQuadStore : QuadStore {
     override fun findSubjects(collection: String, substringMatch: String, limit: Int): List<String> = emptyList()
     override fun aggregateMetadata(collection: String): GraphMetadataView =
         GraphMetadataView(emptyList(), emptyList(), emptyList())
+    override fun scrollAll(collection: String): List<StoredQuad> =
+        byCollection[collection]?.toList() ?: emptyList()
+    override fun isEmpty(collection: String): Boolean =
+        byCollection[collection]?.isEmpty() ?: true
 }
 
 class ExplainabilityEventConsumerTest {
