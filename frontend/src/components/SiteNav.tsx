@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { href: "/documents", label: "Dokumente" },
   { href: "/graph", label: "Graph" },
   { href: "/query", label: "Query" },
+  { href: "/cores", label: "Cores" },
   { href: "/admin", label: "Admin" },
 ];
 
