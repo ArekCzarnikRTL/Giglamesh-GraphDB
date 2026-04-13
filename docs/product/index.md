@@ -24,6 +24,7 @@ Der zentrale Gedanke: Unstrukturiertes Wissen in Dokumenten wird automatisch in 
 | [Wissensmodellierung](wissensmodellierung.md) | Ontologien, SKOS-Taxonomien und RDF-Datenimport | implementiert |
 | [Graph-Visualisierung](graph-visualisierung.md) | Interaktive Graphdarstellung und Exploration | implementiert |
 | [Agent & Streaming](agent-und-streaming.md) | KI-Agenten mit Werkzeugen und Echtzeit-Streaming | implementiert |
+| [Context Cores](context-cores.md) | Versionierte Wissens-Bundles: Export, Import, Tagging | implementiert |
 | [Administration](administration.md) | Konfiguration, Mandantenfaehigkeit und Kommandozeilen-Tools | implementiert |
 
 ## Erste Schritte

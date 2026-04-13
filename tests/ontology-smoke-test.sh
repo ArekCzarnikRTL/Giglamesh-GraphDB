@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Smoke-Test fuer Ontology-Import (Feature 44) und RDF-Daten-Import (Feature 43).
-# Laedt examples/sample-ontology.ttl und examples/sample-data.ttl hoch,
+# Laedt sample-ontology.ttl und sample-data.ttl hoch,
 # prueft list/get/delete und RDF-Import mit Triples-Verifikation.
 #
 # Voraussetzung: Backend laeuft auf :8083, `jq` und `curl` installiert.
@@ -13,9 +13,9 @@ set -uo pipefail
 
 BACKEND_URL="${BACKEND_URL:-http://localhost:8083}"
 GRAPHQL_URL="$BACKEND_URL/graphql"
-ONTOLOGY_FILE="${ONTOLOGY_FILE:-examples/sample-ontology.ttl}"
+ONTOLOGY_FILE="${ONTOLOGY_FILE:-sample-ontology.ttl}"
 ONTOLOGY_KEY="${ONTOLOGY_KEY:-smoke-ontology-$(date +%s)}"
-RDF_DATA_FILE="${RDF_DATA_FILE:-examples/sample-data.ttl}"
+RDF_DATA_FILE="${RDF_DATA_FILE:-sample-data.ttl}"
 RDF_COLLECTION_ID=""
 
 PASS=0
@@ -156,26 +156,27 @@ else
 fi
 
 # ---------- 6. Ontologie loeschen ----------
-step "Mutation: deleteOntology(key=$ONTOLOGY_KEY)"
-RESP=$(gql 'mutation($key: String!) { deleteOntology(key: $key) }' \
-  "$(jq -cn --arg key "$ONTOLOGY_KEY" '{key: $key}')")
-DELETED=$(echo "$RESP" | jq -r '.data.deleteOntology // false')
-if [[ "$DELETED" == "true" ]]; then
-  ok "Ontologie geloescht"
-else
-  fail "deleteOntology fehlgeschlagen: $(echo "$RESP" | jq -c '.errors // .')"
-fi
+# Auskommentiert: Ontologie bleibt erhalten fuer Context-Core-Export
+# step "Mutation: deleteOntology(key=$ONTOLOGY_KEY)"
+# RESP=$(gql 'mutation($key: String!) { deleteOntology(key: $key) }' \
+#   "$(jq -cn --arg key "$ONTOLOGY_KEY" '{key: $key}')")
+# DELETED=$(echo "$RESP" | jq -r '.data.deleteOntology // false')
+# if [[ "$DELETED" == "true" ]]; then
+#   ok "Ontologie geloescht"
+# else
+#   fail "deleteOntology fehlgeschlagen: $(echo "$RESP" | jq -c '.errors // .')"
+# fi
 
 # ---------- 7. Verifizieren, dass geloescht ----------
-step "Verify: ontology(key=$ONTOLOGY_KEY) nach Delete — erwartet null"
-RESP=$(gql 'query($key: String!) { ontology(key: $key) { key } }' \
-  "$(jq -cn --arg key "$ONTOLOGY_KEY" '{key: $key}')")
-GOT=$(echo "$RESP" | jq -r '.data.ontology // "null"')
-if [[ "$GOT" == "null" ]]; then
-  ok "Ontologie nach Delete nicht mehr vorhanden"
-else
-  fail "Ontologie noch vorhanden nach Delete: $GOT"
-fi
+# step "Verify: ontology(key=$ONTOLOGY_KEY) nach Delete — erwartet null"
+# RESP=$(gql 'query($key: String!) { ontology(key: $key) { key } }' \
+#   "$(jq -cn --arg key "$ONTOLOGY_KEY" '{key: $key}')")
+# GOT=$(echo "$RESP" | jq -r '.data.ontology // "null"')
+# if [[ "$GOT" == "null" ]]; then
+#   ok "Ontologie nach Delete nicht mehr vorhanden"
+# else
+#   fail "Ontologie noch vorhanden nach Delete: $GOT"
+# fi
 
 # ==========================================================================
 # TEIL 2: RDF-Daten-Import (Feature 43)

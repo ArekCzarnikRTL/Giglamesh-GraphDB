@@ -41,7 +41,12 @@ class ContextCoreService(
         val nquads = nquadsSerializer.serialize(quads)
 
         val ontologyTtl = if (request.ontologyKey != null) {
-            try { ontologyService.exportTurtle(request.ontologyKey) } catch (_: Exception) { "" }
+            try {
+                ontologyService.exportTurtle(request.ontologyKey)
+            } catch (e: Exception) {
+                logger.warn("Failed to export ontology '{}': {}", request.ontologyKey, e.message)
+                ""
+            }
         } else ""
 
         val physicalCollection = CollectionNaming.physicalName(request.sourceCollection, request.embeddingDimension)

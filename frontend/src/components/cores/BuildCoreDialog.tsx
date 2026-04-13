@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import { BUILD_CONTEXT_CORE_MUTATION } from "@/graphql/cores";
-import { ADMIN_COLLECTIONS_QUERY } from "@/graphql/admin";
+import { ADMIN_COLLECTIONS_QUERY, LIST_ONTOLOGIES_QUERY } from "@/graphql/admin";
 import type { AdminCollection } from "@/types/admin";
 import { useState } from "react";
 
@@ -17,10 +17,12 @@ export function BuildCoreDialog({ onClose, onSuccess }: Props) {
   const [sourceCollection, setSourceCollection] = useState("");
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState("");
+  const [ontologyKey, setOntologyKey] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const { data: collectionsData } = useQuery<{ collections: AdminCollection[] }>(ADMIN_COLLECTIONS_QUERY);
+  const { data: ontologiesData } = useQuery<{ listOntologies: { key: string; name: string }[] }>(LIST_ONTOLOGIES_QUERY);
   const [buildMutation] = useMutation(BUILD_CONTEXT_CORE_MUTATION);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,6 +37,7 @@ export function BuildCoreDialog({ onClose, onSuccess }: Props) {
           sourceCollection,
           description: description || null,
           tags: tags ? tags.split(",").map((t) => t.trim()) : null,
+          ontologyKey: ontologyKey || null,
         },
       });
       onSuccess();
@@ -82,6 +85,21 @@ export function BuildCoreDialog({ onClose, onSuccess }: Props) {
               {collectionsData?.collections?.map((col) => (
                 <option key={col.id} value={col.id}>
                   {col.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-sm">Ontologie (optional)</label>
+            <select
+              value={ontologyKey}
+              onChange={(e) => setOntologyKey(e.target.value)}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            >
+              <option value="">Keine Ontologie</option>
+              {ontologiesData?.listOntologies?.map((ont) => (
+                <option key={ont.key} value={ont.key}>
+                  {ont.name || ont.key}
                 </option>
               ))}
             </select>
