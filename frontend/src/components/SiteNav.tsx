@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/documents", label: "Dokumente" },
+  { href: "/collections", label: "Collections" },
   { href: "/graph", label: "Graph" },
   { href: "/query", label: "Query" },
   { href: "/cores", label: "Cores" },
