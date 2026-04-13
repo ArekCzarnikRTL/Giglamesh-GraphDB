@@ -7,6 +7,7 @@ import com.agentwork.graphmesh.storage.blob.BlobStore
 import com.agentwork.graphmesh.storage.vector.CollectionNaming
 import com.agentwork.graphmesh.storage.vector.VectorStore
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import jakarta.annotation.PostConstruct
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.Instant
@@ -23,7 +24,14 @@ class ContextCoreService(
     private val logger = LoggerFactory.getLogger(javaClass)
     private val mapper = jacksonObjectMapper().apply { findAndRegisterModules() }
     private val nquadsSerializer = NQuadsSerializer()
-    private val bucket = "graphmesh-context-cores"
+
+    @PostConstruct
+    fun init() {
+        blobStore.ensureBucket(BUCKET)
+    }
+    companion object {
+        private const val BUCKET = "graphmesh-context-cores"
+    }
 
     fun build(request: BuildRequest): CoreManifest {
         logger.info("Building context core: coreId={}, version={}, source={}",
@@ -63,7 +71,7 @@ class ContextCoreService(
 
         val zipBytes = BundleWriter.write(manifest, nquads, ontologyTtl, embeddings, request.retrievalPolicies, mapper)
         val blobKey = "cores/${request.coreId}/${request.version}.zip"
-        blobStore.put(bucket, blobKey, zipBytes, "application/zip")
+        blobStore.put(BUCKET, blobKey, zipBytes, "application/zip")
 
         val reader = BundleReader(zipBytes, mapper)
         val finalManifest = reader.readManifest()
@@ -77,7 +85,7 @@ class ContextCoreService(
         val record = registry.find(request.coreId, request.version)
             ?: error("Unknown context core: ${request.coreId}@${request.version}")
 
-        val blobData = blobStore.get(bucket, record.blobKey)
+        val blobData = blobStore.get(BUCKET, record.blobKey)
         val reader = BundleReader(blobData.data, mapper)
 
         val manifest = reader.readManifest()
@@ -143,7 +151,7 @@ class ContextCoreService(
 
     fun delete(coreId: String, version: String) {
         val record = registry.find(coreId, version) ?: return
-        blobStore.delete(bucket, record.blobKey)
+        blobStore.delete(BUCKET, record.blobKey)
         registry.unregister(coreId, version)
         logger.info("Context core deleted: {}@{}", coreId, version)
     }
