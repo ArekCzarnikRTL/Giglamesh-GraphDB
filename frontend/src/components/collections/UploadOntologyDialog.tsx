@@ -28,7 +28,8 @@ export function UploadOntologyDialog({ collectionId, onClose, onSuccess }: Props
     setError("");
     setLoading(true);
     try {
-      const content = btoa(await file.text());
+      const text = await file.text();
+      const content = btoa(unescape(encodeURIComponent(text)));
       const format = file.name.endsWith(".rdf") ? "RDFXML" : "TURTLE";
       await importMutation({
         variables: {

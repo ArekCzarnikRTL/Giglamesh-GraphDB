@@ -25,7 +25,8 @@ export function UploadDataDialog({ collectionId, onClose, onSuccess }: Props) {
     setError("");
     setLoading(true);
     try {
-      const content = btoa(await file.text());
+      const text = await file.text();
+      const content = btoa(unescape(encodeURIComponent(text)));
       let format = "TURTLE";
       if (file.name.endsWith(".rdf")) format = "RDFXML";
       else if (file.name.endsWith(".nt")) format = "NTRIPLES";
