@@ -1,0 +1,25 @@
+type CollectionOntology {
+    ontologyKey: String!
+    role: String!
+    assignedAt: String!
+    assignedBy: String!
+    ontology: OntologyInfo
+}
+
+type CollectionDataStats {
+    tripleCount: Int!
+    entityCount: Int!
+    predicateCount: Int!
+    datasets: [String!]!
+}
+
+extend type Query {
+    collectionOntologies(collectionId: ID!): [CollectionOntology!]!
+    collectionDataStats(collectionId: ID!): CollectionDataStats!
+}
+
+extend type Mutation {
+    assignOntology(collectionId: ID!, ontologyKey: String!, role: String!): CollectionOntology!
+    unassignOntology(collectionId: ID!, ontologyKey: String!): Boolean!
+    deleteTriples(collectionId: ID!, dataset: String): Int!
+}
