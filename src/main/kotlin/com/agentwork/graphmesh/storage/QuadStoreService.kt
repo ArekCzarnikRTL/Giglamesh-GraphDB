@@ -19,6 +19,11 @@ class CassandraQuadStore(
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
+    companion object {
+        /** Each quad produces ~5 CQL rows; Cassandra default batch limit is 50KB. */
+        private const val BATCH_CHUNK_SIZE = 20
+    }
+
     private lateinit var insertEntity: PreparedStatement
     private lateinit var insertCollection: PreparedStatement
     private lateinit var deleteEntity: PreparedStatement
@@ -74,9 +79,11 @@ class CassandraQuadStore(
     }
 
     override fun insertBatch(collection: String, quads: List<StoredQuad>) {
-        val batch = BatchStatement.builder(BatchType.LOGGED)
-        quads.forEach { addInsertToBatch(batch, collection, it) }
-        session.execute(batch.build())
+        quads.chunked(BATCH_CHUNK_SIZE).forEach { chunk ->
+            val batch = BatchStatement.builder(BatchType.LOGGED)
+            chunk.forEach { addInsertToBatch(batch, collection, it) }
+            session.execute(batch.build())
+        }
     }
 
     override fun delete(collection: String, quad: StoredQuad) {

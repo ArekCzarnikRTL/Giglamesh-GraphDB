@@ -1,0 +1,383 @@
+@prefix ec: <http://www.ebu.ch/metadata/ontologies/ebucoreplus#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix ex: <http://example.org/media/> .
+
+# ==========================================================================
+# Organisationen & Agenten
+# ==========================================================================
+
+ex:ebu rdf:type ec:Organisation ;
+    ec:agentName "European Broadcasting Union"^^xsd:string ;
+    ec:hasLocation ex:geneva ;
+    ec:hasContactDetails ex:ebu-contact .
+
+ex:ard rdf:type ec:Organisation ;
+    ec:agentName "ARD"^^xsd:string ;
+    ec:hasAffiliation ex:affiliation-ard-ebu ;
+    ec:hasLocation ex:frankfurt .
+
+ex:bbc rdf:type ec:Organisation ;
+    ec:agentName "British Broadcasting Corporation"^^xsd:string ;
+    ec:hasLocation ex:london .
+
+ex:france-tv rdf:type ec:Organisation ;
+    ec:agentName "France Televisions"^^xsd:string ;
+    ec:hasLocation ex:paris .
+
+ex:nrk rdf:type ec:Organisation ;
+    ec:agentName "Norsk rikskringkasting"^^xsd:string ;
+    ec:hasLocation ex:oslo .
+
+ex:jean-pierre rdf:type ec:Person ;
+    ec:agentName "Jean-Pierre Evain"^^xsd:string ;
+    ec:hasRole ex:role-editor ;
+    ec:hasAffiliation ex:affiliation-jp-ebu .
+
+ex:maria-schmidt rdf:type ec:Person ;
+    ec:agentName "Maria Schmidt"^^xsd:string ;
+    ec:hasRole ex:role-producer ;
+    ec:hasAffiliation ex:affiliation-maria-ard .
+
+ex:james-wilson rdf:type ec:Person ;
+    ec:agentName "James Wilson"^^xsd:string ;
+    ec:hasRole ex:role-journalist ;
+    ec:hasAffiliation ex:affiliation-james-bbc .
+
+# ==========================================================================
+# Affiliationen
+# ==========================================================================
+
+ex:affiliation-ard-ebu rdf:type ec:Affiliation ;
+    ec:hasAffiliate ex:ard ;
+    ec:affiliationDescription "ARD ist Mitglied der EBU"^^xsd:string .
+
+ex:affiliation-jp-ebu rdf:type ec:Affiliation ;
+    ec:hasAffiliate ex:jean-pierre ;
+    ec:affiliationDescription "Chefredakteur Metadata"^^xsd:string .
+
+ex:affiliation-maria-ard rdf:type ec:Affiliation ;
+    ec:hasAffiliate ex:maria-schmidt ;
+    ec:affiliationDescription "Redakteurin Dokumentarfilm"^^xsd:string .
+
+ex:affiliation-james-bbc rdf:type ec:Affiliation ;
+    ec:hasAffiliate ex:james-wilson ;
+    ec:affiliationDescription "Senior Correspondent Europe"^^xsd:string .
+
+# ==========================================================================
+# Rollen
+# ==========================================================================
+
+ex:role-editor rdf:type ec:Role ;
+    ec:roleName "Editor"^^xsd:string .
+
+ex:role-producer rdf:type ec:Role ;
+    ec:roleName "Producer"^^xsd:string .
+
+ex:role-journalist rdf:type ec:Role ;
+    ec:roleName "Journalist"^^xsd:string .
+
+ex:role-camera rdf:type ec:Role ;
+    ec:roleName "Camera Operator"^^xsd:string .
+
+ex:role-director rdf:type ec:Role ;
+    ec:roleName "Director"^^xsd:string .
+
+# ==========================================================================
+# Orte
+# ==========================================================================
+
+ex:geneva rdf:type ec:Location ;
+    ec:locationName "Genf"^^xsd:string ;
+    ec:locationLatitude "46.2044"^^xsd:float ;
+    ec:locationLongitude "6.1432"^^xsd:float .
+
+ex:frankfurt rdf:type ec:Location ;
+    ec:locationName "Frankfurt am Main"^^xsd:string ;
+    ec:locationLatitude "50.1109"^^xsd:float ;
+    ec:locationLongitude "8.6821"^^xsd:float .
+
+ex:london rdf:type ec:Location ;
+    ec:locationName "London"^^xsd:string ;
+    ec:locationLatitude "51.5074"^^xsd:float ;
+    ec:locationLongitude "-0.1278"^^xsd:float .
+
+ex:paris rdf:type ec:Location ;
+    ec:locationName "Paris"^^xsd:string ;
+    ec:locationLatitude "48.8566"^^xsd:float ;
+    ec:locationLongitude "2.3522"^^xsd:float .
+
+ex:oslo rdf:type ec:Location ;
+    ec:locationName "Oslo"^^xsd:string ;
+    ec:locationLatitude "59.9139"^^xsd:float ;
+    ec:locationLongitude "10.7522"^^xsd:float .
+
+ex:berlin rdf:type ec:Location ;
+    ec:locationName "Berlin"^^xsd:string ;
+    ec:locationLatitude "52.5200"^^xsd:float ;
+    ec:locationLongitude "13.4050"^^xsd:float .
+
+# ==========================================================================
+# Editorial Objects (Programme / Sendungen)
+# ==========================================================================
+
+ex:doc-europa-heute rdf:type ec:EditorialObject ;
+    ec:title ex:title-europa-heute ;
+    ec:hasCreator ex:maria-schmidt ;
+    ec:hasContributor ex:james-wilson ;
+    ec:coversLocation ex:berlin ;
+    ec:coversEvent ex:event-eu-summit ;
+    ec:hasGenre ex:genre-documentary ;
+    ec:hasTargetAudience ex:audience-general ;
+    ec:dateCreated "2026-03-15"^^xsd:date ;
+    ec:synopsis "Eine Dokumentation ueber die Zukunft der europaeischen Medienlandschaft und die Rolle oeffentlich-rechtlicher Sender."^^xsd:string ;
+    ec:hasRelatedAsset ex:asset-europa-heute-master .
+
+ex:doc-klima-report rdf:type ec:EditorialObject ;
+    ec:title ex:title-klima-report ;
+    ec:hasCreator ex:jean-pierre ;
+    ec:coversLocation ex:geneva ;
+    ec:hasGenre ex:genre-news ;
+    ec:dateCreated "2026-02-20"^^xsd:date ;
+    ec:synopsis "Bericht ueber die Klimakonferenz in Genf mit Fokus auf Medienberichterstattung und Datenvisualisierung."^^xsd:string ;
+    ec:hasRelatedAsset ex:asset-klima-master .
+
+ex:doc-sport-live rdf:type ec:EditorialObject ;
+    ec:title ex:title-sport-live ;
+    ec:hasCreator ex:james-wilson ;
+    ec:coversLocation ex:paris ;
+    ec:coversEvent ex:event-olympics ;
+    ec:hasGenre ex:genre-sport ;
+    ec:dateCreated "2026-01-10"^^xsd:date ;
+    ec:synopsis "Live-Berichterstattung von den Olympischen Spielen in Paris."^^xsd:string ;
+    ec:hasRelatedAsset ex:asset-sport-master .
+
+# ==========================================================================
+# Titel
+# ==========================================================================
+
+ex:title-europa-heute rdf:type ec:Title ;
+    ec:titleValue "Europa Heute: Medien im Wandel"^^xsd:string .
+
+ex:title-klima-report rdf:type ec:Title ;
+    ec:titleValue "Klima-Report Genf 2026"^^xsd:string .
+
+ex:title-sport-live rdf:type ec:Title ;
+    ec:titleValue "Olympic Games Paris - Live"^^xsd:string .
+
+# ==========================================================================
+# Events
+# ==========================================================================
+
+ex:event-eu-summit rdf:type ec:Event ;
+    ec:eventName "EU Media Summit 2026"^^xsd:string ;
+    ec:coversLocation ex:berlin ;
+    ec:eventStartDate "2026-03-10"^^xsd:date ;
+    ec:eventEndDate "2026-03-12"^^xsd:date .
+
+ex:event-olympics rdf:type ec:Event ;
+    ec:eventName "Olympic Games Paris 2026"^^xsd:string ;
+    ec:coversLocation ex:paris ;
+    ec:eventStartDate "2026-07-26"^^xsd:date ;
+    ec:eventEndDate "2026-08-11"^^xsd:date .
+
+ex:event-ebucoreplus-release rdf:type ec:Event ;
+    ec:eventName "EBUCorePlus 2.0 Release"^^xsd:string ;
+    ec:coversLocation ex:geneva ;
+    ec:eventStartDate "2023-11-01"^^xsd:date .
+
+# ==========================================================================
+# Genres
+# ==========================================================================
+
+ex:genre-documentary rdf:type ec:Genre ;
+    ec:hasGenreDefinition "Dokumentarfilm"^^xsd:string .
+
+ex:genre-news rdf:type ec:Genre ;
+    ec:hasGenreDefinition "Nachrichten"^^xsd:string .
+
+ex:genre-sport rdf:type ec:Genre ;
+    ec:hasGenreDefinition "Sport"^^xsd:string .
+
+# ==========================================================================
+# Audiences
+# ==========================================================================
+
+ex:audience-general rdf:type ec:Audience ;
+    ec:belongsToAudience ex:audience-level-all .
+
+ex:audience-level-all rdf:type ec:AudienceLevel ;
+    rdfs:label "Allgemeines Publikum"^^xsd:string .
+
+# ==========================================================================
+# Assets & Essences (Mediendateien)
+# ==========================================================================
+
+ex:asset-europa-heute-master rdf:type ec:Asset ;
+    ec:hasAssetType ex:asset-type-programme ;
+    ec:dateCreated "2026-03-15"^^xsd:date ;
+    ec:hasEssence ex:essence-europa-video ;
+    ec:hasEssence ex:essence-europa-audio .
+
+ex:asset-klima-master rdf:type ec:Asset ;
+    ec:hasAssetType ex:asset-type-programme ;
+    ec:dateCreated "2026-02-20"^^xsd:date ;
+    ec:hasEssence ex:essence-klima-video .
+
+ex:asset-sport-master rdf:type ec:Asset ;
+    ec:hasAssetType ex:asset-type-live ;
+    ec:dateCreated "2026-01-10"^^xsd:date ;
+    ec:hasEssence ex:essence-sport-video ;
+    ec:hasEssence ex:essence-sport-audio-de ;
+    ec:hasEssence ex:essence-sport-audio-en .
+
+ex:asset-type-programme rdf:type ec:AssetType ;
+    rdfs:label "Programm"^^xsd:string .
+
+ex:asset-type-live rdf:type ec:AssetType ;
+    rdfs:label "Live-Sendung"^^xsd:string .
+
+# ==========================================================================
+# Video-Essences
+# ==========================================================================
+
+ex:essence-europa-video rdf:type ec:Essence ;
+    ec:hasVideoFormat ex:format-hd-1080 ;
+    ec:hasDuration "PT52M"^^xsd:duration ;
+    ec:hasStorageSizeInBytes "4200000000"^^xsd:long .
+
+ex:essence-klima-video rdf:type ec:Essence ;
+    ec:hasVideoFormat ex:format-hd-1080 ;
+    ec:hasDuration "PT28M"^^xsd:duration ;
+    ec:hasStorageSizeInBytes "2100000000"^^xsd:long .
+
+ex:essence-sport-video rdf:type ec:Essence ;
+    ec:hasVideoFormat ex:format-uhd-4k ;
+    ec:hasDuration "PT180M"^^xsd:duration ;
+    ec:hasStorageSizeInBytes "52000000000"^^xsd:long .
+
+# ==========================================================================
+# Audio-Essences
+# ==========================================================================
+
+ex:essence-europa-audio rdf:type ec:Essence ;
+    ec:hasAudioFormat ex:format-audio-stereo ;
+    ec:hasLanguage ex:lang-de ;
+    ec:hasDuration "PT52M"^^xsd:duration .
+
+ex:essence-sport-audio-de rdf:type ec:Essence ;
+    ec:hasAudioFormat ex:format-audio-stereo ;
+    ec:hasLanguage ex:lang-de ;
+    ec:hasDuration "PT180M"^^xsd:duration .
+
+ex:essence-sport-audio-en rdf:type ec:Essence ;
+    ec:hasAudioFormat ex:format-audio-stereo ;
+    ec:hasLanguage ex:lang-en ;
+    ec:hasDuration "PT180M"^^xsd:duration .
+
+# ==========================================================================
+# Formate
+# ==========================================================================
+
+ex:format-hd-1080 rdf:type ec:VideoFormat ;
+    ec:hasVideoEncodingFormat ex:codec-h264 ;
+    ec:widthInPixels "1920"^^xsd:int ;
+    ec:heightInPixels "1080"^^xsd:int ;
+    ec:frameRate "25"^^xsd:float .
+
+ex:format-uhd-4k rdf:type ec:VideoFormat ;
+    ec:hasVideoEncodingFormat ex:codec-h265 ;
+    ec:widthInPixels "3840"^^xsd:int ;
+    ec:heightInPixels "2160"^^xsd:int ;
+    ec:frameRate "50"^^xsd:float .
+
+ex:codec-h264 rdf:type ec:VideoEncodingFormat ;
+    rdfs:label "H.264/AVC"^^xsd:string .
+
+ex:codec-h265 rdf:type ec:VideoEncodingFormat ;
+    rdfs:label "H.265/HEVC"^^xsd:string .
+
+ex:format-audio-stereo rdf:type ec:AudioFormat ;
+    rdfs:label "Stereo PCM"^^xsd:string .
+
+# ==========================================================================
+# Sprachen
+# ==========================================================================
+
+ex:lang-de rdf:type ec:Language ;
+    ec:languageName "Deutsch"^^xsd:string .
+
+ex:lang-en rdf:type ec:Language ;
+    ec:languageName "English"^^xsd:string .
+
+ex:lang-fr rdf:type ec:Language ;
+    ec:languageName "Francais"^^xsd:string .
+
+# ==========================================================================
+# Kontaktdaten
+# ==========================================================================
+
+ex:ebu-contact rdf:type ec:ContactDetails ;
+    ec:emailAddress "info@ebu.ch"^^xsd:string .
+
+# ==========================================================================
+# Publikationen & Channels
+# ==========================================================================
+
+ex:channel-ard-mediathek rdf:type ec:PublicationChannel ;
+    ec:publicationChannelName "ARD Mediathek"^^xsd:string .
+
+ex:channel-bbc-iplayer rdf:type ec:PublicationChannel ;
+    ec:publicationChannelName "BBC iPlayer"^^xsd:string .
+
+ex:channel-france-tv-replay rdf:type ec:PublicationChannel ;
+    ec:publicationChannelName "france.tv"^^xsd:string .
+
+ex:pub-europa-heute rdf:type ec:PublicationEvent ;
+    ec:hasPublicationChannel ex:channel-ard-mediathek ;
+    ec:datePublished "2026-03-16"^^xsd:date ;
+    ec:publishes ex:doc-europa-heute .
+
+ex:pub-klima-bbc rdf:type ec:PublicationEvent ;
+    ec:hasPublicationChannel ex:channel-bbc-iplayer ;
+    ec:datePublished "2026-02-22"^^xsd:date ;
+    ec:publishes ex:doc-klima-report .
+
+ex:pub-sport-ard rdf:type ec:PublicationEvent ;
+    ec:hasPublicationChannel ex:channel-ard-mediathek ;
+    ec:datePublished "2026-07-26"^^xsd:date ;
+    ec:publishes ex:doc-sport-live .
+
+# ==========================================================================
+# Rechte & Lizenzen
+# ==========================================================================
+
+ex:rights-europa rdf:type ec:Rights ;
+    ec:hasRightsHolder ex:ard ;
+    ec:rightsStartDate "2026-03-15"^^xsd:date ;
+    ec:rightsEndDate "2027-03-15"^^xsd:date ;
+    ec:hasRightsType ex:rights-type-broadcast .
+
+ex:rights-type-broadcast rdf:type ec:RightsType ;
+    rdfs:label "Senderechte"^^xsd:string .
+
+# ==========================================================================
+# Annotations
+# ==========================================================================
+
+ex:annotation-klima-1 rdf:type ec:Annotation ;
+    ec:hasAnnotationType ex:annotation-type-keyword ;
+    ec:annotationValue "Klimawandel"^^xsd:string .
+
+ex:annotation-klima-2 rdf:type ec:Annotation ;
+    ec:hasAnnotationType ex:annotation-type-keyword ;
+    ec:annotationValue "COP28"^^xsd:string .
+
+ex:annotation-klima-3 rdf:type ec:Annotation ;
+    ec:hasAnnotationType ex:annotation-type-keyword ;
+    ec:annotationValue "Medienberichterstattung"^^xsd:string .
+
+ex:annotation-type-keyword rdf:type ec:AnnotationType ;
+    rdfs:label "Schlagwort"^^xsd:string .
