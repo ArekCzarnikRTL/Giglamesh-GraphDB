@@ -567,6 +567,7 @@ a, button, input, select { transition: all var(--transition-interactive); }
       <li><a href="#modellierung">Modellierung</a></li>
       <li><a href="#graph">Graph</a></li>
       <li><a href="#agent">Agent</a></li>
+      <li><a href="#cores">Cores</a></li>
       <li><a href="#admin">Admin</a></li>
       <li><a href="#troubleshooting">Hilfe</a></li>
       <li><a href="#changelog">Changelog</a></li>
@@ -1120,12 +1121,102 @@ a, button, input, select { transition: all var(--transition-interactive); }
   </div>
 </section>
 
-<!-- ═══════ 08 · ADMINISTRATION ═══════ -->
+<!-- ═══════ 08 · CONTEXT CORES ═══════ -->
+<section id="cores" class="section" style="border-top: 1px solid var(--color-divider);">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-label">08 &middot; Context Cores</div>
+        <h2 class="section-title">Versionierte Wissens-Bundles: Export, Import, Tagging</h2>
+      </div>
+    </div>
+    <p class="section-desc">Context Cores sind portable, versionierte Wissens-Bundles im ZIP-Format. Sie enthalten den vollstaendigen Stand einer Collection &mdash; Wissensgraph-Tripel, Vektor-Embeddings, Ontologie und Retrieval-Konfigurationen &mdash; und funktionieren wie Build-Artefakte fuer Wissen.</p>
+
+    <div class="card-grid">
+      <div class="feature-card">
+        <div class="feature-card-title">Context Core bauen (Export)</div>
+        <p class="feature-card-problem">Der aktuelle Wissensstand einer Collection laesst sich nicht als geschlossenes Artefakt sichern, einfrieren oder weitergeben.</p>
+        <p class="feature-card-solution">Die Build-Funktion exportiert den vollstaendigen Inhalt einer Collection als versioniertes ZIP-Bundle: N-Quads-Tripel, Ontologie (Turtle), Embeddings, Retrieval-Policies und ein Manifest mit SHA-256-Pruefsumme. Im Frontend unter <code>/cores</code> &rarr; <em>Core bauen</em>.</p>
+        <button class="code-toggle" onclick="toggleCode(this)">
+          <span class="chevron">&#9654;</span> GraphQL-Beispiel anzeigen
+        </button>
+        <div class="code-wrapper">
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <pre class="code-block"><span class="kw">mutation</span> {
+  <span class="fn">buildContextCore</span>(
+    coreId: <span class="str">"pharma-base"</span>
+    version: <span class="str">"1.0.0"</span>
+    sourceCollection: <span class="str">"meine-collection-id"</span>
+    description: <span class="str">"Pharma-Wissensbasis Q1 2026"</span>
+    tags: [<span class="str">"stage"</span>]
+    ontologyKey: <span class="str">"pharma-ontologie"</span>
+  ) {
+    coreId version checksum
+    stats { quadCount entityCount chunkEmbeddingCount }
+  }
+}</pre>
+        </div>
+      </div>
+
+      <div class="feature-card emerald-accent">
+        <div class="feature-card-title">Context Core importieren</div>
+        <p class="feature-card-problem">Extrahiertes Wissen aus einer Umgebung soll in eine andere Collection uebernommen werden, ohne die Dokumente erneut zu verarbeiten.</p>
+        <p class="feature-card-solution">Die Import-Funktion laedt ein bestehendes Bundle in eine Ziel-Collection. Drei Konfliktstrategien stehen zur Verfuegung: <strong>FAIL</strong> (Abbruch wenn nicht leer), <strong>MERGE</strong> (Daten hinzufuegen) und <strong>REPLACE</strong> (vorhandene Daten ersetzen). Optional mit Namespace-Rewrite fuer URI-Praefixe.</p>
+        <button class="code-toggle" onclick="toggleCode(this)">
+          <span class="chevron">&#9654;</span> GraphQL-Beispiel anzeigen
+        </button>
+        <div class="code-wrapper">
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <pre class="code-block"><span class="kw">mutation</span> {
+  <span class="fn">importContextCore</span>(
+    coreId: <span class="str">"pharma-base"</span>
+    version: <span class="str">"1.0.0"</span>
+    targetCollection: <span class="str">"ziel-collection-id"</span>
+    strategy: MERGE
+  ) {
+    coreId version quadsImported embeddingsImported
+  }
+}</pre>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-card-title">Versionierung &amp; Tagging</div>
+        <p class="feature-card-problem">Es gibt keinen Mechanismus um verschiedene Staende eines Wissensbestands zu unterscheiden oder als &ldquo;produktionsreif&rdquo; zu kennzeichnen.</p>
+        <p class="feature-card-solution">Jeder Core traegt eine eindeutige Kombination aus Core-ID und Version. Zusaetzlich koennen Tags wie <code>stage</code>, <code>prod</code> oder <code>latest</code> vergeben werden. Ueber Tags laesst sich gezielt die aktuell gueltige Version abfragen &mdash; ideal fuer Promotion-Workflows.</p>
+        <button class="code-toggle" onclick="toggleCode(this)">
+          <span class="chevron">&#9654;</span> GraphQL-Beispiel anzeigen
+        </button>
+        <div class="code-wrapper">
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <pre class="code-block"><span class="cm"># Tag setzen</span>
+<span class="kw">mutation</span> {
+  <span class="fn">tagContextCore</span>(
+    coreId: <span class="str">"pharma-base"</span>
+    version: <span class="str">"1.0.0"</span>
+    tag: <span class="str">"prod"</span>
+  ) { coreId version tags }
+}
+
+<span class="cm"># Core per Tag abrufen</span>
+<span class="kw">query</span> {
+  <span class="fn">contextCoreByTag</span>(
+    coreId: <span class="str">"pharma-base"</span>
+    tag: <span class="str">"prod"</span>
+  ) { coreId version stats { quadCount } }
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 09 · ADMINISTRATION ═══════ -->
 <section id="admin" class="section" style="border-top: 1px solid var(--color-divider);">
   <div class="container">
     <div class="section-header">
       <div>
-        <div class="section-label">08 &middot; Administration</div>
+        <div class="section-label">09 &middot; Administration</div>
         <h2 class="section-title">Konfiguration, Mandanten und CLI</h2>
       </div>
     </div>
@@ -1178,7 +1269,7 @@ graphmesh config set model-name <span class="str">"gpt-4o"</span> --type llm</pr
   <div class="container">
     <div class="section-header">
       <div>
-        <div class="section-label">09 &middot; Fehlerbehebung</div>
+        <div class="section-label">10 &middot; Fehlerbehebung</div>
         <h2 class="section-title">Troubleshooting</h2>
       </div>
     </div>
@@ -1253,7 +1344,7 @@ graphmesh config set model-name <span class="str">"gpt-4o"</span> --type llm</pr
   <div class="container">
     <div class="section-header">
       <div>
-        <div class="section-label">10 &middot; Aenderungshistorie</div>
+        <div class="section-label">11 &middot; Aenderungshistorie</div>
         <h2 class="section-title">Changelog</h2>
       </div>
     </div>
