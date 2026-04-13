@@ -140,6 +140,17 @@ export const DELETE_ONTOLOGY_MUTATION = gql`
   }
 `;
 
+export const IMPORT_RDF_MUTATION = gql`
+  mutation ImportRdf($input: ImportRdfInput!) {
+    importRdf(input: $input) {
+      tripleCount
+      skippedCount
+      durationMs
+      embeddingsGenerated
+    }
+  }
+`;
+
 export const PIPELINE_DOCUMENTS_QUERY = gql`
   query PipelineDocuments(
     $collectionId: ID!

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { ADMIN_COLLECTIONS_QUERY } from "@/graphql/admin";
 import type { AdminCollection } from "@/types/admin";
 import { OntologySection } from "@/components/collections/OntologySection";
+import { DataSection } from "@/components/collections/DataSection";
 
 export default function CollectionDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +27,7 @@ export default function CollectionDetailPage() {
       </div>
       <div className="space-y-10">
         <OntologySection collectionId={id} />
+        <DataSection collectionId={id} />
       </div>
     </main>
   );
