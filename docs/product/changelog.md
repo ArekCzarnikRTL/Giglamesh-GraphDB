@@ -7,10 +7,15 @@ Uebersicht der nutzerrelevanten Aenderungen in GraphMesh, nach Monat gruppiert.
 ## April 2026
 
 ### Neue Features
+- Context Cores: Wissensstaende koennen nun als versionierte, portable ZIP-Bundles exportiert und importiert werden. Ein Context Core enthaelt alle Wissensgraph-Tripel, Vektor-Embeddings, die zugehoerige Ontologie und Retrieval-Konfigurationen. Drei Konfliktstrategien beim Import (FAIL, MERGE, REPLACE), Tag-basierte Versionierung (z.B. "stage", "prod") und Namespace-Rewriting werden unterstuetzt.
 - Automatische Themenextraktion aus Dokumenten hinzugefuegt: Beim Verarbeiten von Dokumenten werden nun Themen und Schlagwoerter per LLM erkannt und als strukturierte Metadaten gespeichert.
 - SKOS-Taxonomie-Unterstuetzung: Hierarchische Begriffssysteme (Taxonomien) koennen nun verwaltet und in der GraphQL-API abgefragt werden. Konzepte und Konzeptschemen nach SKOS-Standard werden unterstuetzt.
 
+### Verbesserungen
+- Context Core Build-Dialog: Ontologien koennen nun beim Export direkt ausgewaehlt werden, damit die Ontologie-Datei korrekt ins Bundle geschrieben wird.
+
 ### Fehlerbehebungen
+- Context Cores: Fehler beim Ontologie-Export werden nun protokolliert statt stillschweigend ignoriert.
 - Themenextraktion: Korrekte Verarbeitung der Konfigurationsschluessel und Vermeidung doppelter Eintraege.
 - SKOS-Abfragen: Collection-ID wird nun korrekt an untergeordnete Abfragen weitergegeben.
 
