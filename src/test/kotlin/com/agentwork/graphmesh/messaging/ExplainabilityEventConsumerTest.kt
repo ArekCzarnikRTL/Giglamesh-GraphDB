@@ -32,6 +32,9 @@ private class CapturingQuadStore : QuadStore {
         byCollection[collection]?.toList() ?: emptyList()
     override fun isEmpty(collection: String): Boolean =
         byCollection[collection]?.isEmpty() ?: true
+    override fun deleteByDataset(collection: String, dataset: String): Long = 0L
+    override fun stats(collection: String): com.agentwork.graphmesh.storage.QuadStoreStats =
+        com.agentwork.graphmesh.storage.QuadStoreStats(0L, 0L, 0L, emptyList())
 }
 
 class ExplainabilityEventConsumerTest {

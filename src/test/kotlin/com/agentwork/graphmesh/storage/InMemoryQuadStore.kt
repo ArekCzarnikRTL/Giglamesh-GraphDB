@@ -7,6 +7,7 @@ package com.agentwork.graphmesh.storage
  *
  * Only used by unit tests.
  */
+@Suppress("TooManyFunctions")
 class InMemoryQuadStore : QuadStore {
 
     private val byCollection: MutableMap<String, MutableList<StoredQuad>> = mutableMapOf()
@@ -69,5 +70,22 @@ class InMemoryQuadStore : QuadStore {
 
     override fun isEmpty(collection: String): Boolean {
         return byCollection[collection]?.isEmpty() ?: true
+    }
+
+    override fun deleteByDataset(collection: String, dataset: String): Long {
+        val quads = byCollection[collection] ?: return 0L
+        val before = quads.size
+        quads.removeIf { it.dataset == dataset }
+        return (before - quads.size).toLong()
+    }
+
+    override fun stats(collection: String): QuadStoreStats {
+        val quads = byCollection[collection] ?: emptyList()
+        return QuadStoreStats(
+            tripleCount = quads.size.toLong(),
+            entityCount = quads.map { it.subject }.distinct().size.toLong(),
+            predicateCount = quads.map { it.predicate }.distinct().size.toLong(),
+            datasets = quads.map { it.dataset }.distinct().sorted()
+        )
     }
 }
