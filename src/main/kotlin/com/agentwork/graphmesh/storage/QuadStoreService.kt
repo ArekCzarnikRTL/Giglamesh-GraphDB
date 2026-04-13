@@ -230,6 +230,23 @@ class CassandraQuadStore(
         return GraphMetadataView(datasets, predicates, entityTypes)
     }
 
+    override fun deleteByDataset(collection: String, dataset: String): Long {
+        val quads = query(collection, QuadQuery(dataset = dataset))
+        quads.forEach { delete(collection, it) }
+        return quads.size.toLong()
+    }
+
+    override fun stats(collection: String): QuadStoreStats {
+        val meta = aggregateMetadata(collection)
+        val allQuads = scrollAll(collection)
+        return QuadStoreStats(
+            tripleCount = allQuads.size.toLong(),
+            entityCount = allQuads.map { it.subject }.distinct().size.toLong(),
+            predicateCount = meta.predicates.size.toLong(),
+            datasets = meta.datasets
+        )
+    }
+
     private fun resolvePattern(s: String?, p: String?, o: String?, d: String?): Int {
         val known = listOf(s != null, p != null, o != null, d != null)
         return when (known) {

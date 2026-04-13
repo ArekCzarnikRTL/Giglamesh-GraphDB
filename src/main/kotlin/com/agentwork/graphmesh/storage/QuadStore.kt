@@ -81,4 +81,17 @@ interface QuadStore {
             ).mapNotNull { QuadConverter.unpackQuotedTriple(it) }
         }
     }
+
+    /** Deletes all quads in [collection] with the given [dataset]. Returns count of deleted quads. */
+    fun deleteByDataset(collection: String, dataset: String): Long
+
+    /** Returns triple count, entity count, predicate count, and dataset list for [collection]. */
+    fun stats(collection: String): QuadStoreStats
 }
+
+data class QuadStoreStats(
+    val tripleCount: Long,
+    val entityCount: Long,
+    val predicateCount: Long,
+    val datasets: List<String>
+)
