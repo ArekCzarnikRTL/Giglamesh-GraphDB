@@ -18,6 +18,7 @@ class CollectionSchemaInitializer(
     fun initializeSchema() {
         createTables()
         addTenantColumns()
+        createOntologyAssignmentTable()
         logger.info("Collection schema initialized in keyspace '{}'", keyspace)
     }
 
@@ -45,6 +46,19 @@ class CollectionSchemaInitializer(
                 created_at  timestamp,
                 updated_at  timestamp,
                 PRIMARY KEY (name)
+            )
+        """.trimIndent())
+    }
+
+    private fun createOntologyAssignmentTable() {
+        session.execute("""
+            CREATE TABLE IF NOT EXISTS $keyspace.collection_ontologies (
+                collection_id text,
+                ontology_key  text,
+                role          text,
+                assigned_at   timestamp,
+                assigned_by   text,
+                PRIMARY KEY (collection_id, ontology_key)
             )
         """.trimIndent())
     }
