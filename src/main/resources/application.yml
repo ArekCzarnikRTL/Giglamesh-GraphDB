@@ -2,8 +2,8 @@ logging:
   file:
     name: logs/graphmesh.log
   level:
-    com.agentwork.graphmesh: DEBUG
-    ai.koog: DEBUG
+    com.agentwork.graphmesh: INFO
+    ai.koog: INFO
 
 server:
   port: 8083
