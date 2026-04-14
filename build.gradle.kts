@@ -68,7 +68,7 @@ dependencies {
     implementation("com.github.ajalt.clikt:clikt:5.0.1")
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
     implementation("com.expediagroup:graphql-kotlin-ktor-client:8.2.1")
-    implementation("io.ktor:ktor-client-cio:3.0.1")
+    implementation("io.ktor:ktor-client-cio:3.2.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
