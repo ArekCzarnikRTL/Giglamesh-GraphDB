@@ -106,4 +106,4 @@ Die ausfuehrliche Produktdokumentation liegt unter [`docs/product/`](docs/produc
 
 ## Lizenz
 
-Proprietary -- All rights reserved.
+Licensed under the [Apache License 2.0](LICENSE).

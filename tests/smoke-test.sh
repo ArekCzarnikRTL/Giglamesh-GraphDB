@@ -10,7 +10,7 @@ set -uo pipefail
 
 BACKEND_URL="${BACKEND_URL:-http://localhost:8083}"
 GRAPHQL_URL="$BACKEND_URL/graphql"
-TEST_PDF="${TEST_PDF:-docs/test-pdf.pdf}"
+TEST_PDF="${TEST_PDF:-test-pdf.pdf}"
 EXTRACTION_TIMEOUT="${EXTRACTION_TIMEOUT:-300}"  # max Sekunden, die wir auf Extraction warten
 
 PASS=0

@@ -1,6 +1,4 @@
 logging:
-  file:
-    name: logs/graphmesh.log
   level:
     com.agentwork.graphmesh: INFO
     ai.koog: INFO
