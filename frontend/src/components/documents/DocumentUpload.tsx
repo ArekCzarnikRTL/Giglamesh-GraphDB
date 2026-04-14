@@ -97,7 +97,13 @@ export function DocumentUpload({ collectionId, onUploaded }: Props) {
             input: {
               collectionId,
               title: file.name,
-              mimeType: file.type || "application/pdf",
+              mimeType: file.type || (
+                file.name.endsWith(".md") || file.name.endsWith(".markdown")
+                  ? "text/markdown"
+                  : file.name.endsWith(".txt")
+                    ? "text/plain"
+                    : "application/pdf"
+              ),
               content: base64,
               metadata: null,
             },
@@ -119,7 +125,11 @@ export function DocumentUpload({ collectionId, onUploaded }: Props) {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { "application/pdf": [".pdf"] },
+    accept: {
+      "application/pdf": [".pdf"],
+      "text/markdown": [".md", ".markdown"],
+      "text/plain": [".txt"],
+    },
     maxFiles: 1,
     multiple: false,
   });
