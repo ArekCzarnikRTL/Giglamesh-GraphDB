@@ -3,6 +3,7 @@ package com.agentwork.graphmesh.extraction.decoder
 import com.agentwork.graphmesh.librarian.DocumentState
 import com.agentwork.graphmesh.librarian.DocumentType
 import com.agentwork.graphmesh.librarian.LibrarianService
+import com.agentwork.graphmesh.llm.sanitizeForLlm
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -23,7 +24,7 @@ class TextDecoderService(
             val doc = librarianService.findById(documentId)
                 ?: throw TextDecodingException(documentId, IllegalStateException("Document not found"))
 
-            val text = String(content, Charsets.UTF_8)
+            val text = sanitizeForLlm(String(content, Charsets.UTF_8))
             val pages = markdownSplitter.split(text)
 
             pages.forEachIndexed { index, pageText ->

@@ -33,7 +33,7 @@ class StructuredDataExtractorService(
 
     fun extract(chunkId: String, collectionId: String): StructuredExtractionResult {
         val content = librarianService.getContent(chunkId)
-        val chunkText = String(content, Charsets.UTF_8)
+        val chunkText = com.agentwork.graphmesh.llm.sanitizeForLlm(String(content, Charsets.UTF_8))
 
         if (chunkText.isBlank()) {
             return StructuredExtractionResult(chunkId = chunkId, tableDetected = false, rowsExtracted = 0)

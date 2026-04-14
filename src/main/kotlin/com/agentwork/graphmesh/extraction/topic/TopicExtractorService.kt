@@ -4,6 +4,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import com.agentwork.graphmesh.librarian.LibrarianService
 import com.agentwork.graphmesh.llm.resolveLlmModel
+import com.agentwork.graphmesh.llm.sanitizeForLlm
 import com.agentwork.graphmesh.provenance.ProvenanceService
 import com.agentwork.graphmesh.provenance.SubgraphProvenance
 import com.agentwork.graphmesh.rdf.NamedGraph
@@ -43,7 +44,7 @@ class TopicExtractorService(
 
     fun extract(chunkId: String, collectionId: String): TopicExtractionResult {
         val content = librarianService.getContent(chunkId)
-        val chunkText = String(content, Charsets.UTF_8)
+        val chunkText = sanitizeForLlm(String(content, Charsets.UTF_8))
         if (chunkText.isBlank()) {
             return TopicExtractionResult(chunkId, 0, emptyList())
         }

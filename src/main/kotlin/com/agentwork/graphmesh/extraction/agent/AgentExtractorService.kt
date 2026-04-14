@@ -71,7 +71,7 @@ class AgentExtractorService(
 
     fun extract(chunkId: String, collectionId: String, strategy: ExtractionStrategy): AgentExtractionResult {
         val content = librarianService.getContent(chunkId)
-        val chunkText = String(content, Charsets.UTF_8)
+        val chunkText = com.agentwork.graphmesh.llm.sanitizeForLlm(String(content, Charsets.UTF_8))
 
         if (chunkText.isBlank()) {
             return AgentExtractionResult(chunkId = chunkId, extractedItems = emptyList(), strategy = strategy.name)

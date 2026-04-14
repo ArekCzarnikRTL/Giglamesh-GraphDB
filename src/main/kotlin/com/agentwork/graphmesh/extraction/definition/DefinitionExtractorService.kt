@@ -42,7 +42,7 @@ class DefinitionExtractorService(
 
     fun extract(chunkId: String, collectionId: String): DefinitionExtractionResult {
         val content = librarianService.getContent(chunkId)
-        val chunkText = String(content, Charsets.UTF_8)
+        val chunkText = com.agentwork.graphmesh.llm.sanitizeForLlm(String(content, Charsets.UTF_8))
 
         if (chunkText.isBlank()) {
             return DefinitionExtractionResult(chunkId, 0, emptyList())
