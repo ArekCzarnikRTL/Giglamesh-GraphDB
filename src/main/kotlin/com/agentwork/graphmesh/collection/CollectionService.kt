@@ -58,10 +58,12 @@ class CollectionService(
     fun delete(id: String) {
         val collection = findByIdWithAccessCheck(id)
 
-        // Cascade delete across all backends
-        quadStore.deleteCollection(collection.name)
-        vectorStore.deleteCollection(collection.name)
-        deleteBlobsForCollection(collection.name)
+        // Cascade delete across all backends. Quads, vectors and blobs are all
+        // keyed by collection ID (see RdfImportService, GraphController, etc.),
+        // NOT by collection name.
+        quadStore.deleteCollection(id)
+        vectorStore.deleteCollection(id)
+        deleteBlobsForCollection(id)
 
         collectionStore.delete(id)
 
@@ -153,8 +155,8 @@ class CollectionService(
         }
     }
 
-    private fun deleteBlobsForCollection(collectionName: String) {
-        val prefix = "collections/$collectionName/"
+    private fun deleteBlobsForCollection(collectionId: String) {
+        val prefix = "collections/$collectionId/"
         val blobs = blobStore.list(defaultBucket, prefix)
         if (blobs.isNotEmpty()) {
             blobStore.deleteBatch(defaultBucket, blobs.map { it.key })
