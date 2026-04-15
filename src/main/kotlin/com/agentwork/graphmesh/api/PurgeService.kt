@@ -4,6 +4,7 @@ import com.agentwork.graphmesh.collection.CollectionService
 import com.agentwork.graphmesh.librarian.DocumentStore
 import com.agentwork.graphmesh.librarian.DocumentType
 import com.agentwork.graphmesh.ontology.OntologyService
+import com.agentwork.graphmesh.storage.OrphanSweepService
 import org.apache.kafka.clients.admin.AdminClient
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.core.KafkaAdmin
@@ -15,6 +16,7 @@ class PurgeService(
     private val documentStore: DocumentStore,
     private val ontologyService: OntologyService,
     private val kafkaAdmin: KafkaAdmin,
+    private val orphanSweepService: OrphanSweepService,
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -24,6 +26,9 @@ class PurgeService(
         val documentsDeleted: Int,
         val ontologiesDeleted: Int,
         val kafkaTopicsDeleted: Int,
+        val orphanQuadTablesTruncated: Int,
+        val orphanVectorCollectionsDeleted: Int,
+        val orphanBlobsDeleted: Int,
         val durationMs: Long,
     )
 
@@ -31,8 +36,6 @@ class PurgeService(
         val start = System.currentTimeMillis()
         logger.warn("PURGE ALL DATA requested — deleting all content")
 
-        // 1. Delete all documents for each collection (CollectionService.delete cascades quads/vectors/blobs
-        //    but not documents), then delete each collection
         val collections = collectionService.findAll()
         var documentsDeleted = 0
         for (collection in collections) {
@@ -45,28 +48,16 @@ class PurgeService(
         }
         logger.info("Purge: {} collections deleted, {} source documents deleted", collections.size, documentsDeleted)
 
-        // 2. Delete all ontologies
         val ontologyKeys = ontologyService.list()
         for (key in ontologyKeys) {
             ontologyService.delete(key)
         }
         logger.info("Purge: {} ontologies deleted", ontologyKeys.size)
 
-        // 3. Delete all graphmesh Kafka topics (they get auto-recreated by KafkaTopicConfig)
-        var kafkaTopicsDeleted = 0
-        try {
-            AdminClient.create(kafkaAdmin.configurationProperties).use { client ->
-                val allTopics = client.listTopics().names().get()
-                val graphmeshTopics = allTopics.filter { it.startsWith("graphmesh.") }
-                if (graphmeshTopics.isNotEmpty()) {
-                    client.deleteTopics(graphmeshTopics).all().get()
-                    kafkaTopicsDeleted = graphmeshTopics.size
-                    logger.info("Purge: {} Kafka topics deleted: {}", kafkaTopicsDeleted, graphmeshTopics)
-                }
-            }
-        } catch (e: Exception) {
-            logger.warn("Purge: Kafka topic deletion failed (non-fatal): {}", e.message)
-        }
+        val kafkaTopicsDeleted = deleteGraphmeshKafkaTopics()
+
+        // Safety net: drops anything the cascade above may have missed.
+        val orphan = orphanSweepService.sweep()
 
         val duration = System.currentTimeMillis() - start
         logger.warn("PURGE ALL DATA completed in {}ms", duration)
@@ -76,7 +67,29 @@ class PurgeService(
             documentsDeleted = documentsDeleted,
             ontologiesDeleted = ontologyKeys.size,
             kafkaTopicsDeleted = kafkaTopicsDeleted,
+            orphanQuadTablesTruncated = orphan.quadTablesTruncated,
+            orphanVectorCollectionsDeleted = orphan.vectorCollectionsDeleted,
+            orphanBlobsDeleted = orphan.blobsDeleted,
             durationMs = duration,
         )
+    }
+
+    fun purgeOrphansOnly(): OrphanSweepService.Result = orphanSweepService.sweep()
+
+    private fun deleteGraphmeshKafkaTopics(): Int {
+        return try {
+            AdminClient.create(kafkaAdmin.configurationProperties).use { client ->
+                val allTopics = client.listTopics().names().get()
+                val graphmeshTopics = allTopics.filter { it.startsWith("graphmesh.") }
+                if (graphmeshTopics.isNotEmpty()) {
+                    client.deleteTopics(graphmeshTopics).all().get()
+                    logger.info("Purge: {} Kafka topics deleted: {}", graphmeshTopics.size, graphmeshTopics)
+                    graphmeshTopics.size
+                } else 0
+            }
+        } catch (e: Exception) {
+            logger.warn("Purge: Kafka topic deletion failed (non-fatal): {}", e.message)
+            0
+        }
     }
 }

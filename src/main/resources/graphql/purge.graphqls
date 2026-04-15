@@ -3,9 +3,19 @@ type PurgeResult {
     documentsDeleted: Int!
     ontologiesDeleted: Int!
     kafkaTopicsDeleted: Int!
+    orphanQuadTablesTruncated: Int!
+    orphanVectorCollectionsDeleted: Int!
+    orphanBlobsDeleted: Int!
     durationMs: Int!
+}
+
+type OrphanSweepResult {
+    quadTablesTruncated: Int!
+    vectorCollectionsDeleted: Int!
+    blobsDeleted: Int!
 }
 
 extend type Mutation {
     purgeAllData: PurgeResult!
+    purgeOrphans: OrphanSweepResult!
 }
