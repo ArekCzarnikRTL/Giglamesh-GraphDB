@@ -1,8 +1,8 @@
 package com.agentwork.graphmesh.structured
 
+import com.agentwork.graphmesh.storage.AsyncCqlWriter
 import com.datastax.oss.driver.api.core.CqlSession
-import com.datastax.oss.driver.api.core.cql.BatchStatement
-import com.datastax.oss.driver.api.core.cql.BatchType
+import com.datastax.oss.driver.api.core.cql.BoundStatement
 import com.datastax.oss.driver.api.core.cql.PreparedStatement
 import jakarta.annotation.PostConstruct
 import org.slf4j.LoggerFactory
@@ -15,7 +15,8 @@ import org.springframework.stereotype.Service
 class CassandraRowStore(
     private val session: CqlSession,
     private val schemaStore: SchemaStore,
-    @Value("\${graphmesh.cassandra.keyspace}") private val keyspace: String
+    @Value("\${graphmesh.cassandra.keyspace}") private val keyspace: String,
+    private val asyncCqlWriter: AsyncCqlWriter,
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -26,6 +27,7 @@ class CassandraRowStore(
     private lateinit var selectPartitions: PreparedStatement
     private lateinit var selectPartitionsBySchema: PreparedStatement
     private lateinit var deletePartition: PreparedStatement
+    private lateinit var deleteRows: PreparedStatement
 
     @PostConstruct
     fun prepareStatements() {
@@ -59,45 +61,42 @@ class CassandraRowStore(
             DELETE FROM $keyspace.row_partitions
             WHERE collection = ? AND schema_name = ? AND index_name = ?
         """.trimIndent())
+
+        deleteRows = session.prepare("""
+            DELETE FROM $keyspace.rows
+            WHERE collection = ? AND schema_name = ? AND index_name = ?
+        """.trimIndent())
     }
 
     fun insert(row: DataRow) {
         val schema = schemaStore.load(row.schemaName)
             ?: throw IllegalArgumentException("Schema '${row.schemaName}' not found")
-
-        val batch = BatchStatement.builder(BatchType.LOGGED)
-
-        for (indexName in schema.allIndexNames) {
-            val indexValue = extractIndexValue(indexName, row.values)
-            batch.addStatement(insertRow.bind(
-                row.collection, row.schemaName, indexName, indexValue, row.values, row.source
-            ))
-            batch.addStatement(insertPartition.bind(row.collection, row.schemaName, indexName))
-        }
-
-        session.execute(batch.build())
-        logger.debug("Inserted row into {}/{} with {} indexes", row.collection, row.schemaName, schema.allIndexNames.size)
+        asyncCqlWriter.executeAll(buildInsertStatements(row, schema))
+        logger.debug("Inserted row into {}/{} with {} indexes",
+            row.collection, row.schemaName, schema.allIndexNames.size)
     }
 
     fun insertBatch(rows: List<DataRow>) {
         if (rows.isEmpty()) return
-        val batch = BatchStatement.builder(BatchType.LOGGED)
-
-        for (row in rows) {
+        val statements = rows.flatMap { row ->
             val schema = schemaStore.load(row.schemaName)
                 ?: throw IllegalArgumentException("Schema '${row.schemaName}' not found")
-
-            for (indexName in schema.allIndexNames) {
-                val indexValue = extractIndexValue(indexName, row.values)
-                batch.addStatement(insertRow.bind(
-                    row.collection, row.schemaName, indexName, indexValue, row.values, row.source
-                ))
-                batch.addStatement(insertPartition.bind(row.collection, row.schemaName, indexName))
-            }
+            buildInsertStatements(row, schema)
         }
-
-        session.execute(batch.build())
+        asyncCqlWriter.executeAll(statements)
         logger.debug("Batch inserted {} rows", rows.size)
+    }
+
+    private fun buildInsertStatements(row: DataRow, schema: TableSchema): List<BoundStatement> {
+        val statements = mutableListOf<BoundStatement>()
+        for (indexName in schema.allIndexNames) {
+            val indexValue = extractIndexValue(indexName, row.values)
+            statements += insertRow.bind(
+                row.collection, row.schemaName, indexName, indexValue, row.values, row.source,
+            )
+            statements += insertPartition.bind(row.collection, row.schemaName, indexName)
+        }
+        return statements
     }
 
     fun query(query: StructuredQuery): QueryResult {
@@ -122,39 +121,26 @@ class CassandraRowStore(
 
     fun deleteByCollection(collection: String) {
         val partitions = session.execute(selectPartitions.bind(collection))
-        val batch = BatchStatement.builder(BatchType.LOGGED)
-        var count = 0
-
+        val statements = mutableListOf<BoundStatement>()
         for (row in partitions) {
             val schemaName = row.getString("schema_name")!!
             val indexName = row.getString("index_name")!!
-
-            session.execute("DELETE FROM $keyspace.rows WHERE collection = '${collection}' AND schema_name = '${schemaName}' AND index_name = '${indexName}'")
-            batch.addStatement(deletePartition.bind(collection, schemaName, indexName))
-            count++
+            statements += deleteRows.bind(collection, schemaName, indexName)
+            statements += deletePartition.bind(collection, schemaName, indexName)
         }
-
-        if (count > 0) {
-            session.execute(batch.build())
-        }
+        asyncCqlWriter.executeAll(statements)
         logger.info("Deleted all rows for collection {}", collection)
     }
 
     fun deleteBySchema(collection: String, schemaName: String) {
         val partitions = session.execute(selectPartitionsBySchema.bind(collection, schemaName))
-        val batch = BatchStatement.builder(BatchType.LOGGED)
-        var count = 0
-
+        val statements = mutableListOf<BoundStatement>()
         for (row in partitions) {
             val indexName = row.getString("index_name")!!
-            session.execute("DELETE FROM $keyspace.rows WHERE collection = '${collection}' AND schema_name = '${schemaName}' AND index_name = '${indexName}'")
-            batch.addStatement(deletePartition.bind(collection, schemaName, indexName))
-            count++
+            statements += deleteRows.bind(collection, schemaName, indexName)
+            statements += deletePartition.bind(collection, schemaName, indexName)
         }
-
-        if (count > 0) {
-            session.execute(batch.build())
-        }
+        asyncCqlWriter.executeAll(statements)
         logger.info("Deleted rows for collection {}, schema {}", collection, schemaName)
     }
 }
