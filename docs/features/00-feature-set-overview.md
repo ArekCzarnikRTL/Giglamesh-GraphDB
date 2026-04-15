@@ -124,6 +124,17 @@ jeweiligen Feature-Docs fuer die Motivation.
 |----|-------------------------|------------------------------------------------------|------------------------|---------|
 | 51 | Helm Deployment Setup   | [51-helm-deployment.md](51-helm-deployment.md)       | (infra-only, kein Code) | M       |
 
+### Phase 11: MemPalace-inspirierte Retrieval-Feinschliffe
+
+Abgeleitet aus einer Analyse des MemPalace-Artikels (Medium, 08.04.2026).
+Siehe `docs/medium-article-graphmesh-explained.md` fuer den Kontext.
+
+| #  | Feature                              | Datei                                                                                              | Abhaengig von           | Aufwand |
+|----|--------------------------------------|----------------------------------------------------------------------------------------------------|-------------------------|---------|
+| 52 | Collection Identity Profile (Layer-0)| [52-collection-identity-profile.md](52-collection-identity-profile.md)                             | 08, 15, 16, 18, 40      | M       |
+| 53 | Topic/Tag Pre-Filter fuer Retrieval  | [53-topic-prefilter.md](53-topic-prefilter.md)                                                     | 04, 07, 15, 16, 38      | L       |
+| 54 | Fein-granulare MCP-Retrieval-Tools   | [54-mcp-fine-grained-retrieval-tools.md](54-mcp-fine-grained-retrieval-tools.md)                   | 17, 19, 38              | M       |
+
 ## DAG-Visualisierung
 
 ```
@@ -177,4 +188,8 @@ Phase 8b (Vocab):      02,07,14,43 ──▶ 46(SkosTaxonomy)
 Phase 9 (Perf):         15,16,18 ──▶ 45(QueryPerformance)
 
 Phase 10 (Deploy):   (infra-only, kein Code-Dep) ──▶ 51(HelmDeployment)
+
+Phase 11 (MemPalace):  08,15,16,18,40 ──▶ 52(CollectionIdentity)
+                        04,07,15,16,38 ──▶ 53(TopicPrefilter)
+                               17,19,38 ──▶ 54(McpFineGrained)
 ```

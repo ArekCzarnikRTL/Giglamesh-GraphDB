@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -18,8 +19,15 @@ export function SiteNav() {
 
   return (
     <nav className="flex h-14 shrink-0 items-center gap-1 border-b bg-background px-6">
-      <Link href="/documents" className="mr-6 text-lg font-bold">
-        GraphMesh
+      <Link href="/documents" className="mr-6 flex items-center" aria-label="GraphMesh home">
+        <Image
+          src="/logo.png"
+          alt="GraphMesh"
+          width={118}
+          height={72}
+          priority
+          className="h-9 w-auto"
+        />
       </Link>
       <ul className="flex items-center gap-1">
         {NAV_ITEMS.map((item) => {

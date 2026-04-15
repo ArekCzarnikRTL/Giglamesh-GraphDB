@@ -8,17 +8,20 @@ import org.springframework.kafka.config.TopicBuilder
 @Configuration
 class KafkaTopicConfig {
 
-    @Bean
-    fun documentIngestedTopic(): NewTopic =
-        TopicBuilder.name("graphmesh.document.ingested")
-            .partitions(3)
+    private fun topic(name: String): NewTopic =
+        TopicBuilder.name(name)
+            .partitions(PARTITIONS)
             .replicas(1)
             .build()
 
-    @Bean
-    fun queryExplainedTopic(): NewTopic =
-        TopicBuilder.name("graphmesh.query.explained")
-            .partitions(3)
-            .replicas(1)
-            .build()
+    @Bean fun documentIngestedTopic(): NewTopic = topic("graphmesh.document.ingested")
+    @Bean fun queryExplainedTopic(): NewTopic = topic("graphmesh.query.explained")
+    @Bean fun pageExtractedTopic(): NewTopic = topic("graphmesh.page.extracted")
+    @Bean fun chunkCreatedTopic(): NewTopic = topic("graphmesh.chunk.created")
+    @Bean fun collectionLifecycleTopic(): NewTopic = topic("graphmesh.collection.lifecycle")
+    @Bean fun configChangedTopic(): NewTopic = topic("graphmesh.config.changed")
+
+    companion object {
+        const val PARTITIONS = 5
+    }
 }

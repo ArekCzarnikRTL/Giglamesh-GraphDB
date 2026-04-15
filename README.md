@@ -1,4 +1,5 @@
-# GraphMesh
+
+![GraphMesh Logo](docs/product/images/logo.png)
 
 KI-Knowledge-Graph-Plattform zur automatischen Wissensextraktion aus Dokumenten. GraphMesh analysiert Dokumente mit LLMs, extrahiert strukturiertes Wissen als Wissensgraph (SPO-Tripel) und ermoeglicht semantische Suche sowie RAG-Abfragen ueber den gesamten Wissensbestand.
 

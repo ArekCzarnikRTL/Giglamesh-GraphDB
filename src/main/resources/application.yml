@@ -39,9 +39,14 @@ spring:
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+      max-poll-records: 1
+    listener:
+      ack-mode: RECORD
+      concurrency: 5
     properties:
       schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8181}
       specific.avro.reader: false
+      max.poll.interval.ms: 1800000   # 30 min, LLM-puffer
   cassandra:
     contact-points: ${CASSANDRA_CONTACT_POINTS:localhost}
     port: ${CASSANDRA_PORT:9042}
