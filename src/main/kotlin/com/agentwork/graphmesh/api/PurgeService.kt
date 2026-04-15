@@ -26,9 +26,6 @@ class PurgeService(
         val documentsDeleted: Int,
         val ontologiesDeleted: Int,
         val kafkaTopicsDeleted: Int,
-        val orphanQuadTablesTruncated: Int,
-        val orphanVectorCollectionsDeleted: Int,
-        val orphanBlobsDeleted: Int,
         val durationMs: Long,
     )
 
@@ -56,9 +53,6 @@ class PurgeService(
 
         val kafkaTopicsDeleted = deleteGraphmeshKafkaTopics()
 
-        // Safety net: drops anything the cascade above may have missed.
-        val orphan = orphanSweepService.sweep()
-
         val duration = System.currentTimeMillis() - start
         logger.warn("PURGE ALL DATA completed in {}ms", duration)
 
@@ -67,9 +61,6 @@ class PurgeService(
             documentsDeleted = documentsDeleted,
             ontologiesDeleted = ontologyKeys.size,
             kafkaTopicsDeleted = kafkaTopicsDeleted,
-            orphanQuadTablesTruncated = orphan.quadTablesTruncated,
-            orphanVectorCollectionsDeleted = orphan.vectorCollectionsDeleted,
-            orphanBlobsDeleted = orphan.blobsDeleted,
             durationMs = duration,
         )
     }

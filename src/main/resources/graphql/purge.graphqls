@@ -3,9 +3,6 @@ type PurgeResult {
     documentsDeleted: Int!
     ontologiesDeleted: Int!
     kafkaTopicsDeleted: Int!
-    orphanQuadTablesTruncated: Int!
-    orphanVectorCollectionsDeleted: Int!
-    orphanBlobsDeleted: Int!
     durationMs: Int!
 }
 
