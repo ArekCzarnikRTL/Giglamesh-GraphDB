@@ -7,6 +7,7 @@ import com.agentwork.graphmesh.librarian.DocumentState
 import com.agentwork.graphmesh.librarian.DocumentStore
 import com.agentwork.graphmesh.librarian.DocumentType
 import com.agentwork.graphmesh.ontology.OntologyService
+import com.agentwork.graphmesh.storage.OrphanSweepService
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -26,8 +27,9 @@ class PurgeServiceTest {
     private val documentStore = mockk<DocumentStore>(relaxed = true)
     private val ontologyService = mockk<OntologyService>(relaxed = true)
     private val kafkaAdmin = mockk<KafkaAdmin>()
+    private val orphanSweepService = mockk<OrphanSweepService>(relaxed = true)
 
-    private val service = PurgeService(collectionService, documentStore, ontologyService, kafkaAdmin)
+    private val service = PurgeService(collectionService, documentStore, ontologyService, kafkaAdmin, orphanSweepService)
 
     private fun collection(id: String, name: String) = Collection(
         id = id, name = name, description = "", tags = emptySet(),
