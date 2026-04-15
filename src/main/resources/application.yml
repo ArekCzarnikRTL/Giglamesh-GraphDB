@@ -69,6 +69,9 @@ koog:
 graphmesh:
   cassandra:
     keyspace: graphmesh
+    write:
+      max-inflight: 32
+      timeout: 30s
   storage:
     blob:
       endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
