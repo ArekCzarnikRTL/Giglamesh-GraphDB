@@ -12,9 +12,24 @@ enum class ColumnType(val cassandraType: String) {
     TIMESTAMP("timestamp");
 
     companion object {
-        fun fromString(value: String): ColumnType =
-            entries.firstOrNull { it.name.equals(value, ignoreCase = true) }
-                ?: throw IllegalArgumentException("Unbekannter Spaltentyp: $value")
+        private val synonyms: Map<String, ColumnType> = mapOf(
+            "TEXT" to STRING, "VARCHAR" to STRING, "CHAR" to STRING, "UUID" to STRING,
+            "JSON" to STRING, "OBJECT" to STRING, "ARRAY" to STRING, "LIST" to STRING, "MAP" to STRING,
+            "INT" to INTEGER, "INTEGER" to INTEGER, "SMALLINT" to INTEGER,
+            "BIGINT" to LONG, "LONG" to LONG,
+            "REAL" to FLOAT, "FLOAT" to FLOAT,
+            "DOUBLE" to DOUBLE, "NUMERIC" to DOUBLE, "DECIMAL" to DOUBLE, "NUMBER" to DOUBLE,
+            "BOOL" to BOOLEAN, "BOOLEAN" to BOOLEAN,
+            "DATE" to TIMESTAMP, "DATETIME" to TIMESTAMP, "TIMESTAMP" to TIMESTAMP, "TIME" to TIMESTAMP
+        )
+
+        fun fromString(value: String): ColumnType {
+            val base = value.trim().substringBefore('[').substringBefore('<').substringBefore('(')
+                .trim().uppercase()
+            entries.firstOrNull { it.name == base }?.let { return it }
+            synonyms[base]?.let { return it }
+            return STRING
+        }
     }
 }
 

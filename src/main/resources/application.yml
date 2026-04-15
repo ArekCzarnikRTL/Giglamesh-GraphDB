@@ -21,7 +21,7 @@ spring:
       server:
         name: graphmesh
         version: 1.0.0
-        protocol: SSE
+        protocol: STREAMABLE
   autoconfigure:
     exclude:
       - org.springframework.ai.vectorstore.qdrant.autoconfigure.QdrantVectorStoreAutoConfiguration
