@@ -5,6 +5,7 @@ logs/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+node_modules/
 
 ### STS ###
 .apt_generated
@@ -40,3 +41,8 @@ out/
 ### Kotlin ###
 .kotlin
 /CLAUDE.local.md
+/deploy/helm/graphmesh-infra/charts/cassandra-12.3.11.tgz
+/deploy/helm/graphmesh-infra/charts/kafka-32.4.3.tgz
+/deploy/helm/graphmesh-infra/charts/minio-17.0.21.tgz
+/deploy/helm/graphmesh-infra/charts/qdrant-1.17.1.tgz
+/deploy/helm/graphmesh-infra/charts/schema-registry-26.0.5.tgz

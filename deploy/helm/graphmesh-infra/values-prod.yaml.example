@@ -1,0 +1,112 @@
+# =============================================================================
+# PRODUCTION VALUES - TEMPLATE (nicht fuer direktes Deployment)
+# =============================================================================
+#
+# Hinweis: Dieses Umbrella-Chart ist primaer fuer Dev/Staging gedacht.
+# Fuer echten Production-Betrieb dringend zu erwaegen:
+#
+#   - Kafka     -> Strimzi Operator (KafkaTopic-CRDs, Rolling-Upgrades, TLS)
+#   - Cassandra -> K8ssandra / Cass-Operator (Reaper, Medusa Backups)
+#   - MinIO     -> MinIO Operator (Tenants, Lifecycle, TLS-Auto)
+#   - Schema Registry -> wie hier, oder managed (Confluent Cloud)
+#   - Qdrant    -> offizielles Chart mit Cluster-Mode (>=3 Replicas)
+#
+# Die folgenden Platzhalter dienen als Startpunkt; konkrete Werte sind
+# Team-/Infrastruktur-abhaengig.
+# =============================================================================
+
+global:
+  # Dedizierte StorageClass mit ausreichendem IOPS-Budget.
+  storageClass: "fast-ssd"        # z.B. "longhorn", "rook-ceph-block", "gp3"
+
+# -----------------------------------------------------------------------------
+# Kafka
+# -----------------------------------------------------------------------------
+kafka:
+  controller:
+    replicaCount: 3               # >=3 fuer echtes Quorum
+    heapOpts: "-Xmx4g -Xms4g"
+    resources:
+      requests: { cpu: "1", memory: "6Gi" }
+      limits:   { cpu: "2", memory: "8Gi" }
+    persistence:
+      size: 100Gi
+
+  listeners:
+    client:       { protocol: SASL_SSL }
+    controller:   { protocol: SASL_SSL }
+    interbroker:  { protocol: SASL_SSL }
+
+  sasl:
+    enabledMechanisms: "SCRAM-SHA-512"
+    # Passwords via existingSecret injizieren, niemals plain hier!
+
+  tls:
+    type: jks
+    existingSecret: "kafka-tls"
+
+  extraConfig: |
+    default.replication.factor=3
+    min.insync.replicas=2
+    offsets.topic.replication.factor=3
+    transaction.state.log.replication.factor=3
+
+# -----------------------------------------------------------------------------
+# Schema Registry
+# -----------------------------------------------------------------------------
+schema-registry:
+  replicaCount: 2
+  externalKafka:
+    brokers:
+      - "SASL_SSL://graphmesh-infra-kafka:9092"
+  # TLS/Auth via existingSecret
+  auth:
+    enabled: true
+
+# -----------------------------------------------------------------------------
+# Cassandra
+# -----------------------------------------------------------------------------
+cassandra:
+  cluster:
+    replicaCount: 3               # fuer Production dringend K8ssandra/Cass-Operator pruefen
+    datacenter: datacenter1
+  auth:
+    enabled: true
+  jvm:
+    maxHeapSize: "8G"
+    newHeapSize: "2G"
+  persistence:
+    size: 500Gi
+  resources:
+    requests: { cpu: "2", memory: "12Gi" }
+    limits:   { cpu: "4", memory: "16Gi" }
+
+# -----------------------------------------------------------------------------
+# MinIO
+# -----------------------------------------------------------------------------
+minio:
+  mode: distributed
+  statefulset:
+    replicaCount: 4
+    zones: 1
+    drivesPerNode: 1
+  auth:
+    existingSecret: "minio-credentials"
+  persistence:
+    size: 500Gi
+  resources:
+    requests: { cpu: "500m", memory: "1Gi" }
+    limits:   { cpu: "2",    memory: "4Gi" }
+
+# -----------------------------------------------------------------------------
+# Qdrant
+# -----------------------------------------------------------------------------
+qdrant:
+  replicaCount: 3
+  persistence:
+    size: 200Gi
+    storageClassName: "fast-ssd"
+  apiKey: ""                      # aus Secret injizieren (chart unterstuetzt existingSecret)
+  resources:
+    requests: { cpu: "1",   memory: "4Gi" }
+    limits:   { cpu: "4",   memory: "16Gi" }

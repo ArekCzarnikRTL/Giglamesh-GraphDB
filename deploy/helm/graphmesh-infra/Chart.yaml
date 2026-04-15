@@ -1,0 +1,54 @@
+apiVersion: v2
+name: graphmesh-infra
+description: >
+  Umbrella chart fuer die GraphMesh-Infrastruktur (Kafka, Schema Registry,
+  Cassandra, MinIO, Qdrant). Ersetzt das dev-docker-compose.yaml fuer
+  k3s-Deployments. Optimiert fuer Single-Node-Dev-Cluster. Fuer Production
+  siehe values-prod.yaml.example (Hinweise auf Strimzi / K8ssandra / MinIO-Operator).
+type: application
+version: 0.1.0
+appVersion: "0.0.1-SNAPSHOT"
+
+# Alle Dependencies werden via `helm dependency update` gezogen.
+# Bitnami-Charts liegen unter oci://registry-1.docker.io/bitnamicharts.
+# Qdrant wird vom offiziellen Qdrant-Repo geladen (Bitnami hat kein Qdrant).
+#
+# Die Versionen sind zum Zeitpunkt des Feature-51-Setups aktuelle stabile
+# Minor-Versionen. Koennen per `helm dependency update` spaeter bump't werden.
+dependencies:
+  - name: kafka
+    version: "32.4.3"
+    repository: "oci://registry-1.docker.io/bitnamicharts"
+    condition: kafka.enabled
+
+  - name: schema-registry
+    version: "26.0.5"
+    repository: "oci://registry-1.docker.io/bitnamicharts"
+    condition: schema-registry.enabled
+    alias: schema-registry
+
+  - name: cassandra
+    version: "12.3.11"
+    repository: "oci://registry-1.docker.io/bitnamicharts"
+    condition: cassandra.enabled
+
+  - name: minio
+    version: "17.0.21"
+    repository: "oci://registry-1.docker.io/bitnamicharts"
+    condition: minio.enabled
+
+  - name: qdrant
+    version: "1.17.1"
+    repository: "https://qdrant.github.io/qdrant-helm"
+    condition: qdrant.enabled
+
+maintainers:
+  - name: GraphMesh Team
+
+keywords:
+  - graphmesh
+  - kafka
+  - cassandra
+  - qdrant
+  - minio
+  - knowledge-graph

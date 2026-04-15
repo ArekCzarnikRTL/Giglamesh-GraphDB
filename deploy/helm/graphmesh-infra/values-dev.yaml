@@ -1,0 +1,168 @@
+# Dev-Overrides fuer lokales k3s (Single-Node).
+#
+# Exposure-Strategie:
+#   Das Backend laeuft ausserhalb des Clusters (./gradlew bootRun) und muss
+#   die 5 Services unter ihren docker-compose-Ports erreichen. Drei Optionen:
+#
+#   a) kubectl port-forward  (einfachste Variante, pro Service ein Terminal)
+#      siehe README.md -> "Expose ports" fuer die Befehle.
+#
+#   b) NodePort  (dieser Wertefile aktiviert es fuer die wichtigsten Services).
+#      k3s mappt den NodePort direkt auf die Host-IP. Mit Port-Remapping
+#      uebers nodePort-Feld trifft das die bekannten docker-compose-Ports.
+#
+#   c) Traefik-IngressRoute  (nicht im Scope dieses Charts).
+#
+# Wir verwenden Variante (b) als Default; (a) bleibt jederzeit moeglich.
+
+global:
+  storageClass: "local-path"
+
+kafka:
+  controller:
+    replicaCount: 1
+    heapOpts: "-Xmx512m -Xms256m"
+    resources:
+      requests:
+        cpu: 50m
+        memory: 384Mi
+      limits:
+        cpu: 800m
+        memory: 768Mi
+    persistence:
+      size: 1Gi
+
+  # Interner Service (fuer Schema-Registry / andere in-cluster Clients).
+  service:
+    type: ClusterIP
+    ports:
+      client: 9092
+
+  # Externer Zugriff fuer Remote-Clients (start-remote.sh).
+  # Bitnami legt pro Replica einen eigenen NodePort-Service an und setzt
+  # advertised.listeners auf <domain>:<nodePort>, damit der Kafka-Metadata-
+  # Handshake einen remote-aufloesbaren Host zurueckgibt.
+  externalAccess:
+    enabled: true
+    controller:
+      service:
+        type: NodePort
+        nodePorts:
+          - "30092"
+        # Node-IP, die ein Remote-Client aufloesen kann. Bei geaenderter IP
+        # hier und in start-remote.sh (K8S_NODE_IP) anpassen.
+        domain: "192.168.178.175"
+
+schema-registry:
+  service:
+    type: NodePort
+    nodePorts:
+      client: "30181"
+    ports:
+      client: 8181
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hostname: schema-registry.graphmesh.local
+    pathType: Prefix
+    path: /
+  resources:
+    requests:
+      cpu: 50m
+      memory: 192Mi
+    limits:
+      cpu: 300m
+      memory: 384Mi
+
+cassandra:
+  cluster:
+    replicaCount: 1
+  jvm:
+    maxHeapSize: "384M"
+    newHeapSize: "96M"
+  persistence:
+    size: 3Gi
+  service:
+    type: NodePort
+    nodePorts:
+      cql: "30942"
+  resources:
+    requests:
+      cpu: 150m
+      memory: 768Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+minio:
+  persistence:
+    size: 3Gi
+  service:
+    type: NodePort
+    nodePorts:
+      api: "30900"
+      console: "30901"
+  # S3-API ueber Ingress
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hostname: minio.graphmesh.local
+    path: /
+    pathType: Prefix
+  # Web-Console ueber Ingress
+  console:
+    ingress:
+      enabled: true
+      ingressClassName: traefik
+      hostname: minio-console.graphmesh.local
+      path: /
+      pathType: Prefix
+  resources:
+    requests:
+      cpu: 50m
+      memory: 192Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+qdrant:
+  persistence:
+    size: 3Gi
+  service:
+    type: NodePort
+    ports:
+      - name: http
+        port: 6333
+        targetPort: 6333
+        nodePort: 30633
+        protocol: TCP
+        checksEnabled: true
+      - name: grpc
+        port: 6334
+        targetPort: 6334
+        nodePort: 30634
+        protocol: TCP
+        checksEnabled: false
+      - name: p2p
+        port: 6335
+        targetPort: 6335
+        protocol: TCP
+        checksEnabled: false
+  # HTTP-API ueber Ingress. gRPC (6334) bleibt auf NodePort (Traefik gRPC braucht
+  # h2c-Annotations und zusaetzliche Ingress-Ressource - fuer dev zu viel Aufwand).
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - host: qdrant.graphmesh.local
+        paths:
+          - path: /
+            pathType: Prefix
+            servicePort: 6333
+  resources:
+    requests:
+      cpu: 50m
+      memory: 384Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi

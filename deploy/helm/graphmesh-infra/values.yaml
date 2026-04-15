@@ -1,0 +1,281 @@
+# Default values fuer graphmesh-infra.
+# Spiegeln die Defaults aus dem Root-docker-compose.yaml wider.
+# k3s-optimiert: storageClass "local-path" (k3s default), bescheidene Resources.
+
+global:
+  storageClass: "local-path"
+  # Bitnami hat am 28.08.2025 freie Public-Images aus docker.io/bitnami/* entfernt
+  # und ins Archiv docker.io/bitnamilegacy/* verschoben. Alle Bitnami-Subcharts
+  # unten pinnen deshalb ihre Repos auf bitnamilegacy. Das allowInsecureImages-Flag
+  # ist notwendig, weil die Charts sonst beim Pull einen Signature-Check erzwingen.
+  security:
+    allowInsecureImages: true
+
+# -----------------------------------------------------------------------------
+# Kafka (Bitnami)
+# -----------------------------------------------------------------------------
+# KRaft mode (kein Zookeeper), 1 kombinierter Controller+Broker-Pod.
+# Default-Listener: PLAINTEXT auf 9092 (ClusterIP).
+# Bitnami benennt die Rolle "controller" wenn controllerOnly=false, dann laeuft
+# ein kombinierter controller+broker.
+kafka:
+  enabled: true
+
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/kafka
+  # Sub-Images (initContainer / Helper) auch auf bitnamilegacy mappen
+  volumePermissions:
+    image:
+      registry: docker.io
+      repository: bitnamilegacy/os-shell
+  kubectl:
+    image:
+      registry: docker.io
+      repository: bitnamilegacy/kubectl
+  provisioning:
+    image:
+      registry: docker.io
+      repository: bitnamilegacy/kafka
+
+  listeners:
+    client:
+      protocol: PLAINTEXT
+    controller:
+      protocol: PLAINTEXT
+    interbroker:
+      protocol: PLAINTEXT
+    external:
+      protocol: PLAINTEXT
+
+  sasl:
+    enabledMechanisms: ""
+    interBrokerMechanism: ""
+    controllerMechanism: ""
+
+  # KRaft-Modus: controller-Pods uebernehmen auch Broker-Rolle
+  controller:
+    replicaCount: 1
+    controllerOnly: false
+    heapOpts: "-Xmx768m -Xms512m"
+    resources:
+      requests:
+        cpu: 100m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+    persistence:
+      enabled: true
+      storageClass: "local-path"
+      size: 2Gi
+
+  broker:
+    replicaCount: 0
+
+  # Interne Erreichbarkeit fuer schema-registry: <release>-kafka:9092
+  service:
+    type: ClusterIP
+    ports:
+      client: 9092
+
+  # NodePort Exposure nur ueber values-dev.yaml (siehe dort)
+  externalAccess:
+    enabled: false
+
+  # Single-broker dev: alle Replication-Factors auf 1.
+  # Chart 32.x erwartet diese Overrides als YAML-Map unter `overrideConfiguration`
+  # (nicht als `extraConfig`-String, das gibt es in dieser Chart-Version nicht mehr).
+  overrideConfiguration:
+    offsets.topic.replication.factor: 1
+    transaction.state.log.replication.factor: 1
+    transaction.state.log.min.isr: 1
+    default.replication.factor: 1
+    min.insync.replicas: 1
+
+# -----------------------------------------------------------------------------
+# Schema Registry (Bitnami) - Confluent Schema Registry
+# -----------------------------------------------------------------------------
+# Bitnami-Chart nutzt Confluent-kompatibles Image.
+# Port bleibt 8181 um Backend-Config aus application.yml nicht zu brechen.
+schema-registry:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/schema-registry
+
+  service:
+    type: ClusterIP
+    ports:
+      client: 8181
+
+  containerPorts:
+    client: 8181
+
+  # Bootstrap-Server zeigt auf die in-chart kafka-Instanz.
+  # Der DNS-Name setzt sich zusammen aus <release-name>-kafka.<namespace>.svc.
+  # Wir referenzieren bewusst per tpl-freiem, statischem Namen und gehen davon
+  # aus, dass release name = "graphmesh-infra".
+  kafka:
+    enabled: false  # Bitnami-Schema-Registry kann selbst Kafka als Sub-Dep ziehen - wir wollen das NICHT
+  externalKafka:
+    brokers:
+      - "PLAINTEXT://graphmesh-infra-kafka:9092"
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# -----------------------------------------------------------------------------
+# Cassandra (Bitnami)
+# -----------------------------------------------------------------------------
+cassandra:
+  enabled: true
+
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/cassandra
+  volumePermissions:
+    image:
+      registry: docker.io
+      repository: bitnamilegacy/os-shell
+
+  cluster:
+    name: graphmesh
+    datacenter: datacenter1
+    replicaCount: 1
+  dbUser:
+    user: cassandra
+    forcePassword: false
+  # Kein Auth in dev (analog docker-compose).
+  auth:
+    enabled: false
+
+  jvm:
+    maxHeapSize: "512M"
+    newHeapSize: "128M"
+
+  service:
+    type: ClusterIP
+    ports:
+      cql: 9042
+
+  persistence:
+    enabled: true
+    storageClass: "local-path"
+    size: 5Gi
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+# -----------------------------------------------------------------------------
+# MinIO (Bitnami)
+# -----------------------------------------------------------------------------
+minio:
+  enabled: true
+
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/minio
+  clientImage:
+    registry: docker.io
+    repository: bitnamilegacy/minio-client
+  volumePermissions:
+    image:
+      registry: docker.io
+      repository: bitnamilegacy/os-shell
+  console:
+    image:
+      registry: docker.io
+      repository: bitnamilegacy/minio-object-browser
+
+  auth:
+    rootUser: minioadmin
+    rootPassword: minioadmin
+
+  mode: standalone
+
+  defaultBuckets: ""
+
+  service:
+    type: ClusterIP
+    ports:
+      api: 9000
+      console: 9001
+  containerPorts:
+    api: 9000
+    console: 9001
+  apiIngress:
+    enabled: false
+  ingress:
+    enabled: false
+
+  persistence:
+    enabled: true
+    storageClass: "local-path"
+    size: 5Gi
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+# -----------------------------------------------------------------------------
+# Qdrant (offizielles Chart)
+# -----------------------------------------------------------------------------
+qdrant:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    repository: qdrant/qdrant
+    tag: ""  # leer = chart-default (pinned)
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    ports:
+      - name: http
+        port: 6333
+        targetPort: 6333
+        protocol: TCP
+        checksEnabled: true
+      - name: grpc
+        port: 6334
+        targetPort: 6334
+        protocol: TCP
+        checksEnabled: false
+      - name: p2p
+        port: 6335
+        targetPort: 6335
+        protocol: TCP
+        checksEnabled: false
+
+  # Default: keine API-Key-Auth (analog docker-compose).
+  apiKey: ""
+
+  persistence:
+    size: 5Gi
+    storageClassName: "local-path"
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 2Gi

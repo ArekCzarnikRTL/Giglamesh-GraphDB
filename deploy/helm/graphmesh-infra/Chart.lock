@@ -1,0 +1,18 @@
+dependencies:
+- name: kafka
+  repository: oci://registry-1.docker.io/bitnamicharts
+  version: 32.4.3
+- name: schema-registry
+  repository: oci://registry-1.docker.io/bitnamicharts
+  version: 26.0.5
+- name: cassandra
+  repository: oci://registry-1.docker.io/bitnamicharts
+  version: 12.3.11
+- name: minio
+  repository: oci://registry-1.docker.io/bitnamicharts
+  version: 17.0.21
+- name: qdrant
+  repository: https://qdrant.github.io/qdrant-helm
+  version: 1.17.1
+digest: sha256:5d28002125c7968e4a0367f607dafc1ebee7c40f4dddc1892baebefd46a432df
+generated: "2026-04-15T13:53:18.841521+02:00"
