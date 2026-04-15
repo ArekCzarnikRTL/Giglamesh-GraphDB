@@ -1,61 +1,59 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Kurzleitfaden fuer Claude Code in diesem Repository. Die folgenden fuenf Abschnitte beantworten alles, was vor jeder Aktion im Kopf sein sollte.
 
-## Project Overview
+## 1. Worum geht es?
 
-GraphMesh is an Enterprise Knowledge Graph Platform built with Spring Boot + Kotlin. It extracts structured knowledge (RDF/SPO triples) from documents using LLMs, stores them in a graph, and enables semantic search and RAG queries.
+**GraphMesh** ist eine Enterprise Knowledge Graph Platform (Spring Boot + Kotlin). Sie extrahiert via LLMs RDF/SPO-Triples aus Dokumenten (PDF/Markdown/Text), speichert sie im Graph und beantwortet NLP-Fragen ueber Graph-RAG, Document-RAG und MCP-Tools. End-to-end-Pipeline:
 
-## Code Review Process
-
-I need to implement these independent features in parallel: [LIST FEATURES]. For each feature: 1) Create a git branch named `feature/<name>`, 2) Spawn a sub-agent to implement it following our docs/features workflow—write the feature doc first, then plan, then implement with tests, 3) Each agent must run the full build and test suite on its branch before reporting done, 4) After all agents complete, merge each branch into `develop` one at a time, running tests after each merge to catch integration conflicts. Report a summary table: feature name, branch, files changed, tests added, build status.
-
-## Build Commands
-
-```bash
-./gradlew build              # Full build (compile + test)
-./gradlew test               # Run all tests
-./gradlew test --tests "com.agentwork.graphmesh.SomeTest"  # Run single test class
-./gradlew bootRun            # Run the application
-./gradlew generateJava       # Generate GraphQL client code from schemas in src/main/resources/graphql-client/
+```
+Document → Decode → Chunk → LLM-Extract → RDF-Triples → Cassandra + Qdrant → GraphQL/MCP → RAG
 ```
 
-No linter is configured yet.
+## 2. Wie ist das Projekt organisiert?
 
-## Tech Stack
+- **Monorepo**: Backend (`src/main/kotlin/com/agentwork/graphmesh/...`), Frontend (`frontend/`, Next.js 14 + Apollo + shadcn/Tailwind), Docs (`docs/`), Infra (`docker-compose.yaml`).
+- **Spring Modulith**: jedes Feature ist ein Package unter `com.agentwork.graphmesh`, _keine_ Submodule.
+- **Features**: `docs/features/NN-name.md` = Spec, `NN-name-done.md` = Abschlussdoku. Uebersicht in `docs/features/00-feature-set-overview.md`.
+- **Tech-Stack**: Kotlin auf Java 21, Gradle 9.4.1, Spring Boot 4.0.5, Spring Modulith 2.0.5, Spring AI 2.0.0-M4 (MCP-Server), **Koog 0.7.3** (LLM-Calls), Apache Cassandra + Qdrant + S3/MinIO + Kafka (Avro).
+- **Tests**: JUnit 5 via `kotlin-test-junit5`. Integration-Tests brauchen laufendes `docker-compose up` (keine Testcontainers).
 
-- **Language**: Kotlin on Java 21
-- **Build**: Gradle 9.4.1 with Kotlin DSL
-- **Framework**: Spring Boot 4.0.5, Spring Modulith 2.0.5, Spring AI 2.0.0-M4
-- **Storage**: Apache Cassandra (entity-centric RDF quads), Qdrant (vector embeddings), S3/MinIO (blobs)
-- **Messaging**: Apache Kafka (event-driven pub/sub)
-- **API**: GraphQL (Netflix DGS codegen) + MCP (Model Context Protocol)
-- **LLM**: Provider-agnostic via Spring AI (OpenAI, Anthropic, Ollama, etc.)
+## 3. Wichtigste Befehle
 
-## Architecture
+```bash
+./gradlew build                      # Compile + Test
+./gradlew test                       # Nur Tests
+./gradlew test --tests "com.agentwork.graphmesh.SomeTest"
+./gradlew bootRun                    # App starten (Port 8083)
+./gradlew generateJava               # GraphQL-Client-Codegen aus src/main/resources/graphql-client/
 
-### Core Principles (from `docs/base/architecture-principles.md`)
+docker-compose up -d                 # Cassandra/Qdrant/Kafka/MinIO hochfahren
+./tests/smoke-test.sh                # End-to-end Smoke-Test (braucht laufendes Backend + Infra)
+./tests/mcp-smoke-test.sh            # MCP-Server Smoke-Test
 
-1. **SPO/RDF Graph Model** — Subject-Predicate-Object triples as core knowledge representation
-2. **LLM-Native** — Graph structure optimized for LLM interaction
-3. **Embedding-Based Navigation** — NLP queries map to graph nodes via vector embeddings (`NLP Query → Embeddings → Graph Nodes`)
-4. **Deterministic Entity Resolution** — Parallel knowledge extraction with deterministic identifiers
-5. **Event-Driven** — Kafka pub/sub for loose coupling between processing stages
+cd frontend && pnpm dev              # Frontend (Port 3002)
+cd frontend && pnpm test             # Vitest
+```
 
-### Modular Structure (Spring Modulith)
+Kein Linter konfiguriert.
 
-The project uses Spring Modulith for internal module boundaries. Each feature is a self-contained module under `com.agentwork.graphmesh`. Features are implemented in phases following a dependency DAG documented in `docs/features/00-feature-set-overview.md`.
+## 4. Konventionen
 
-### Key Pipeline Flow
+- **Kotlin-Compiler**: `-Xjsr305=strict`, `-Xannotation-default-target=param-property`.
+- **LLM-Calls**: **immer** ueber `resolveLlmModel(name)` aus `com.agentwork.graphmesh.llm.ModelResolver` — Koog braucht Capabilities, rohe `LLModel(...)` knallt zur Laufzeit.
+- **Kafka-Envelopes**: Avro-Schemas in `src/main/resources/avro/`, Consumer via `@KafkaListener`, Content-Type fest `application/avro`.
+- **Commits**: direkt auf `main`, keine PRs, **niemals `git push` ohne explizite Freigabe**.
+- **Doku**: neue Features erst als Spec in `docs/features/`, nach Abschluss eine `-done.md` nachziehen (siehe Muster `46-skos-taxonomy-done.md`, `49-markdown-document-support-done.md`).
+- **Sprache in Docs und Commits**: Deutsch ok, Umlaute vermeiden (ae/oe/ue/ss).
+- **Simplicity first**: keine Abstraktions-Layer ohne Not, YAGNI — direkt gegen Spring/Koog bauen.
 
-Documents → PDF Decode → Chunk → Extract (LLM) → RDF Triples → Cassandra + Qdrant embeddings → GraphQL/MCP query → RAG responses
+## 5. Einschraenkungen — nicht uebersehen
 
-## Documentation
-
-- `docs/features/` — 35 feature specifications organized in 5 implementation phases with dependency ordering
-- `docs/base/` — Architectural analysis, infrastructure decisions, and design documents (in German and English)
-
-## Kotlin Conventions
-
-- Compiler flags: `-Xjsr305=strict` (strict null-safety for Spring annotations), `-Xannotation-default-target=param-property`
-- Tests use JUnit 5 via `kotlin-test-junit5`
+- **Feature-Docs luegen teilweise**: aeltere Specs nennen falsche Packages oder Libs (z. B. `com.graphmesh.*`, alte Service-Namen). Immer gegen den echten Code gegenpruefen, bevor du darauf planst.
+- **Qdrant: Dimension im Collection-Namen**. Wechsel des Embedding-Modells = neue Collection, sonst Dim-Mismatch.
+- **Embedding-Context-Limits**: `multilingual-e5` nur 512 Tokens, `nomic-embed-text` 2048, `bge-m3` 8192. Chunk-Size in `application.yml` muss passen.
+- **MCP-Transport**: aktuell `spring.ai.mcp.server.protocol=STREAMABLE` am `/mcp`-Endpoint. Der alte SSE-Pfad (`/sse`) sendet kein `endpoint`-Event — nicht dort andocken.
+- **Koog-Beans-Konflikt**: `MultiLLMAutoConfiguration` muss in `application.yml` excluded bleiben, sonst kollidiert der `PromptExecutor`-Bean mit Ollama.
+- **Bekannte Build-Issues** (pre-existing, nicht "fixen"): ambiguer `mainClass`, Koog-Bean-Konflikt beim parallelen Provider, Integration-Tests brauchen docker-compose.
+- **Keine Testcontainers**, keine Submodule — Infra laeuft lokal via `docker-compose up`.
+- **Git**: direkt auf `main` committen ist Konvention; aber **nie** `git push`, `git reset --hard`, `--force`, Branch-Deletes oder `--no-verify` ohne ausdrueckliche Anweisung.
