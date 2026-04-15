@@ -51,13 +51,13 @@ spring:
 ai:
   koog:
     openai:
-      enabled: ${OPENAI_ENABLED:true}
+      enabled: ${OPENAI_ENABLED:false}
       api-key: ${OPENAI_API_KEY:}
     anthropic:
       enabled: ${ANTHROPIC_ENABLED:false}
       api-key: ${ANTHROPIC_API_KEY:}
     ollama:
-      enabled: false
+      enabled: true
       base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
 
 koog:
@@ -86,8 +86,8 @@ graphmesh:
     chunk-size: 2000
     overlap-size: 200
   extraction:
-    model: ${LLM_EXTRACTION_MODEL:gpt-4o-mini}
+    model: ${LLM_EXTRACTION_MODEL:llama3.2:3b}
     topic:
       min-confidence: 0.5
   embedding:
-    model: ${EMBEDDING_MODEL:text-embedding-3-small}
+    model: ${EMBEDDING_MODEL:bge-m3}

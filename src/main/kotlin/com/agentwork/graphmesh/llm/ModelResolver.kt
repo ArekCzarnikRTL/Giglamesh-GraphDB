@@ -2,7 +2,16 @@ package com.agentwork.graphmesh.llm
 
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+
+private val BGE_M3: LLModel = LLModel(
+    provider = LLMProvider.Ollama,
+    id = "bge-m3",
+    capabilities = listOf(LLMCapability.Embed),
+    contextLength = 8_192,
+)
 
 /**
  * Koog 0.7.3 verlangt fuer chat- bzw. embed-Aufrufe vorgefertigte LLModel-Instanzen
@@ -41,6 +50,7 @@ fun resolveLlmModel(name: String): LLModel = when (name.lowercase()) {
     "bge-large" -> OllamaModels.Embeddings.BGE_LARGE
     "multilingual-e5" -> OllamaModels.Embeddings.MULTILINGUAL_E5
     "mxbai-embed-large" -> OllamaModels.Embeddings.MXBAI_EMBED_LARGE
+    "bge-m3" -> BGE_M3
 
     else -> error(
         "Unbekanntes LLM-Modell: '$name'. Bitte einen der unterstuetzten Namen " +

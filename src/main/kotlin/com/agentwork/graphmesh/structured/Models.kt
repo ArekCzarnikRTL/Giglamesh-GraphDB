@@ -1,5 +1,7 @@
 package com.agentwork.graphmesh.structured
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+
 enum class ColumnType(val cassandraType: String) {
     STRING("text"),
     INTEGER("int"),
@@ -34,12 +36,15 @@ data class TableSchema(
     val columns: List<ColumnDescriptor>,
     val indexes: List<IndexDefinition> = emptyList()
 ) {
+    @get:JsonIgnore
     val primaryKeyColumns: List<ColumnDescriptor>
         get() = columns.filter { it.primaryKey }
 
+    @get:JsonIgnore
     val indexedColumns: List<ColumnDescriptor>
         get() = columns.filter { it.indexed && !it.primaryKey }
 
+    @get:JsonIgnore
     val allIndexNames: List<String>
         get() {
             val names = mutableListOf<String>()

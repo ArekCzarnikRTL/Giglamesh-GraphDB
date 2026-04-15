@@ -70,7 +70,13 @@ class SchemaInferenceService(
 
     @Suppress("UNCHECKED_CAST")
     internal fun parseInferredSchema(response: String): InferredSchema {
-        val cleaned = response.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
+        val stripped = response.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
+        val start = stripped.indexOf('{')
+        val end = stripped.lastIndexOf('}')
+        if (start < 0 || end <= start) {
+            throw IllegalArgumentException("LLM response contains no JSON object: ${stripped.take(200)}")
+        }
+        val cleaned = stripped.substring(start, end + 1)
         val map = objectMapper.readValue<Map<String, Any?>>(cleaned)
 
         val columns = (map["columns"] as List<Map<String, Any?>>).map { col ->

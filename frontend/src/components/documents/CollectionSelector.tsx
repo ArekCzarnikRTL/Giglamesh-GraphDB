@@ -30,7 +30,11 @@ export function CollectionSelector() {
       onValueChange={(v) => setCollectionId(v)}
     >
       <SelectTrigger className="w-56">
-        <SelectValue placeholder="Collection auswählen…" />
+        <SelectValue placeholder="Collection auswählen…">
+          {(value) =>
+            data?.collections.find((c) => c.id === value)?.name ?? value
+          }
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {data?.collections.map((col) => (

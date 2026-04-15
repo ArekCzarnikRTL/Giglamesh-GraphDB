@@ -100,6 +100,18 @@ docs/
 ./gradlew generateJava             # GraphQL-Codegen
 ```
 
+### Lokale Ollama-Instanz
+
+```bash
+ollama pull llama3.2:3b
+ollama pull zylonai/multilingual-e5-large
+
+export LLM_EXTRACTION_MODEL=llama3.2:3b
+export EMBEDDING_MODEL=multilingual-e5
+export OPENAI_ENABLED=false
+export OLLAMA_ENABLED=true
+```
+
 ## Dokumentation
 
 Die ausfuehrliche Produktdokumentation liegt unter [`docs/product/`](docs/product/index.md) und ist auch als [HTML-Seite](docs/product/index.html) verfuegbar.

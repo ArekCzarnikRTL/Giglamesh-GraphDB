@@ -62,7 +62,11 @@ class TableDetector(
 
     internal fun parseDetectionResult(response: String): DetectionResult {
         return try {
-            val cleaned = response.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
+            val stripped = response.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
+            val start = stripped.indexOf('{')
+            val end = stripped.lastIndexOf('}')
+            if (start < 0 || end <= start) return DetectionResult(hasTable = false, confidence = 0.0)
+            val cleaned = stripped.substring(start, end + 1)
             val map = objectMapper.readValue<Map<String, Any?>>(cleaned)
             DetectionResult(
                 hasTable = map["has_table"] as? Boolean ?: false,

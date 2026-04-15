@@ -32,6 +32,7 @@ class EmbeddingService(
         }
 
         val model = resolveLlmModel(config.model)
+        logger.info("Embedding chunk: id={}, collection={}, model={}", chunkId, collectionName, model)
 
         val embedding = runBlocking {
             embeddingProvider.embed(text, model)

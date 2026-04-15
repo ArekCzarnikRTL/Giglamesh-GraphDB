@@ -82,7 +82,12 @@ function PipelinePanelInner({ initialCollectionId }: Props) {
           onValueChange={(v) => setCollectionId(v)}
         >
           <SelectTrigger className="w-72">
-            <SelectValue placeholder="Collection auswählen…" />
+            <SelectValue placeholder="Collection auswählen…">
+              {(value) =>
+                collectionsData?.collections.find((c) => c.id === value)?.name ??
+                value
+              }
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {collectionsData?.collections.map((c) => (
