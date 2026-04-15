@@ -113,9 +113,16 @@ jeweiligen Feature-Docs fuer die Motivation.
 
 ### Phase 9: Performance
 
-| #  | Feature                       | Datei                                                          | Abhaengig von      | Aufwand |
-|----|-------------------------------|----------------------------------------------------------------|---------------------|---------|
-| 45 | Query Performance Optimierung | [45-query-performance.md](45-query-performance.md)             | 15, 16, 18         | L       |
+| #  | Feature                            | Datei                                                                                      | Abhaengig von | Aufwand | Status |
+|----|------------------------------------|--------------------------------------------------------------------------------------------|---------------|---------|--------|
+| 45 | Query Performance Optimierung      | [45-query-performance.md](45-query-performance.md)                                         | 15, 16, 18    | L       | done   |
+| 50 | Async Parallel Cassandra Writes    | [50-async-parallel-cassandra-writes.md](50-async-parallel-cassandra-writes.md) ([done](50-async-parallel-cassandra-writes-done.md)) | 02, 07        | S       | done   |
+
+### Phase 10: Deployment
+
+| #  | Feature                 | Datei                                                | Abhaengig von          | Aufwand |
+|----|-------------------------|------------------------------------------------------|------------------------|---------|
+| 51 | Helm Deployment Setup   | [51-helm-deployment.md](51-helm-deployment.md)       | (infra-only, kein Code) | M       |
 
 ## DAG-Visualisierung
 
@@ -168,4 +175,6 @@ Phase 8 (Import):      02,07,08,14 ──▶ 43(RdfImport)
 Phase 8b (Vocab):      02,07,14,43 ──▶ 46(SkosTaxonomy)
 
 Phase 9 (Perf):         15,16,18 ──▶ 45(QueryPerformance)
+
+Phase 10 (Deploy):   (infra-only, kein Code-Dep) ──▶ 51(HelmDeployment)
 ```
