@@ -20,7 +20,7 @@ JAR_PATH="build/libs/GraphMesh-0.0.1-SNAPSHOT.jar"
 
 # Defaults
 SERVER_PORT="${SERVER_PORT:-8083}"
-OTEL_ENABLED="${OTEL_ENABLED:-0}"
+OTEL_ENABLED="${OTEL_ENABLED:-1}"
 OTEL_AGENT_JAR="${OTEL_AGENT_JAR:-./opentelemetry-javaagent.jar}"
 OTEL_ENDPOINT="${OTEL_ENDPOINT:-https://signoz-otelcollector.operations-dev-internal.k8s.netrtl.com}"
 OTEL_SERVICE_NAME="${OTEL_SERVICE_NAME:-graphmesh}"

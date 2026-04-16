@@ -64,17 +64,31 @@ class CollectionSchemaInitializer(
     }
 
     private fun addTenantColumns() {
+        addColumnIfMissing("collections", "tenant_id", "text")
+        addColumnIfMissing("collections", "owner_id", "text")
+        addColumnIfMissing("collections_by_name", "tenant_id", "text")
+        addColumnIfMissing("collections_by_name", "owner_id", "text")
+    }
+
+    private fun addColumnIfMissing(table: String, column: String, type: String) {
+        val existing = session.metadata
+            .getKeyspace(keyspace).orElse(null)
+            ?.getTable(table)?.orElse(null)
+            ?.columns
+            ?.keys
+            ?.map { it.asInternal() }
+            ?.toSet()
+            ?: emptySet()
+        if (column in existing) {
+            logger.debug("Column {}.{} already present — skipping ALTER", table, column)
+            return
+        }
         try {
-            session.execute("ALTER TABLE $keyspace.collections ADD tenant_id text")
-        } catch (_: Exception) { /* column already exists */ }
-        try {
-            session.execute("ALTER TABLE $keyspace.collections ADD owner_id text")
-        } catch (_: Exception) { /* column already exists */ }
-        try {
-            session.execute("ALTER TABLE $keyspace.collections_by_name ADD tenant_id text")
-        } catch (_: Exception) { /* column already exists */ }
-        try {
-            session.execute("ALTER TABLE $keyspace.collections_by_name ADD owner_id text")
-        } catch (_: Exception) { /* column already exists */ }
+            session.execute("ALTER TABLE $keyspace.$table ADD $column $type")
+            logger.info("Added column {}.{} ({})", table, column, type)
+        } catch (e: Exception) {
+            // Race: zweite Instanz hat die Spalte gerade angelegt. Harmlos, loggen und weitermachen.
+            logger.warn("ALTER TABLE {} ADD {} failed (likely race): {}", table, column, e.message)
+        }
     }
 }
