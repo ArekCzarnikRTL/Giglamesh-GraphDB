@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory
  *
  * Any unrecognized event is ignored (logged at DEBUG level).
  */
-class KoogAgentTracingBridge(private val collector: AgentIterationCollector) {
+class alKoogAgentTracingBridge(private val collector: AgentIterationCollector) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 

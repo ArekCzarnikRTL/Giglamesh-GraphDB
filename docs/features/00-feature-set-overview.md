@@ -135,6 +135,17 @@ Siehe `docs/medium-article-graphmesh-explained.md` fuer den Kontext.
 | 53 | Topic/Tag Pre-Filter fuer Retrieval  | [53-topic-prefilter.md](53-topic-prefilter.md)                                                     | 04, 07, 15, 16, 38      | L       |
 | 54 | Fein-granulare MCP-Retrieval-Tools   | [54-mcp-fine-grained-retrieval-tools.md](54-mcp-fine-grained-retrieval-tools.md)                   | 17, 19, 38              | M       |
 
+### Phase 12: Architektur-Refactoring
+
+| #  | Feature                              | Datei                                                                                              | Abhaengig von                    | Aufwand |
+|----|--------------------------------------|----------------------------------------------------------------------------------------------------|----------------------------------|---------|
+| 55 | Unified Extractor Interface          | [55-unified-extractor-interface.md](55-unified-extractor-interface.md)                             | 01, 05, 07, 11, 12, 19, 21, 23, 24, 29 | L       |
+| 56 | Shared RAG Retrieval                 | [56-shared-rag-retrieval.md](56-shared-rag-retrieval.md)                                           | 04, 13, 15, 16                   | S       |
+| 57 | Kafka Messaging Abstraction          | [57-kafka-messaging-abstraction.md](57-kafka-messaging-abstraction.md)                             | 01                               | M       |
+| 58 | Typed Vector Payload                 | [58-typed-vector-payload.md](58-typed-vector-payload.md)                                           | 04, 13, 15, 16                   | S       |
+| 59 | Streaming Module Consolidation       | [59-streaming-module-consolidation.md](59-streaming-module-consolidation.md)                       | 25, 27                           | S       |
+| 60 | Collection Lifecycle Manager         | [60-collection-lifecycle-manager.md](60-collection-lifecycle-manager.md)                           | 02, 03, 04, 08, 09              | M       |
+
 ## DAG-Visualisierung
 
 ```
@@ -192,4 +203,11 @@ Phase 10 (Deploy):   (infra-only, kein Code-Dep) ──▶ 51(HelmDeployment)
 Phase 11 (MemPalace):  08,15,16,18,40 ──▶ 52(CollectionIdentity)
                         04,07,15,16,38 ──▶ 53(TopicPrefilter)
                                17,19,38 ──▶ 54(McpFineGrained)
+
+Phase 12 (Refactoring): 01,05,07,11,12,19,21,23,24,29 ──▶ 55(ExtractorInterface)
+                                          04,13,15,16 ──▶ 56(SharedRetrieval)
+                                                   01 ──▶ 57(KafkaAbstraction)
+                                          04,13,15,16 ──▶ 58(TypedPayload)
+                                               25,27 ──▶ 59(StreamingConsolidation)
+                                       02,03,04,08,09 ──▶ 60(LifecycleManager)
 ```
