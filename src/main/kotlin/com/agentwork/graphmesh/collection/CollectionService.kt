@@ -1,12 +1,8 @@
 package com.agentwork.graphmesh.collection
 
-import com.agentwork.graphmesh.storage.QuadStore
-import com.agentwork.graphmesh.storage.blob.BlobStore
-import com.agentwork.graphmesh.storage.vector.VectorStore
 import com.agentwork.graphmesh.tenant.AccessDeniedException
 import com.agentwork.graphmesh.tenant.TenantContext
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import java.time.Instant
@@ -14,12 +10,9 @@ import java.time.Instant
 @Service
 class CollectionService(
     private val collectionStore: CollectionStore,
-    private val quadStore: QuadStore,
-    private val vectorStore: VectorStore,
-    private val blobStore: BlobStore,
+    private val lifecycleManager: CollectionLifecycleManager,
     private val eventPublisher: ApplicationEventPublisher,
     private val collectionEventProducer: CollectionEventProducer,
-    @Value("\${graphmesh.storage.blob.default-bucket:graphmesh}") private val defaultBucket: String
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -58,14 +51,10 @@ class CollectionService(
     fun delete(id: String) {
         val collection = findByIdWithAccessCheck(id)
 
-        // Cascade delete across all backends. Quads, vectors and blobs are all
-        // keyed by collection ID (see RdfImportService, GraphController, etc.),
-        // NOT by collection name.
-        quadStore.deleteCollection(id)
-        vectorStore.deleteCollection(id)
-        deleteBlobsForCollection(id)
-
-        collectionStore.delete(id)
+        val result = lifecycleManager.purge(id)
+        if (!result.complete) {
+            logger.warn("Partial purge for collection {}: {}", id, result.failures)
+        }
 
         val event = CollectionEvent(CollectionEventType.DELETED, id, collection.name)
         eventPublisher.publishEvent(event)
@@ -155,11 +144,4 @@ class CollectionService(
         }
     }
 
-    private fun deleteBlobsForCollection(collectionId: String) {
-        val prefix = "collections/$collectionId/"
-        val blobs = blobStore.list(defaultBucket, prefix)
-        if (blobs.isNotEmpty()) {
-            blobStore.deleteBatch(defaultBucket, blobs.map { it.key })
-        }
-    }
 }
