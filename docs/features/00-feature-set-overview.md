@@ -137,14 +137,14 @@ Siehe `docs/medium-article-graphmesh-explained.md` fuer den Kontext.
 
 ### Phase 12: Architektur-Refactoring
 
-| #  | Feature                              | Datei                                                                                              | Abhaengig von                    | Aufwand |
-|----|--------------------------------------|----------------------------------------------------------------------------------------------------|----------------------------------|---------|
-| 55 | Unified Extractor Interface          | [55-unified-extractor-interface.md](55-unified-extractor-interface.md)                             | 01, 05, 07, 11, 12, 19, 21, 23, 24, 29 | L       |
-| 56 | Shared RAG Retrieval                 | [56-shared-rag-retrieval.md](56-shared-rag-retrieval.md)                                           | 04, 13, 15, 16                   | S       |
-| 57 | Kafka Messaging Abstraction          | [57-kafka-messaging-abstraction.md](57-kafka-messaging-abstraction.md)                             | 01                               | M       |
-| 58 | Typed Vector Payload                 | [58-typed-vector-payload.md](58-typed-vector-payload.md)                                           | 04, 13, 15, 16                   | S       |
-| 59 | Streaming Module Consolidation       | [59-streaming-module-consolidation.md](59-streaming-module-consolidation.md)                       | 25, 27                           | S       |
-| 60 | Collection Lifecycle Manager         | [60-collection-lifecycle-manager.md](60-collection-lifecycle-manager.md)                           | 02, 03, 04, 08, 09              | M       |
+| #  | Feature                              | Datei                                                                                              | Abhaengig von                    | Aufwand | Status |
+|----|--------------------------------------|----------------------------------------------------------------------------------------------------|----------------------------------|---------|--------|
+| 55 | Unified Extractor Interface          | [55-unified-extractor-interface.md](55-unified-extractor-interface.md)                             | 01, 05, 07, 11, 12, 19, 21, 23, 24, 29 | L       |        |
+| 56 | Shared RAG Retrieval                 | [56-shared-rag-retrieval.md](56-shared-rag-retrieval.md)                                           | 04, 13, 15, 16                   | S       |        |
+| 57 | Kafka Messaging Abstraction          | [57-kafka-messaging-abstraction.md](57-kafka-messaging-abstraction.md)                             | 01                               | M       |        |
+| 58 | Typed Vector Payload                 | [58-typed-vector-payload.md](58-typed-vector-payload.md) ([done](58-typed-vector-payload-done.md)) | 04, 13, 15, 16                   | S       | done   |
+| 59 | Streaming Module Consolidation       | [59-streaming-module-consolidation.md](59-streaming-module-consolidation.md) ([done](59-streaming-module-consolidation-done.md)) | 25, 27                           | S       | done   |
+| 60 | Collection Lifecycle Manager         | [60-collection-lifecycle-manager.md](60-collection-lifecycle-manager.md) ([done](60-collection-lifecycle-manager-done.md)) | 02, 03, 04, 08, 09              | M       | done   |
 
 ## DAG-Visualisierung
 
