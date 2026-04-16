@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@apollo/client/react";
 import { DOCUMENTS_QUERY } from "@/graphql/queries";
 import { DocumentFilter, DocumentPage } from "@/types/document";
@@ -31,10 +31,21 @@ export function DocumentList({ collectionId }: Props) {
   const [filter, setFilter] = useState<DocumentFilter>({});
   const [page, setPage] = useState(0);
 
-  const { data, loading, error } = useQuery<DocumentsQueryData>(DOCUMENTS_QUERY, {
+  const { data, loading, error, startPolling, stopPolling } = useQuery<DocumentsQueryData>(DOCUMENTS_QUERY, {
     variables: { collectionId, filter, page, pageSize: PAGE_SIZE },
     fetchPolicy: "cache-and-network",
   });
+
+  useEffect(() => {
+    const hasInProgress = data?.documents.items.some(
+      (d) => d.state === "UPLOADED" || d.state === "PROCESSING",
+    );
+    if (hasInProgress) {
+      startPolling(3000);
+    } else {
+      stopPolling();
+    }
+  }, [data, startPolling, stopPolling]);
 
   return (
     <div className="space-y-4">

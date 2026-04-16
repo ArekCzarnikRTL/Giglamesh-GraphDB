@@ -27,6 +27,8 @@ class CassandraDocumentStore(
     private lateinit var selectByCollectionType: PreparedStatement
     private lateinit var selectByParent: PreparedStatement
     private lateinit var updateStateStmt: PreparedStatement
+    private lateinit var updateStateByCollectionStmt: PreparedStatement
+    private lateinit var updateStateByParentStmt: PreparedStatement
     private lateinit var deleteDoc: PreparedStatement
     private lateinit var deleteByCollection: PreparedStatement
     private lateinit var deleteByParent: PreparedStatement
@@ -63,6 +65,12 @@ class CassandraDocumentStore(
 
         updateStateStmt = session.prepare(
             "UPDATE $keyspace.documents SET state = ?, updated_at = ? WHERE id = ?"
+        )
+        updateStateByCollectionStmt = session.prepare(
+            "UPDATE $keyspace.documents_by_collection SET state = ?, updated_at = ? WHERE collection_id = ? AND type = ? AND id = ?"
+        )
+        updateStateByParentStmt = session.prepare(
+            "UPDATE $keyspace.documents_by_parent SET state = ?, updated_at = ? WHERE parent_id = ? AND id = ?"
         )
 
         deleteDoc = session.prepare("DELETE FROM $keyspace.documents WHERE id = ?")
@@ -106,7 +114,16 @@ class CassandraDocumentStore(
     }
 
     override fun updateState(id: String, state: DocumentState) {
-        session.execute(updateStateStmt.bind(state.name, Instant.now(), id))
+        val now = Instant.now()
+        session.execute(updateStateStmt.bind(state.name, now, id))
+
+        val doc = findById(id)
+        if (doc != null) {
+            session.execute(updateStateByCollectionStmt.bind(state.name, now, doc.collectionId, doc.type.name, id))
+            if (doc.parentId != null) {
+                session.execute(updateStateByParentStmt.bind(state.name, now, doc.parentId, id))
+            }
+        }
         logger.debug("Updated document state: id={}, state={}", id, state)
     }
 
