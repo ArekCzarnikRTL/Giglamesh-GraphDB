@@ -1,0 +1,22 @@
+{{- if and .Values.cassandra.enabled ((.Values.cassandra).ingressRouteTCP).enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: {{ .Release.Name }}-cassandra-tcp
+  labels:
+    app.kubernetes.io/name: graphmesh-infra
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: cassandra
+  {{- with ((.Values.cassandra).ingressRouteTCP).annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  entryPoints:
+    - {{ ((.Values.cassandra).ingressRouteTCP).entryPoint | default "cassandra" }}
+  routes:
+    - match: HostSNI(`*`)
+      services:
+        - name: {{ .Release.Name }}-cassandra
+          port: {{ .Values.cassandra.service.ports.cql | default 9042 }}
+{{- end }}

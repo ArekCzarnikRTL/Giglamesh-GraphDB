@@ -1,7 +1,8 @@
 # graphmesh-infra (Umbrella Helm Chart)
 
 Ersetzt das root-`docker-compose.yaml` fuer k3s-Deployments.
-Zieht 5 externe Charts als Dependencies (keine eigenen Templates noetig).
+Zieht 5 externe Charts als Dependencies und stellt eigene Templates fuer
+Traefik-IngressRouteTCP (Cassandra CQL, Kafka) bereit.
 
 ## Mapping: docker-compose -> helm
 
@@ -83,6 +84,63 @@ Backend startet dann unveraendert mit den Hosts aus `application.yml`
 Da NodePorts nicht mit den docker-compose-Defaults uebereinstimmen, muessen
 beim Backend entweder `application.yml` angepasst oder lokale Port-Weiterleitung
 eingerichtet werden. Fuer minimalen Configaufwand ist Variante A meist bequemer.
+
+## Variante C: Traefik TCP Ingress (IngressRouteTCP)
+
+Cassandra (CQL) und Kafka sind keine HTTP-Services — sie brauchen TCP-Routing
+via Traefik-CRD `IngressRouteTCP` statt Standard-Ingress.
+
+`values-dev.yaml` aktiviert IngressRouteTCP fuer beide. Damit Traefik den
+Traffic annimmt, muessen zusaetzliche **entryPoints** in der Traefik-Config
+registriert werden.
+
+### Traefik TCP EntryPoints konfigurieren (k3s)
+
+k3s deployt Traefik als HelmChartConfig. EntryPoints ergaenzen:
+
+```yaml
+# /var/lib/rancher/k3s/server/manifests/traefik-config.yaml
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    ports:
+      cassandra:
+        port: 9042
+        expose:
+          default: true
+        exposedPort: 9042
+        protocol: TCP
+      kafka:
+        port: 9092
+        expose:
+          default: true
+        exposedPort: 9092
+        protocol: TCP
+```
+
+Nach dem Speichern startet k3s Traefik automatisch neu. Danach sind die
+Services ueber `<node-ip>:9042` (CQL) und `<node-ip>:9092` (Kafka) erreichbar.
+
+### Ingress-Status
+
+| Service         | Typ              | Hostname / Route               | Aktiviert in      |
+|-----------------|------------------|--------------------------------|-------------------|
+| Schema Registry | Ingress (HTTP)   | schema-registry.graphmesh.local| values-dev.yaml   |
+| MinIO API       | Ingress (HTTP)   | minio.graphmesh.local          | values-dev.yaml   |
+| MinIO Console   | Ingress (HTTP)   | minio-console.graphmesh.local  | values-dev.yaml   |
+| Qdrant HTTP     | Ingress (HTTP)   | qdrant.graphmesh.local         | values-dev.yaml   |
+| Cassandra CQL   | IngressRouteTCP  | HostSNI(`*`) :9042             | values-dev.yaml   |
+| Kafka Broker    | IngressRouteTCP  | HostSNI(`*`) :9092             | values-dev.yaml   |
+
+**Hinweis Kafka:** Kafka gibt im Metadata-Handshake `advertised.listeners` zurueck.
+Fuer cluster-externe Clients (z.B. lokales `./gradlew bootRun`) ist der
+NodePort-/externalAccess-Weg (Variante B) zuverlaessiger, weil die
+advertised-Adresse auf die Node-IP zeigt. IngressRouteTCP eignet sich primaer
+fuer in-cluster Clients die ueber den Traefik-Service routen.
 
 ## Einzelne Services deaktivieren
 

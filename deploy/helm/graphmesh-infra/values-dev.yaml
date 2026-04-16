@@ -53,6 +53,17 @@ kafka:
         # hier und in start-remote.sh (K8S_NODE_IP) anpassen.
         domain: "192.168.178.175"
 
+  # Traefik IngressRouteTCP fuer Kafka-Broker-Zugriff (cluster-intern oder
+  # fuer Clients die ueber den Ingress-Hostname kommen).
+  # Voraussetzung: Traefik entryPoint "kafka" auf Port 9092 konfiguriert
+  # (siehe README.md -> "Traefik TCP EntryPoints").
+  # ACHTUNG: Kafka-Clients brauchen korrekte advertised.listeners. Fuer
+  # cluster-externe Clients ist externalAccess (NodePort/domain oben) zuverlaessiger.
+  # Diese IngressRoute ist primaer fuer in-cluster Routing ohne NodePort gedacht.
+  ingressRouteTCP:
+    enabled: true
+    entryPoint: kafka
+
 schema-registry:
   service:
     type: NodePort
@@ -86,6 +97,12 @@ cassandra:
     type: NodePort
     nodePorts:
       cql: "30942"
+  # Traefik IngressRouteTCP fuer CQL-Zugriff.
+  # Voraussetzung: Traefik entryPoint "cassandra" auf Port 9042 konfiguriert
+  # (siehe README.md -> "Traefik TCP EntryPoints").
+  ingressRouteTCP:
+    enabled: true
+    entryPoint: cassandra
   resources:
     requests:
       cpu: 150m
