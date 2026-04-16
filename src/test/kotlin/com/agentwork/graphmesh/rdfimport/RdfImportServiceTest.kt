@@ -200,8 +200,8 @@ class RdfImportServiceTest {
         val pointsSlot = slot<List<VectorPoint>>()
         verify { vectorStore.upsert(collectionId, capture(pointsSlot)) }
         val points = pointsSlot.captured
-        assertTrue(points.any { it.payload["entity_uri"] == "http://example.org/Alice" })
-        assertTrue(points.any { it.payload["source"] == "rdf-import" })
+        assertTrue(points.any { it.payload.entityUri == "http://example.org/Alice" })
+        assertTrue(points.any { it.payload.source == "rdf-import" })
     }
 
     @Test

@@ -6,6 +6,7 @@ import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import com.agentwork.graphmesh.librarian.LibrarianService
+import com.agentwork.graphmesh.storage.vector.VectorPayload
 import com.agentwork.graphmesh.storage.vector.VectorPoint
 import com.agentwork.graphmesh.storage.vector.VectorStore
 import kotlinx.coroutines.runBlocking
@@ -43,10 +44,10 @@ class EmbeddingService(
         val point = VectorPoint(
             id = chunkId,
             vector = vector,
-            payload = mapOf(
-                "chunk_id" to chunkId,
-                "document_id" to documentId,
-                "collection" to collectionName
+            payload = VectorPayload(
+                collection = collectionName,
+                chunkId = chunkId,
+                documentId = documentId
             )
         )
 

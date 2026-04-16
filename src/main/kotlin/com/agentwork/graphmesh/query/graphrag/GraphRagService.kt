@@ -98,12 +98,12 @@ class GraphRagService(
 
         // Split results into chunk-based and entity-based hits
         val chunkUrns = searchResults
-            .mapNotNull { it.payload["chunk_id"]?.toString() }
+            .mapNotNull { it.payload.chunkId }
             .map { "urn:chunk:$it" }
             .distinct()
 
         val entityUris = searchResults
-            .mapNotNull { it.payload["entity_uri"]?.toString() }
+            .mapNotNull { it.payload.entityUri }
             .distinct()
 
         if (chunkUrns.isEmpty() && entityUris.isEmpty()) {

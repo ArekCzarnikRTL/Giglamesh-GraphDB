@@ -50,7 +50,7 @@ object BundleWriter {
             mapper.writeValueAsString(mapOf(
                 "id" to point.id,
                 "vector" to point.vector.toList(),
-                "payload" to point.payload
+                "payload" to point.payload.toMap()
             ))
         }.toByteArray(Charsets.UTF_8)
     }

@@ -1,9 +1,41 @@
 package com.agentwork.graphmesh.storage.vector
 
+data class VectorPayload(
+    val collection: String,
+    val chunkId: String? = null,
+    val documentId: String? = null,
+    val entityUri: String? = null,
+    val source: String? = null,
+    val extra: Map<String, Any> = emptyMap()
+) {
+    fun toMap(): Map<String, Any> = buildMap {
+        put("collection", collection)
+        chunkId?.let { put("chunk_id", it) }
+        documentId?.let { put("document_id", it) }
+        entityUri?.let { put("entity_uri", it) }
+        source?.let { put("source", it) }
+        putAll(extra)
+    }
+
+    companion object {
+        fun fromMap(map: Map<String, Any>): VectorPayload {
+            val known = setOf("collection", "chunk_id", "document_id", "entity_uri", "source")
+            return VectorPayload(
+                collection = map["collection"]?.toString() ?: "",
+                chunkId = map["chunk_id"]?.toString(),
+                documentId = map["document_id"]?.toString(),
+                entityUri = map["entity_uri"]?.toString(),
+                source = map["source"]?.toString(),
+                extra = map.filterKeys { it !in known }
+            )
+        }
+    }
+}
+
 data class VectorPoint(
     val id: String,
     val vector: FloatArray,
-    val payload: Map<String, Any> = emptyMap()
+    val payload: VectorPayload = VectorPayload(collection = "")
 ) {
     val dimension: Int get() = vector.size
 
@@ -19,7 +51,7 @@ data class VectorPoint(
 data class SearchResult(
     val id: String,
     val score: Float,
-    val payload: Map<String, Any> = emptyMap()
+    val payload: VectorPayload = VectorPayload(collection = "")
 )
 
 sealed class VectorFilter {

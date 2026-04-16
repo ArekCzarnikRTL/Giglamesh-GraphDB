@@ -113,7 +113,7 @@ class DocumentRagService(
 
         return searchResults.map { result ->
             val chunkId = result.id
-            val documentId = result.payload["document_id"]?.toString() ?: ""
+            val documentId = result.payload.documentId ?: ""
 
             val text = try {
                 String(librarianService.getContent(chunkId), Charsets.UTF_8)

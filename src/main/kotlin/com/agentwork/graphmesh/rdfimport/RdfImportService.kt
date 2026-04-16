@@ -7,6 +7,7 @@ import com.agentwork.graphmesh.ontology.JenaAdapter
 import com.agentwork.graphmesh.storage.ObjectType
 import com.agentwork.graphmesh.storage.QuadStore
 import com.agentwork.graphmesh.storage.StoredQuad
+import com.agentwork.graphmesh.storage.vector.VectorPayload
 import com.agentwork.graphmesh.storage.vector.VectorPoint
 import com.agentwork.graphmesh.storage.vector.VectorStore
 import kotlinx.coroutines.runBlocking
@@ -121,10 +122,10 @@ class RdfImportService(
                 points += VectorPoint(
                     id = subjectUri,
                     vector = vector,
-                    payload = mapOf(
-                        "entity_uri" to subjectUri,
-                        "source" to "rdf-import",
-                        "collection" to collectionId,
+                    payload = VectorPayload(
+                        collection = collectionId,
+                        entityUri = subjectUri,
+                        source = "rdf-import"
                     )
                 )
             } catch (e: Exception) {

@@ -78,14 +78,15 @@ class QdrantVectorStore(
         val results = client.searchAsync(searchBuilder.build()).get()
 
         return results.map { scored ->
-            val payload = scored.payloadMap
-            val originalId = payload["_original_id"]?.stringValue ?: scored.id.uuid
+            val rawPayload = scored.payloadMap
+            val originalId = rawPayload["_original_id"]?.stringValue ?: scored.id.uuid
+            val payloadMap = rawPayload
+                .filterKeys { it != "_original_id" }
+                .mapValues { extractPayloadValue(it.value) }
             SearchResult(
                 id = originalId,
                 score = scored.score,
-                payload = payload
-                    .filterKeys { it != "_original_id" }
-                    .mapValues { extractPayloadValue(it.value) }
+                payload = VectorPayload.fromMap(payloadMap)
             )
         }
     }
@@ -158,7 +159,7 @@ class QdrantVectorStore(
             points.forEach { point ->
                 val id = point.id.uuid.ifEmpty { point.id.num.toString() }
                 val vector = point.vectors.vector.dataList.map { it }.toFloatArray()
-                val payload = point.payloadMap.mapValues { (_, v) ->
+                val payloadMap = point.payloadMap.mapValues { (_, v) ->
                     when {
                         v.hasStringValue() -> v.stringValue
                         v.hasIntegerValue() -> v.integerValue
@@ -167,7 +168,7 @@ class QdrantVectorStore(
                         else -> v.stringValue
                     } as Any
                 }
-                result.add(VectorPoint(id = id, vector = vector, payload = payload))
+                result.add(VectorPoint(id = id, vector = vector, payload = VectorPayload.fromMap(payloadMap)))
             }
 
             offset = response.nextPageOffset
@@ -181,10 +182,10 @@ class QdrantVectorStore(
     private fun deterministicUuid(id: String): UUID =
         UUID.nameUUIDFromBytes(id.toByteArray())
 
-    private fun buildPayload(originalId: String, payload: Map<String, Any>): Map<String, io.qdrant.client.grpc.JsonWithInt.Value> {
+    private fun buildPayload(originalId: String, payload: VectorPayload): Map<String, io.qdrant.client.grpc.JsonWithInt.Value> {
         val result = mutableMapOf<String, io.qdrant.client.grpc.JsonWithInt.Value>()
         result["_original_id"] = ValueFactory.value(originalId)
-        payload.forEach { (key, value) ->
+        payload.toMap().forEach { (key, value) ->
             result[key] = when (value) {
                 is String -> ValueFactory.value(value)
                 is Int -> ValueFactory.value(value.toLong())

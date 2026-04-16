@@ -59,9 +59,9 @@ class QdrantVectorStoreIntegrationTest {
     @Test
     fun `search with equals filter`() {
         val points = listOf(
-            VectorPoint("doc1", floatArrayOf(1.0f, 0.0f, 0.0f, 0.0f), mapOf("category" to "science")),
-            VectorPoint("doc2", floatArrayOf(0.9f, 0.1f, 0.0f, 0.0f), mapOf("category" to "arts")),
-            VectorPoint("doc3", floatArrayOf(0.8f, 0.2f, 0.0f, 0.0f), mapOf("category" to "science"))
+            VectorPoint("doc1", floatArrayOf(1.0f, 0.0f, 0.0f, 0.0f), VectorPayload(collection = "", extra = mapOf("category" to "science"))),
+            VectorPoint("doc2", floatArrayOf(0.9f, 0.1f, 0.0f, 0.0f), VectorPayload(collection = "", extra = mapOf("category" to "arts"))),
+            VectorPoint("doc3", floatArrayOf(0.8f, 0.2f, 0.0f, 0.0f), VectorPayload(collection = "", extra = mapOf("category" to "science")))
         )
         vectorStore.upsert(collection, points)
 
@@ -73,7 +73,7 @@ class QdrantVectorStoreIntegrationTest {
         )
 
         assertEquals(2, results.size)
-        assertTrue(results.all { it.payload["category"] == "science" })
+        assertTrue(results.all { it.payload.extra["category"] == "science" })
     }
 
     @Test
@@ -185,14 +185,14 @@ class QdrantVectorStoreIntegrationTest {
     @Test
     fun `upsert preserves payload metadata`() {
         val points = listOf(
-            VectorPoint("doc1", floatArrayOf(1.0f, 0.0f, 0.0f, 0.0f), mapOf("title" to "Hello", "count" to 42))
+            VectorPoint("doc1", floatArrayOf(1.0f, 0.0f, 0.0f, 0.0f), VectorPayload(collection = "", extra = mapOf("title" to "Hello", "count" to 42)))
         )
         vectorStore.upsert(collection, points)
 
         val results = vectorStore.search(collection, floatArrayOf(1.0f, 0.0f, 0.0f, 0.0f), limit = 1)
 
         assertEquals(1, results.size)
-        assertEquals("Hello", results[0].payload["title"])
-        assertEquals(42L, results[0].payload["count"])
+        assertEquals("Hello", results[0].payload.extra["title"])
+        assertEquals(42L, results[0].payload.extra["count"])
     }
 }

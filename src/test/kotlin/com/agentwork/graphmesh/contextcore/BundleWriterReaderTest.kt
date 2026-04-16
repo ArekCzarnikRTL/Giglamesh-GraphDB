@@ -1,5 +1,6 @@
 package com.agentwork.graphmesh.contextcore
 
+import com.agentwork.graphmesh.storage.vector.VectorPayload
 import com.agentwork.graphmesh.storage.vector.VectorPoint
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -31,7 +32,7 @@ class BundleWriterReaderTest {
         val nquads = "<http://ex.org/A> <http://ex.org/p> <http://ex.org/B> .\n"
         val ontologyTtl = "@prefix ex: <http://ex.org/> .\nex:Person a owl:Class .\n"
         val embeddings = listOf(
-            VectorPoint("chunk-1", floatArrayOf(0.1f, 0.2f, 0.3f), mapOf("text" to "hello"))
+            VectorPoint("chunk-1", floatArrayOf(0.1f, 0.2f, 0.3f), VectorPayload(collection = "", extra = mapOf("text" to "hello")))
         )
         val policies = RetrievalPolicies()
 

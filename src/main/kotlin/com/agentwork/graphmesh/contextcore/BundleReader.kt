@@ -1,5 +1,6 @@
 package com.agentwork.graphmesh.contextcore
 
+import com.agentwork.graphmesh.storage.vector.VectorPayload
 import com.agentwork.graphmesh.storage.vector.VectorPoint
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -51,8 +52,8 @@ class BundleReader(
             val vectorList = map["vector"] as List<Number>
             val vector = vectorList.map { it.toFloat() }.toFloatArray()
             @Suppress("UNCHECKED_CAST")
-            val payload = (map["payload"] as? Map<String, Any>) ?: emptyMap()
-            VectorPoint(id = id, vector = vector, payload = payload)
+            val rawPayload = (map["payload"] as? Map<String, Any>) ?: emptyMap()
+            VectorPoint(id = id, vector = vector, payload = VectorPayload.fromMap(rawPayload))
         }
     }
 
