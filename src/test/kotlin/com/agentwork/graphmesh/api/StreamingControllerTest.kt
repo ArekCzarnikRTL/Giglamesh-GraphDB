@@ -1,8 +1,8 @@
 package com.agentwork.graphmesh.api
 
-import com.agentwork.graphmesh.streaming.StreamToken
-import com.agentwork.graphmesh.streaming.StreamTokenType
-import com.agentwork.graphmesh.streaming.StreamingAgentService
+import com.agentwork.graphmesh.agent.StreamToken
+import com.agentwork.graphmesh.agent.StreamTokenType
+import com.agentwork.graphmesh.agent.StreamingAgentService
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

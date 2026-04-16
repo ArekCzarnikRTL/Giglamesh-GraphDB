@@ -1,8 +1,8 @@
 package com.agentwork.graphmesh.api
 
 import com.agentwork.graphmesh.agent.AgentQueryConfig
-import com.agentwork.graphmesh.streaming.StreamToken
-import com.agentwork.graphmesh.streaming.StreamingAgentService
+import com.agentwork.graphmesh.agent.StreamToken
+import com.agentwork.graphmesh.agent.StreamingAgentService
 import kotlinx.coroutines.flow.Flow
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.SubscriptionMapping

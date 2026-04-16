@@ -1,4 +1,4 @@
-package com.agentwork.graphmesh.streaming
+package com.agentwork.graphmesh.agent
 
 data class StreamToken(
     val content: String,

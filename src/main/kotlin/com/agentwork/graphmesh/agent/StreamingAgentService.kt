@@ -1,6 +1,5 @@
-package com.agentwork.graphmesh.streaming
+package com.agentwork.graphmesh.agent
 
-import com.agentwork.graphmesh.agent.AgentQueryConfig
 import kotlinx.coroutines.flow.Flow
 
 interface StreamingAgentService {
