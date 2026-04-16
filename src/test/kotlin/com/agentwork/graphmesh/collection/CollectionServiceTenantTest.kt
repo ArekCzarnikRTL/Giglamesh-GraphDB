@@ -1,8 +1,5 @@
 package com.agentwork.graphmesh.collection
 
-import com.agentwork.graphmesh.storage.QuadStore
-import com.agentwork.graphmesh.storage.blob.BlobStore
-import com.agentwork.graphmesh.storage.vector.VectorStore
 import com.agentwork.graphmesh.tenant.AccessDeniedException
 import com.agentwork.graphmesh.tenant.TenantContext
 import io.mockk.every
@@ -16,15 +13,13 @@ import kotlin.test.assertEquals
 class CollectionServiceTenantTest {
 
     private val collectionStore = mockk<CollectionStore>(relaxed = true)
-    private val quadStore = mockk<QuadStore>(relaxed = true)
-    private val vectorStore = mockk<VectorStore>(relaxed = true)
-    private val blobStore = mockk<BlobStore>(relaxed = true)
+    private val lifecycleManager = mockk<CollectionLifecycleManager>(relaxed = true)
     private val eventPublisher = mockk<ApplicationEventPublisher>(relaxed = true)
     private val collectionEventProducer = mockk<CollectionEventProducer>(relaxed = true)
 
     private val service = CollectionService(
-        collectionStore, quadStore, vectorStore, blobStore,
-        eventPublisher, collectionEventProducer, "graphmesh"
+        collectionStore, lifecycleManager,
+        eventPublisher, collectionEventProducer
     )
 
     @AfterEach

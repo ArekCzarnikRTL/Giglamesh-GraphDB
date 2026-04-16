@@ -49,7 +49,7 @@ class SearchController(
                 null
             }
 
-            val payload = result.payload.map { (k, v) -> mapOf("key" to k, "value" to v.toString()) }
+            val payload = result.payload.toMap().map { (k, v) -> mapOf("key" to k, "value" to v.toString()) }
 
             mapOf(
                 "id" to result.id,
