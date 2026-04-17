@@ -37,8 +37,12 @@ export KAFKA_BOOTSTRAP_SERVERS="${K8S_NODE_IP}:${KAFKA_PORT}"
 export SCHEMA_REGISTRY_URL="http://${K8S_NODE_IP}:${SCHEMA_REGISTRY_PORT}"
 export CASSANDRA_CONTACT_POINTS="${K8S_NODE_IP}"
 export CASSANDRA_PORT="${CASSANDRA_PORT}"
-export CASSANDRA_USERNAME="${CASSANDRA_USERNAME}"
-export CASSANDRA_PASSWORD="${CASSANDRA_PASSWORD}"
+# Spring Boot Cassandra-Auth: nur setzen wenn Credentials vorhanden,
+# sonst registriert Spring einen Auth-Provider der bei Leerstring crasht.
+if [[ -n "${CASSANDRA_USERNAME}" ]]; then
+  export SPRING_CASSANDRA_USERNAME="${CASSANDRA_USERNAME}"
+  export SPRING_CASSANDRA_PASSWORD="${CASSANDRA_PASSWORD}"
+fi
 export MINIO_ENDPOINT="http://${K8S_NODE_IP}:${MINIO_PORT}"
 export QDRANT_HOST="${K8S_NODE_IP}"
 export QDRANT_GRPC_PORT="${QDRANT_GRPC_PORT}"

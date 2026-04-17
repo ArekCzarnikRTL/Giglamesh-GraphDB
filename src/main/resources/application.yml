@@ -50,8 +50,6 @@ spring:
   cassandra:
     contact-points: ${CASSANDRA_CONTACT_POINTS:localhost}
     port: ${CASSANDRA_PORT:9042}
-    username: ${CASSANDRA_USERNAME:}
-    password: ${CASSANDRA_PASSWORD:}
     local-datacenter: datacenter1
     schema-action: none
     # Open-Source-Cassandra 5.x spricht Native Protocol V5. Ohne explizite Angabe
