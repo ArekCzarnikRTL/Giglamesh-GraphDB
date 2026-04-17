@@ -50,6 +50,8 @@ spring:
   cassandra:
     contact-points: ${CASSANDRA_CONTACT_POINTS:localhost}
     port: ${CASSANDRA_PORT:9042}
+    username: ${CASSANDRA_USERNAME:}
+    password: ${CASSANDRA_PASSWORD:}
     local-datacenter: datacenter1
     schema-action: none
     # Open-Source-Cassandra 5.x spricht Native Protocol V5. Ohne explizite Angabe
@@ -66,7 +68,7 @@ ai:
       api-key: ${ANTHROPIC_API_KEY:}
     ollama:
       enabled: true
-      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      base-url: ${OLLAMA_BASE_URL:http://192.168.178.175:11434}
 
 koog:
   spring:
