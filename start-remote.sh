@@ -8,20 +8,31 @@
 #   - kubectl/Helm nicht noetig zum Starten; nur Netzwerk-Erreichbarkeit
 #
 # Umgebungsvariablen (alle optional):
-#   K8S_NODE_IP=169.254.99.252     IP des k3s-Nodes (fuer TCP-NodePorts)
-#   HOST_SUFFIX=k3s.home     Domain-Suffix der Ingress-Hosts
+#   K8S_NODE_IP=192.168.x.x         IP des k3s-Nodes (Default: via kubectl
+#                                   InternalIP des ersten Nodes)
+#   HOST_SUFFIX=k3s.home            Domain-Suffix der Ingress-Hosts
 #   SERVER_PORT=8083                Backend-Port
 #   SKIP_PREFLIGHT=1                Ueberspringt Konnektivitaetscheck
 #   Alle Variablen aus start.sh (SKIP_BUILD, OTEL_ENABLED, ...)
 #
 # Exit-Codes:
+#   1 - K8S_NODE_IP nicht ermittelbar (kubectl down oder kein Cluster)
 #   2 - Preflight fehlgeschlagen (Service nicht erreichbar)
 
 set -euo pipefail
 
 cd "$(dirname "$0")"
 
-K8S_NODE_IP="${K8S_NODE_IP:-169.254.99.252}"
+# Default: erste InternalIP des ersten Nodes via kubectl (typisch IPv4).
+# Falls kubectl mehrere Adressen liefert (z.B. IPv4+IPv6), nehmen wir die erste.
+# Override per Env moeglich (K8S_NODE_IP=...).
+K8S_NODE_IP="${K8S_NODE_IP:-$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}' 2>/dev/null | awk '{print $1}')}"
+if [[ -z "$K8S_NODE_IP" ]]; then
+  echo "FEHLER: K8S_NODE_IP konnte nicht via kubectl ermittelt werden." >&2
+  echo "  - Pruefe: kubectl cluster-info" >&2
+  echo "  - oder setze manuell: K8S_NODE_IP=<ip> $0" >&2
+  exit 1
+fi
 HOST_SUFFIX="${HOST_SUFFIX:-k3s.home}"
 
 # ---------- Ports (passend zu deploy/helm/graphmesh-infra/values-dev.yaml) ----------

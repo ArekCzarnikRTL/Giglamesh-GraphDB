@@ -1,5 +1,6 @@
 package com.agentwork.graphmesh.storage.blob
 
+import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -42,4 +43,12 @@ class BlobStoreAutoConfiguration {
     @Bean
     fun blobStore(s3Client: S3Client, s3Presigner: S3Presigner): BlobStore =
         S3BlobStore(s3Client, s3Presigner)
+
+    @Bean
+    fun blobStoreInitializer(blobStore: BlobStore, props: BlobStoreProperties): ApplicationRunner =
+        ApplicationRunner {
+            if (props.autoCreateBuckets) {
+                blobStore.ensureBucket(props.defaultBucket)
+            }
+        }
 }

@@ -1,9 +1,9 @@
 import { DocumentDetail } from "@/components/documents/DocumentDetail";
 
 interface Props {
-  params: { id: string };
+  params: { id: string[] };
 }
 
 export default function DocumentDetailPage({ params }: Props) {
-  return <DocumentDetail documentId={params.id} />;
+  return <DocumentDetail documentId={params.id.join("/")} />;
 }
