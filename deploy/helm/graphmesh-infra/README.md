@@ -1,8 +1,8 @@
 # graphmesh-infra (Umbrella Helm Chart)
 
 Ersetzt das root-`docker-compose.yaml` fuer k3s-Deployments.
-Zieht 5 externe Charts als Dependencies und stellt eigene Templates fuer
-Traefik-IngressRouteTCP (Cassandra CQL, Kafka) bereit.
+Zieht 5 externe Charts als Dependencies und stellt ein eigenes Template fuer
+die Cassandra-Traefik-IngressRouteTCP bereit.
 
 ## Mapping: docker-compose -> helm
 
@@ -69,13 +69,13 @@ Backend startet dann unveraendert mit den Hosts aus `application.yml`
 
 ### Variante B: NodePort (Default in `values-dev.yaml`)
 
-`values-dev.yaml` setzt Service-Type auf NodePort:
+`values-dev.yaml` setzt Service-Type auf NodePort fuer Kafka/Schema-Registry/MinIO/Qdrant
+(Cassandra geht via Variante C):
 
 | Service         | NodePort |
 |-----------------|----------|
 | Kafka           | 30092    |
 | Schema Registry | 30181    |
-| Cassandra       | 30942    |
 | MinIO API       | 30900    |
 | MinIO Console   | 30901    |
 | Qdrant HTTP     | 30633    |
@@ -87,60 +87,67 @@ eingerichtet werden. Fuer minimalen Configaufwand ist Variante A meist bequemer.
 
 ## Variante C: Traefik TCP Ingress (IngressRouteTCP)
 
-Cassandra (CQL) und Kafka sind keine HTTP-Services — sie brauchen TCP-Routing
-via Traefik-CRD `IngressRouteTCP` statt Standard-Ingress.
+Cassandra (CQL) ist kein HTTP-Service — es braucht TCP-Routing via Traefik-CRD
+`IngressRouteTCP` statt Standard-Ingress.
 
-`values-dev.yaml` aktiviert IngressRouteTCP fuer beide. Damit Traefik den
-Traffic annimmt, muessen zusaetzliche **entryPoints** in der Traefik-Config
-registriert werden.
+`values-dev.yaml` aktiviert IngressRouteTCP fuer Cassandra. Damit Traefik den
+Traffic annimmt, muss ein zusaetzlicher **entryPoint** `cassandra:9042` in der
+Traefik-Config registriert werden.
+
+**Kafka geht bewusst nicht diesen Weg.** Bitnami's `externalAccess` legt einen
+NodePort an und setzt `advertised.listeners` auf `<node-ip>:<nodePort>` —
+genau das brauchen Remote-Clients. Eine Traefik-IngressRouteTCP wuerde zwar
+TCP-Pakete weiterleiten, aber der Broker antwortet im Metadata-Handshake mit
+der advertised-Adresse. Ohne aufwendiges Override (Routing auf den EXTERNAL-
+Listener-Service pro Replica + `advertised.listeners`-Override) bleibt Kafka
+fuer externe Clients an NodePort gebunden.
 
 ### Traefik TCP EntryPoints konfigurieren (k3s)
 
-k3s deployt Traefik als HelmChartConfig. EntryPoints ergaenzen:
+k3s deployt Traefik via `HelmChart`. Zusatz-EntryPoints werden ueber eine
+`HelmChartConfig`-Resource gemerged. Datei liegt im Repo:
 
-```yaml
-# /var/lib/rancher/k3s/server/manifests/traefik-config.yaml
-apiVersion: helm.cattle.io/v1
-kind: HelmChartConfig
-metadata:
-  name: traefik
-  namespace: kube-system
-spec:
-  valuesContent: |-
-    ports:
-      cassandra:
-        port: 9042
-        expose:
-          default: true
-        exposedPort: 9042
-        protocol: TCP
-      kafka:
-        port: 9092
-        expose:
-          default: true
-        exposedPort: 9092
-        protocol: TCP
+```bash
+kubectl apply -f ../../k3s/traefik-config.yaml
 ```
 
-Nach dem Speichern startet k3s Traefik automatisch neu. Danach sind die
-Services ueber `<node-ip>:9042` (CQL) und `<node-ip>:9092` (Kafka) erreichbar.
+Nach dem Apply reconciled der k3s helm-controller den Traefik-HelmChart
+automatisch (30-60s). Verifizieren:
+
+```bash
+# Pods rollen durch
+kubectl -n kube-system get pods -l app.kubernetes.io/name=traefik -w
+
+# Service muss 9042 + 9092 zeigen
+kubectl -n kube-system get svc traefik
+
+# Logs sollten KEINE "EntryPoint doesn't exist"-Fehler mehr zeigen
+kubectl -n kube-system logs -l app.kubernetes.io/name=traefik --tail=50
+```
+
+Danach ist Cassandra ueber `<node-ip>:9042` (CQL) erreichbar.
+
+**Symptom wenn EntryPoint fehlt:** in den Traefik-Logs erscheint
+`ERR EntryPoint doesn't exist entryPointName=cassandra`. Die
+IngressRouteTCP-Resource ist dann zwar im Cluster, aber kein Listener
+nimmt den Traffic an.
 
 ### Ingress-Status
 
 | Service         | Typ              | Hostname / Route               | Aktiviert in      |
 |-----------------|------------------|--------------------------------|-------------------|
-| Schema Registry | Ingress (HTTP)   | schema-registry.graphmesh.local| values-dev.yaml   |
-| MinIO API       | Ingress (HTTP)   | minio.graphmesh.local          | values-dev.yaml   |
-| MinIO Console   | Ingress (HTTP)   | minio-console.graphmesh.local  | values-dev.yaml   |
-| Qdrant HTTP     | Ingress (HTTP)   | qdrant.graphmesh.local         | values-dev.yaml   |
+| Schema Registry | Ingress (HTTP)   | schema-registry.k3s.home       | values-dev.yaml   |
+| MinIO API       | Ingress (HTTP)   | minio.k3s.home                 | values-dev.yaml   |
+| MinIO Console   | Ingress (HTTP)   | minio-console.k3s.home         | values-dev.yaml   |
+| Qdrant HTTP     | Ingress (HTTP)   | qdrant.k3s.home                | values-dev.yaml   |
 | Cassandra CQL   | IngressRouteTCP  | HostSNI(`*`) :9042             | values-dev.yaml   |
-| Kafka Broker    | IngressRouteTCP  | HostSNI(`*`) :9092             | values-dev.yaml   |
+| Kafka Broker    | NodePort         | <node-ip>:30092 (advertised)   | values-dev.yaml   |
 
-**Hinweis Kafka:** Kafka gibt im Metadata-Handshake `advertised.listeners` zurueck.
-Fuer cluster-externe Clients (z.B. lokales `./gradlew bootRun`) ist der
-NodePort-/externalAccess-Weg (Variante B) zuverlaessiger, weil die
-advertised-Adresse auf die Node-IP zeigt. IngressRouteTCP eignet sich primaer
-fuer in-cluster Clients die ueber den Traefik-Service routen.
+**Hinweis Cassandra:** CQL ist ein binaeres TCP-Protokoll ohne HTTP-Host-Header,
+deshalb laeuft das Routing pro Traefik-EntryPoint (Port-basiert, `HostSNI(*)`).
+Der DNS-Name `cassandra.k3s.home` ist nicht noetig — Clients verbinden sich
+direkt gegen die Node-IP auf 9042. Hostname-basiertes Routing ginge nur mit
+TLS+SNI (`HostSNI('cassandra.k3s.home')`), wird hier aber nicht genutzt.
 
 ## Einzelne Services deaktivieren
 

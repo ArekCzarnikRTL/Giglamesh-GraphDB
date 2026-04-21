@@ -1,0 +1,33 @@
+# Erweitert die Traefik-Installation in k3s um den TCP-EntryPoint cassandra:9042.
+# Wird vom IngressRouteTCP in deploy/helm/graphmesh-infra/templates/cassandra-ingressroutetcp.yaml
+# referenziert.
+#
+# Apply:
+#   kubectl apply -f deploy/k3s/traefik-config.yaml
+#
+# Danach reconciled der k3s helm-controller den Traefik-HelmChart automatisch
+# (kann 30-60s dauern). Verifizieren:
+#   kubectl -n kube-system get svc traefik
+#   -> 9042/TCP muss in PORT(S) auftauchen.
+#
+# WICHTIG: Datei NICHT in /var/lib/rancher/k3s/server/manifests/ ablegen unter
+# dem Namen "traefik.yaml" — das wuerde den k3s-eigenen HelmChart ueberschreiben.
+# Als HelmChartConfig (siehe unten) merged k3s die Werte additiv.
+#
+# Hinweis Kafka: kein eigener EntryPoint, weil Kafka via NodePort + Bitnami's
+# externalAccess laeuft (advertised.listeners-Constraint zwingt zu festen
+# Node-IP+Port-Kombinationen, Traefik bringt da keinen Mehrwert).
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    ports:
+      cassandra:
+        port: 9042
+        exposedPort: 9042
+        protocol: TCP
+        expose:
+          default: true

@@ -3,13 +3,13 @@
 #
 # Annahmen:
 #   - deploy/helm/graphmesh-infra ist mit values-dev.yaml installiert
-#   - Auf diesem Rechner zeigen die <service>.graphmesh.local-Eintraege
+#   - Auf diesem Rechner zeigen die <service>.k3s.home-Eintraege
 #     im /etc/hosts auf die k3s-Node-IP (siehe deploy/helm/graphmesh-infra/README.md)
 #   - kubectl/Helm nicht noetig zum Starten; nur Netzwerk-Erreichbarkeit
 #
 # Umgebungsvariablen (alle optional):
-#   K8S_NODE_IP=192.168.178.175     IP des k3s-Nodes (fuer TCP-NodePorts)
-#   HOST_SUFFIX=graphmesh.local     Domain-Suffix der Ingress-Hosts
+#   K8S_NODE_IP=169.254.99.252     IP des k3s-Nodes (fuer TCP-NodePorts)
+#   HOST_SUFFIX=k3s.home     Domain-Suffix der Ingress-Hosts
 #   SERVER_PORT=8083                Backend-Port
 #   SKIP_PREFLIGHT=1                Ueberspringt Konnektivitaetscheck
 #   Alle Variablen aus start.sh (SKIP_BUILD, OTEL_ENABLED, ...)
@@ -21,26 +21,50 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-K8S_NODE_IP="${K8S_NODE_IP:-192.168.178.175}"
-HOST_SUFFIX="${HOST_SUFFIX:-graphmesh.local}"
+K8S_NODE_IP="${K8S_NODE_IP:-169.254.99.252}"
+HOST_SUFFIX="${HOST_SUFFIX:-k3s.home}"
 
 # ---------- Ports (passend zu deploy/helm/graphmesh-infra/values-dev.yaml) ----------
 KAFKA_NODEPORT="${KAFKA_NODEPORT:-30092}"
-CASSANDRA_NODEPORT="${CASSANDRA_NODEPORT:-30942}"
+CASSANDRA_PORT_DEFAULT="${CASSANDRA_PORT_DEFAULT:-9042}"
 QDRANT_GRPC_NODEPORT="${QDRANT_GRPC_NODEPORT:-30634}"
+OLLAMA_BASE_URL="${OLLAMA_BASE_URL:-http://localhost:11434}"
 
 # ---------- Host/Endpoint-Mapping ----------
 # HTTP-Services laufen via Traefik-Ingress auf Port 80 (Host-Header entscheidet).
-# TCP-Services (Kafka/Cassandra/Qdrant-gRPC) gehen direkt auf Node-IP + NodePort.
+# Kafka geht direkt auf Node-IP + NodePort (advertised.listeners-Constraint).
+# Cassandra geht ueber Traefik-IngressRouteTCP auf Port 9042 (Node-IP).
+# Qdrant-gRPC geht direkt auf Node-IP + NodePort.
 export KAFKA_BOOTSTRAP_SERVERS="${KAFKA_BOOTSTRAP_SERVERS:-${K8S_NODE_IP}:${KAFKA_NODEPORT}}"
 export SCHEMA_REGISTRY_URL="${SCHEMA_REGISTRY_URL:-http://schema-registry.${HOST_SUFFIX}}"
 export CASSANDRA_CONTACT_POINTS="${CASSANDRA_CONTACT_POINTS:-${K8S_NODE_IP}}"
-export CASSANDRA_PORT="${CASSANDRA_PORT:-${CASSANDRA_NODEPORT}}"
+export CASSANDRA_PORT="${CASSANDRA_PORT:-${CASSANDRA_PORT_DEFAULT}}"
 export MINIO_ENDPOINT="${MINIO_ENDPOINT:-http://minio.${HOST_SUFFIX}}"
 export MINIO_ACCESS_KEY="${MINIO_ACCESS_KEY:-minioadmin}"
 export MINIO_SECRET_KEY="${MINIO_SECRET_KEY:-minioadmin}"
 export QDRANT_HOST="${QDRANT_HOST:-${K8S_NODE_IP}}"
 export QDRANT_GRPC_PORT="${QDRANT_GRPC_PORT:-${QDRANT_GRPC_NODEPORT}}"
+export OLLAMA_BASE_URL="${OLLAMA_BASE_URL}"
+
+# Spring Boot Cassandra-Auth: nur setzen wenn Credentials vorhanden,
+# sonst registriert Spring einen Auth-Provider der bei Leerstring crasht.
+export CASSANDRA_USERNAME="${CASSANDRA_USERNAME:-cassandra}"
+export CASSANDRA_PASSWORD="${CASSANDRA_PASSWORD:-$(kubectl get secret -l app.kubernetes.io/name=cassandra -o jsonpath='{.items[0].data.cassandra-password}' | base64 -d 2>/dev/null || echo "")}"
+
+
+# ---------- Ausgabe ----------
+echo "=== GraphMesh Remote Start ==="
+echo ""
+echo "  Node:             ${K8S_NODE_IP}"
+echo "  Kafka:            ${KAFKA_BOOTSTRAP_SERVERS}"
+echo "  Schema Registry:  ${SCHEMA_REGISTRY_URL}"
+echo "  Cassandra:        ${CASSANDRA_CONTACT_POINTS}:${CASSANDRA_PORT} (user=${CASSANDRA_USERNAME})"
+echo "  MinIO:            ${MINIO_ENDPOINT}"
+echo "  Qdrant gRPC:      ${QDRANT_HOST}:${QDRANT_GRPC_PORT}"
+echo "  Ollama:           ${OLLAMA_BASE_URL}"
+echo "  Cassandra User:   ${CASSANDRA_USERNAME}"
+echo "  Cassandra PW:     ${CASSANDRA_PASSWORD}"
+echo ""
 
 # ---------- Preflight ----------
 tcp_check() {
@@ -73,7 +97,7 @@ if [[ "${SKIP_PREFLIGHT:-0}" != "1" ]]; then
   echo "Preflight gegen k3s (${K8S_NODE_IP}, *.${HOST_SUFFIX}):"
   fail=0
   tcp_check  "$K8S_NODE_IP"                       "$KAFKA_NODEPORT"       "Kafka"            || fail=1
-  tcp_check  "$K8S_NODE_IP"                       "$CASSANDRA_NODEPORT"   "Cassandra"        || fail=1
+  tcp_check  "$K8S_NODE_IP"                       "$CASSANDRA_PORT"       "Cassandra"        || fail=1
   tcp_check  "$K8S_NODE_IP"                       "$QDRANT_GRPC_NODEPORT" "Qdrant gRPC"      || fail=1
   http_check "$SCHEMA_REGISTRY_URL/subjects"                              "Schema Registry"  || fail=1
   http_check "$MINIO_ENDPOINT/minio/health/live"                          "MinIO"            || fail=1
@@ -85,6 +109,8 @@ if [[ "${SKIP_PREFLIGHT:-0}" != "1" ]]; then
     echo "  - Stehen die /etc/hosts-Eintraege? (schema-registry/minio/qdrant.${HOST_SUFFIX} -> ${K8S_NODE_IP})" >&2
     echo "  - Laufen alle Pods? kubectl get pods" >&2
     echo "  - Richtige Node-IP? Setze K8S_NODE_IP=<ip>" >&2
+    echo "  - Cassandra erreichbar? Traefik braucht entryPoint 'cassandra' auf 9042" >&2
+    echo "    (siehe deploy/helm/graphmesh-infra/README.md -> Traefik TCP EntryPoints)" >&2
     echo "  - Check abschalten: SKIP_PREFLIGHT=1 $0" >&2
     exit 2
   fi

@@ -42,6 +42,10 @@ kafka:
   # Bitnami legt pro Replica einen eigenen NodePort-Service an und setzt
   # advertised.listeners auf <domain>:<nodePort>, damit der Kafka-Metadata-
   # Handshake einen remote-aufloesbaren Host zurueckgibt.
+  #
+  # Kein Traefik-IngressRouteTCP fuer Kafka — der advertised.listeners-
+  # Constraint zwingt zu fester Node-IP+Port-Kombination, Traefik wuerde
+  # nichts vereinfachen (siehe README.md, Variante C).
   externalAccess:
     enabled: true
     controller:
@@ -53,17 +57,6 @@ kafka:
         # hier und in start-remote.sh (K8S_NODE_IP) anpassen.
         domain: "192.168.178.175"
 
-  # Traefik IngressRouteTCP fuer Kafka-Broker-Zugriff (cluster-intern oder
-  # fuer Clients die ueber den Ingress-Hostname kommen).
-  # Voraussetzung: Traefik entryPoint "kafka" auf Port 9092 konfiguriert
-  # (siehe README.md -> "Traefik TCP EntryPoints").
-  # ACHTUNG: Kafka-Clients brauchen korrekte advertised.listeners. Fuer
-  # cluster-externe Clients ist externalAccess (NodePort/domain oben) zuverlaessiger.
-  # Diese IngressRoute ist primaer fuer in-cluster Routing ohne NodePort gedacht.
-  ingressRouteTCP:
-    enabled: true
-    entryPoint: kafka
-
 schema-registry:
   service:
     type: NodePort
@@ -74,7 +67,7 @@ schema-registry:
   ingress:
     enabled: true
     ingressClassName: traefik
-    hostname: schema-registry.graphmesh.local
+    hostname: schema-registry.k3s.home
     pathType: Prefix
     path: /
   resources:
@@ -93,11 +86,13 @@ cassandra:
     newHeapSize: "96M"
   persistence:
     size: 3Gi
+  # Cluster-interner Service. Externer CQL-Zugriff laeuft ausschliesslich ueber
+  # die Traefik-IngressRouteTCP (siehe unten) — kein NodePort.
   service:
-    type: NodePort
-    nodePorts:
-      cql: "30942"
-  # Traefik IngressRouteTCP fuer CQL-Zugriff.
+    type: ClusterIP
+    ports:
+      cql: 9042
+  # Traefik IngressRouteTCP fuer externen CQL-Zugriff (Backend ausserhalb des Clusters).
   # Voraussetzung: Traefik entryPoint "cassandra" auf Port 9042 konfiguriert
   # (siehe README.md -> "Traefik TCP EntryPoints").
   ingressRouteTCP:
@@ -123,7 +118,7 @@ minio:
   ingress:
     enabled: true
     ingressClassName: traefik
-    hostname: minio.graphmesh.local
+    hostname: minio.k3s.home
     path: /
     pathType: Prefix
   # Web-Console ueber Ingress
@@ -131,7 +126,7 @@ minio:
     ingress:
       enabled: true
       ingressClassName: traefik
-      hostname: minio-console.graphmesh.local
+      hostname: minio-console.k3s.home
       path: /
       pathType: Prefix
   resources:
@@ -171,7 +166,7 @@ qdrant:
     enabled: true
     ingressClassName: traefik
     hosts:
-      - host: qdrant.graphmesh.local
+      - host: qdrant.k3s.home
         paths:
           - path: /
             pathType: Prefix
