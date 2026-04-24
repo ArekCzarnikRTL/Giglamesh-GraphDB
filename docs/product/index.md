@@ -21,7 +21,7 @@ Der zentrale Gedanke: Unstrukturiertes Wissen in Dokumenten wird automatisch in 
 | [Dokumentenverwaltung](dokumentenverwaltung.md) | Upload, Verwaltung und Verarbeitung von Dokumenten | implementiert |
 | [Wissensextraktion](wissensextraktion.md) | Automatische Extraktion von Wissen aus Dokumenten mittels KI | implementiert |
 | [Suche & Abfragen](suche-und-abfragen.md) | Semantische Suche, RAG-Abfragen und natuerlichsprachliche Fragen | implementiert |
-| [Wissensmodellierung](wissensmodellierung.md) | Ontologien, SKOS-Taxonomien und RDF-Datenimport | implementiert |
+| [Wissensmodellierung](wissensmodellierung.md) | Ontologien, SKOS-Taxonomien, RDF-Datenimport und dynamische GraphQL-APIs | implementiert |
 | [Graph-Visualisierung](graph-visualisierung.md) | Interaktive Graphdarstellung und Exploration | implementiert |
 | [Agent & Streaming](agent-und-streaming.md) | KI-Agenten mit Werkzeugen und Echtzeit-Streaming | implementiert |
 | [Context Cores](context-cores.md) | Versionierte Wissens-Bundles: Export, Import, Tagging | implementiert |

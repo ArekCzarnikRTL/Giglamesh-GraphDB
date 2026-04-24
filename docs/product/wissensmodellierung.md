@@ -273,3 +273,196 @@ Parameter:
 3. GraphMesh meldet: 4.987 Tripel importiert, 13 uebersprungen (ungueltige URIs), 4.987 Embeddings generiert, Dauer 12.400 ms.
 4. Die CMDB-Daten sind sofort im Knowledge Graph verfuegbar und koennen per Graph RAG, Document RAG oder NLP Query abgefragt werden.
 5. Durch den Dataset-Namen "cmdb-q1-2026" ist die Herkunft der Daten jederzeit nachvollziehbar.
+
+---
+
+## Dynamische GraphQL-API aus Ontologie
+
+**Problem:** Importierte RDF-Daten liegen als Tripel im Knowledge Graph, sind aber nur ueber generische Graph-RAG-Abfragen zugaenglich. Fuer strukturierte Anwendungsfaelle -- Dashboards, Integrationen, gezielte Einzelabfragen -- fehlt ein typisierter, maschinenlesbarer Zugang, der die Struktur der Ontologie widerspiegelt.
+
+**Loesung:** GraphMesh generiert automatisch einen eigenen GraphQL-Endpoint pro Wissenssammlung, sobald dieser eine Ontologie zugewiesen ist und RDF-Daten importiert werden. Das Schema bildet die Ontologie-Klassen als GraphQL-Typen ab, Eigenschaften als Felder und Beziehungen als navigierbare Verknuepfungen -- inklusive Filterung, Paginierung und Graph-Traversal.
+
+### Wie es funktioniert
+
+1. Eine Ontologie wird einer Wissenssammlung zugewiesen (z.B. "IT-Architektur-Ontologie" der Sammlung "it-landschaft").
+2. Beim Import von RDF-Daten erkennt GraphMesh die zugewiesene Ontologie und generiert automatisch ein typisiertes GraphQL-Schema.
+3. Der Endpoint ist sofort unter `/graphql/{sammlungsname}` erreichbar -- z.B. `/graphql/it-landschaft`.
+4. Bei jedem weiteren RDF-Import wird das Schema automatisch aktualisiert.
+5. Wird die Sammlung geloescht, wird auch der Endpoint entfernt.
+
+### Anwendung
+
+**Endpoint-Adresse:**
+
+Jede Wissenssammlung mit zugewiesener Ontologie erhaelt ihren eigenen GraphQL-Endpoint:
+
+```
+POST /graphql/{sammlungsname}
+```
+
+Der Endpoint akzeptiert Standard-GraphQL-Anfragen:
+
+```json
+{
+  "query": "{ ... }",
+  "variables": { ... },
+  "operationName": "..."
+}
+```
+
+**Schema-Aufbau:**
+
+Das generierte Schema bildet die Ontologie direkt ab. Fuer eine Ontologie mit den Klassen `Person` und `Organisation` entsteht beispielsweise:
+
+```graphql
+type Query {
+  Person(filter: PersonFilter, limit: Int = 20, offset: Int = 0): [Person!]!
+  PersonById(id: ID!): Person
+  Organisation(filter: OrganisationFilter, limit: Int = 20, offset: Int = 0): [Organisation!]!
+  OrganisationById(id: ID!): Organisation
+}
+
+type Person {
+  id: ID!
+  name: String
+  geburtsdatum: Date
+  arbeitetBei(limit: Int = 10, offset: Int = 0): [Organisation]
+}
+
+type Organisation {
+  id: ID!
+  name: String
+  gruendungsjahr: Int
+}
+
+input PersonFilter {
+  name: String
+  geburtsdatum: Date
+}
+
+input OrganisationFilter {
+  name: String
+  gruendungsjahr: Int
+}
+```
+
+Jede Ontologie-Klasse wird zu einem GraphQL-Typ, jede Datentyp-Eigenschaft zu einem typisierten Feld, jede Objekt-Eigenschaft zu einer navigierbaren Verknuepfung.
+
+**Abfrage-Beispiele:**
+
+Alle Personen auflisten (mit Paginierung):
+
+```graphql
+query {
+  Person(limit: 10, offset: 0) {
+    id
+    name
+    arbeitetBei {
+      name
+    }
+  }
+}
+```
+
+Eine bestimmte Person per ID abrufen:
+
+```graphql
+query {
+  PersonById(id: "https://example.org/person/max-mustermann") {
+    name
+    geburtsdatum
+    arbeitetBei {
+      name
+      gruendungsjahr
+    }
+  }
+}
+```
+
+Personen nach Eigenschaft filtern:
+
+```graphql
+query {
+  Person(filter: { name: "Max Mustermann" }) {
+    id
+    name
+    arbeitetBei {
+      name
+    }
+  }
+}
+```
+
+Verschachtelte Paginierung auf Beziehungen:
+
+```graphql
+query {
+  Organisation(limit: 5) {
+    name
+    hatMitarbeiter(limit: 3, offset: 0) {
+      name
+    }
+  }
+}
+```
+
+**Schema erkunden (Introspection):**
+
+Der Endpoint unterstuetzt Standard-GraphQL-Introspection, sodass Tools wie GraphQL Playground, Insomnia oder Postman das Schema automatisch erkennen:
+
+```graphql
+{
+  __schema {
+    types {
+      name
+      fields {
+        name
+        type { name }
+      }
+    }
+  }
+}
+```
+
+**Unterstuetzte Datentypen:**
+
+Ontologie-Datentypen werden automatisch in passende GraphQL-Typen uebersetzt:
+
+| Ontologie-Typ | GraphQL-Typ | Beispiel |
+|---|---|---|
+| Text (xsd:string) | `String` | "Max Mustermann" |
+| Ganzzahl (xsd:integer, xsd:int) | `Int` | 42 |
+| Grosse Ganzzahl (xsd:long) | `Long` | 9876543210 |
+| Dezimalzahl (xsd:float, xsd:double) | `Float` | 3.14 |
+| Wahrheitswert (xsd:boolean) | `Boolean` | true |
+| Datum (xsd:date) | `Date` | "2026-04-24" |
+| Zeitstempel (xsd:dateTime) | `DateTime` | "2026-04-24T10:30:00Z" |
+| URI-Verweis (xsd:anyURI) | `ID` | "https://example.org/..." |
+| Unbekannt | `String` (Fallback) | — |
+
+### Beispiel
+
+> **Szenario:** Ein IT-Architekt moechte die CMDB-Daten seines Unternehmens ueber eine typisierte API abfragen.
+
+1. Er importiert die Ontologie "IT-Architektur" mit den Klassen `Anwendung`, `Server`, `Team` und Beziehungen wie `laeuftAuf`, `verantwortetDurch`.
+2. Er weist die Ontologie der Wissenssammlung "it-landschaft" zu.
+3. Er importiert die CMDB-Daten im Turtle-Format in die Sammlung.
+4. Sofort ist der Endpoint `/graphql/it-landschaft` verfuegbar.
+5. Er kann nun typisierte Abfragen stellen:
+   ```graphql
+   query {
+     Anwendung(filter: { kritikalitaet: "hoch" }) {
+       name
+       version
+       laeuftAuf {
+         name
+         standort
+       }
+       verantwortetDurch {
+         name
+       }
+     }
+   }
+   ```
+6. Die Antwort enthaelt alle hochkritischen Anwendungen mit ihren Servern und verantwortlichen Teams -- strukturiert, typisiert und paginierbar.
+7. Wird die CMDB erneut exportiert und importiert, aktualisiert sich das Schema automatisch.
