@@ -97,7 +97,6 @@ cd frontend && pnpm test             # Vitest
 ```
 
 ## Key Conventions
-
 - Use allway superpowers for new features and code example research with context7.
 - Feature specs go in `docs/features/NN-feature-name.md` (German, numbered, kebab-case)
 - Design specs go in `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
