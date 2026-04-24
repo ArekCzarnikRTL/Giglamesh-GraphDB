@@ -1,3 +1,8 @@
+---
+title: Administration
+nav_order: 10
+---
+
 # Administration
 
 Dieses Dokument beschreibt die Verwaltung von GraphMesh: Systemkonfiguration, Mandantenfähigkeit, Admin-Oberfläche und Kommandozeilen-Werkzeuge.

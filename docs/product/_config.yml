@@ -1,0 +1,26 @@
+title: GraphMesh
+description: KI-Knowledge-Graph-Plattform — Produktdokumentation
+lang: de
+
+theme: just-the-docs
+
+color_scheme: dark
+search_enabled: true
+search.heading_level: 3
+
+nav_sort: case_insensitive
+heading_anchors: true
+
+footer_content: "&copy; GraphMesh Produktdokumentation"
+
+exclude:
+  - index.html
+  - .DS_Store
+  - Gemfile.lock
+  - "*.mp4"
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default

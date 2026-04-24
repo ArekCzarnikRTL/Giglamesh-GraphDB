@@ -38,6 +38,11 @@ out/
 ### VS Code ###
 .vscode/
 
+### Jekyll ###
+docs/product/_site/
+docs/product/.jekyll-cache/
+docs/product/Gemfile.lock
+
 ### Kotlin ###
 .kotlin
 /CLAUDE.local.md

@@ -1,3 +1,8 @@
+---
+title: Dokumentenverwaltung
+nav_order: 3
+---
+
 # Dokumentenverwaltung
 
 GraphMesh organisiert Dokumente in **Collections** (thematische Sammlungen) und verarbeitet hochgeladene Dateien automatisch: Texterkennung, Aufteilung in semantische Abschnitte und Vorbereitung fuer die Wissensextraktion.

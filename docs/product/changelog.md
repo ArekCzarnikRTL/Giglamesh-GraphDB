@@ -1,3 +1,8 @@
+---
+title: Aenderungshistorie
+nav_order: 13
+---
+
 # Aenderungshistorie
 
 Uebersicht der nutzerrelevanten Aenderungen in GraphMesh, nach Monat gruppiert.

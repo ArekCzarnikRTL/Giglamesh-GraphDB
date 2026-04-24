@@ -1,3 +1,8 @@
+---
+title: Context Cores
+nav_order: 9
+---
+
 # Context Cores & Wissensportabilitaet
 
 ## Ueberblick

@@ -1,3 +1,8 @@
+---
+title: Tutorials und Best Practices
+nav_order: 11
+---
+
 # Tutorials und Best Practices
 
 Schritt-für-Schritt-Anleitungen für typische Anwendungsfälle und bewährte Vorgehensweisen für den effektiven Einsatz von GraphMesh.

@@ -1,3 +1,8 @@
+---
+title: Graph-Visualisierung
+nav_order: 7
+---
+
 # Graph-Visualisierung und Exploration
 
 GraphMesh stellt extrahiertes Wissen als interaktiven Wissensgraphen dar. Entitaeten und ihre Beziehungen lassen sich visuell erkunden, filtern und schrittweise erweitern.

@@ -1,3 +1,8 @@
+---
+title: Wissensextraktion
+nav_order: 4
+---
+
 # Wissensextraktion
 
 Nach dem Upload verarbeitet GraphMesh Dokumente automatisch: Der Text wird in Abschnitte aufgeteilt, und aus jedem Abschnitt extrahiert das System strukturiertes Wissen. Nutzer muessen die Extraktion nicht manuell ausloesen -- sie laeuft im Hintergrund, sobald ein Dokument hochgeladen wurde.

@@ -1,3 +1,8 @@
+---
+title: Fehlerbehebung
+nav_order: 12
+---
+
 # Fehlerbehebung
 
 Dieses Dokument beschreibt haeufige Probleme bei der Nutzung von GraphMesh und deren Loesungen.

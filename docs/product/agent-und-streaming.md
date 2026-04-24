@@ -1,3 +1,8 @@
+---
+title: Agent und Streaming
+nav_order: 8
+---
+
 # Agent-System und Streaming
 
 GraphMesh bietet KI-Agenten, die komplexe Fragen ueber den Wissensgraphen beantworten. Die Agenten nutzen Werkzeuge (Tools) in einer Denk-Handlungs-Schleife und liefern Antworten in Echtzeit per Streaming.

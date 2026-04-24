@@ -1,3 +1,8 @@
+---
+title: Wissensmodellierung
+nav_order: 6
+---
+
 # Wissensmodellierung
 
 GraphMesh ermoeglicht die Strukturierung von Wissen durch Ontologien, kontrollierte Vokabulare (Taxonomien) und den Import bestehender Wissensdaten. Diese Werkzeuge definieren, wie Wissen organisiert, klassifiziert und miteinander verknuepft wird.

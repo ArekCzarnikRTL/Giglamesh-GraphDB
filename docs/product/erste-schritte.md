@@ -1,3 +1,8 @@
+---
+title: Erste Schritte
+nav_order: 2
+---
+
 # Erste Schritte
 
 ## Voraussetzungen

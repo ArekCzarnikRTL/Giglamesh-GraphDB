@@ -1,3 +1,8 @@
+---
+title: Suche und Abfragen
+nav_order: 5
+---
+
 # Suche und Abfragen
 
 GraphMesh bietet verschiedene Wege, Wissen aus Ihren Dokumenten und dem Knowledge Graph abzufragen -- von gezielten Graph-Abfragen ueber semantische Dokumentensuche bis hin zu automatisch optimierten Freitext-Fragen.
