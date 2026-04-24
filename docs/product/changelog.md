@@ -12,6 +12,7 @@ Uebersicht der nutzerrelevanten Aenderungen in GraphMesh, nach Monat gruppiert.
 ## April 2026
 
 ### Neue Features
+- Dynamische GraphQL-API aus Ontologie: Jede Wissenssammlung mit zugewiesener Ontologie erhaelt einen eigenen typisierten GraphQL-Endpoint unter `/graphql/{sammlungsname}`. Ontologie-Klassen werden automatisch zu GraphQL-Typen, Eigenschaften zu Feldern und Beziehungen zu navigierbaren Verknuepfungen -- inklusive Filterung, Paginierung, Graph-Traversal und Introspection-Unterstuetzung fuer Tools wie GraphQL Playground, Insomnia oder Postman. Das Schema wird bei jedem RDF-Import automatisch aktualisiert.
 - Context Cores: Wissensstaende koennen nun als versionierte, portable ZIP-Bundles exportiert und importiert werden. Ein Context Core enthaelt alle Wissensgraph-Tripel, Vektor-Embeddings, die zugehoerige Ontologie und Retrieval-Konfigurationen. Drei Konfliktstrategien beim Import (FAIL, MERGE, REPLACE), Tag-basierte Versionierung (z.B. "stage", "prod") und Namespace-Rewriting werden unterstuetzt.
 - Automatische Themenextraktion aus Dokumenten hinzugefuegt: Beim Verarbeiten von Dokumenten werden nun Themen und Schlagwoerter per LLM erkannt und als strukturierte Metadaten gespeichert.
 - SKOS-Taxonomie-Unterstuetzung: Hierarchische Begriffssysteme (Taxonomien) koennen nun verwaltet und in der GraphQL-API abgefragt werden. Konzepte und Konzeptschemen nach SKOS-Standard werden unterstuetzt.
