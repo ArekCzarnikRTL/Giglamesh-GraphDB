@@ -50,11 +50,21 @@ spring:
   cassandra:
     contact-points: ${CASSANDRA_CONTACT_POINTS:localhost}
     port: ${CASSANDRA_PORT:9042}
+    username: ${CASSANDRA_USERNAME:cassandra}
+    password: ${CASSANDRA_PASSWORD:Pbfe3Rj9mt}
     local-datacenter: datacenter1
     schema-action: none
     # Open-Source-Cassandra 5.x spricht Native Protocol V5. Ohne explizite Angabe
     # versucht der DataStax-Driver (in Spring Boot 4) DSE_V2 und wird abgelehnt.
     protocol-version: V5
+    # Default request.timeout ist 2s — reicht nicht fuer DDL (CREATE KEYSPACE/TABLE)
+    # ueber einen Traefik-TCP-Proxy, da der Schema-Agreement-Roundtrip darueber
+    # zusaetzliche Latenz hat. Siehe DriverTimeoutException beim Schema-Init.
+    request:
+      timeout: 30s
+    connection:
+      connect-timeout: 10s
+      init-query-timeout: 10s
 
 ai:
   koog:
