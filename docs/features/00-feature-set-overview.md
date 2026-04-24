@@ -146,6 +146,12 @@ Siehe `docs/medium-article-graphmesh-explained.md` fuer den Kontext.
 | 59 | Streaming Module Consolidation       | [59-streaming-module-consolidation.md](59-streaming-module-consolidation.md) ([done](59-streaming-module-consolidation-done.md)) | 25, 27                           | S       | done   |
 | 60 | Collection Lifecycle Manager         | [60-collection-lifecycle-manager.md](60-collection-lifecycle-manager.md) ([done](60-collection-lifecycle-manager-done.md)) | 02, 03, 04, 08, 09              | M       | done   |
 
+### Phase 13: Dynamic API
+
+| #  | Feature                          | Datei                                                                                              | Abhaengig von              | Aufwand | Status |
+|----|----------------------------------|----------------------------------------------------------------------------------------------------|----------------------------|---------|--------|
+| 61 | Dynamic GraphQL from Ontology    | [61-dynamic-graphql-from-ontology.md](61-dynamic-graphql-from-ontology.md)                         | 07, 08, 14, 20, 43         | M       | done   |
+
 ## DAG-Visualisierung
 
 ```

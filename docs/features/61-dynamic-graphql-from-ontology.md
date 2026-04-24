@@ -1,6 +1,6 @@
 # Feature 61: Dynamic GraphQL from Ontology
 
-## Status: planned
+## Status: done
 
 ## Beschreibung
 
