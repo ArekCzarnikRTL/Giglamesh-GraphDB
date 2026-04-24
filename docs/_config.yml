@@ -1,0 +1,33 @@
+remote_theme: just-the-docs/just-the-docs
+
+title: GraphMesh
+description: KI-Knowledge-Graph-Plattform — Produktdokumentation
+lang: de
+
+plugins:
+  - jekyll-remote-theme
+
+color_scheme: dark
+search_enabled: true
+search.heading_level: 3
+heading_anchors: true
+
+footer_content: "&copy; GraphMesh Produktdokumentation"
+
+exclude:
+  - features
+  - superpowers
+  - ideas
+  - medium-article-graphmesh-explained.md
+  - mini-graph-test-metrics.md
+  - product/index.html
+  - product/.DS_Store
+  - product/Gemfile
+  - product/Gemfile.lock
+  - product/video
+
+defaults:
+  - scope:
+      path: "product"
+    values:
+      layout: default
