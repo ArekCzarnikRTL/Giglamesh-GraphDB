@@ -55,6 +55,7 @@ dependencies {
     implementation("ai.koog:prompt-executor-ollama-client:$koogVersion")
     implementation("ai.koog:koog-spring-ai-starter-model-embedding:$koogVersion")
     implementation("org.apache.jena:apache-jena-libs:6.0.0")
+    implementation("com.graphql-java:graphql-java-extended-scalars:22.0")
     implementation("org.springframework.boot:spring-boot-starter-kafka")
     implementation("org.apache.avro:avro:1.12.0")
     implementation("io.confluent:kafka-avro-serializer:7.9.0")
