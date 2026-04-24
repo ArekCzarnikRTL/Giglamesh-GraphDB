@@ -1,6 +1,7 @@
 package com.agentwork.graphmesh.rdfimport
 
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
+import com.agentwork.graphmesh.dynamicgraphql.DynamicGraphQlSchemaBuilder
 import com.agentwork.graphmesh.extraction.embedding.EmbeddingConfig
 import com.agentwork.graphmesh.ontology.JenaAdapter
 import com.agentwork.graphmesh.storage.InMemoryQuadStore
@@ -24,7 +25,8 @@ class RdfImportServiceTest {
     private val embeddingProvider = mockk<LLMEmbeddingProvider>()
     private val vectorStore = mockk<VectorStore>(relaxed = true)
     private val embeddingConfig = EmbeddingConfig(model = "text-embedding-3-small")
-    private val service = RdfImportService(jenaAdapter, quadStore, embeddingProvider, vectorStore, embeddingConfig)
+    private val dynamicGraphQlSchemaBuilder = mockk<DynamicGraphQlSchemaBuilder>(relaxed = true)
+    private val service = RdfImportService(jenaAdapter, quadStore, embeddingProvider, vectorStore, embeddingConfig, dynamicGraphQlSchemaBuilder)
 
     private val collectionId = "test-collection"
 
