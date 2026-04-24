@@ -10,6 +10,7 @@ import com.agentwork.graphmesh.storage.StoredQuad
 import com.agentwork.graphmesh.storage.vector.VectorPayload
 import com.agentwork.graphmesh.storage.vector.VectorPoint
 import com.agentwork.graphmesh.storage.vector.VectorStore
+import com.agentwork.graphmesh.dynamicgraphql.DynamicGraphQlSchemaBuilder
 import kotlinx.coroutines.runBlocking
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.RDFNode
@@ -23,6 +24,7 @@ class RdfImportService(
     private val embeddingProvider: LLMEmbeddingProvider,
     private val vectorStore: VectorStore,
     private val embeddingConfig: EmbeddingConfig,
+    private val dynamicGraphQlSchemaBuilder: DynamicGraphQlSchemaBuilder,
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -86,6 +88,8 @@ class RdfImportService(
 
         logger.info("RDF import into collection '{}': {} triples, {} skipped, {}ms",
             collectionId, imported, skipped, System.currentTimeMillis() - start)
+
+        dynamicGraphQlSchemaBuilder.rebuildIfOntologyAssigned(collectionId)
 
         return ImportResult(
             tripleCount = imported,
