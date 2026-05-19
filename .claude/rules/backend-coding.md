@@ -42,7 +42,7 @@ Shared types used by multiple features → `com.agentwork.graphmesh.common.domai
 - **Domain models:** `<Entity>.kt` — no suffix
 - **Domain exceptions:** `<Condition>Exception.kt`
 - **Input port (grouped):** `<Feature>UseCases` — CRUD-style, multiple methods
-- **Input port (single):** `<Action><Feature>UseCase` — one `invoke(command): Result`; add `<Action><Feature>Command` data class alongside
+- **Input port (single):** `<Action><Feature>UseCase` — one uniquely named method; add `<Action><Feature>Command` data class only when the method would have six or more parameters
 - **Output ports:** `<Feature>Store` (persistence), `<Feature>EventPort` (messaging), `<Feature>Port` (external)
 - **Application service:** `<Feature>Service`
 - **`adapter/in/`:** `<Feature>Controller`, `<Feature>KafkaConsumer`, `<Feature>McpTools`, `<Feature>CliCommand`
@@ -62,8 +62,15 @@ Shared types used by multiple features → `com.agentwork.graphmesh.common.domai
 ## Use Case Style
 
 - **Grouped** (`<Feature>UseCases`): CRUD operations that belong together
-- **Single-method** (`<Action><Feature>UseCase`): complex flows, or anything that may later split into its own service
-- A feature may have both
+- **Single-method** (`<Action><Feature>UseCase`): complex flows, or anything that may later split into its own service; one uniquely named method (not `invoke`) so a service can implement several interfaces without collision
+- **Commands** (`<Action><Feature>Command`): only when a single-method port would otherwise have six or more parameters; avoid for simpler cases
+- A feature may have both; a `*Service` may implement multiple `*UseCase` interfaces
+
+## Testing by Interface
+
+- **`*UseCasesTest` (unit):** construct the `*Service` assigned to its `*UseCases` interface type; mock all output ports (`*Store`, producers). Proves the service satisfies the contract; lets you refactor the implementation freely.
+- **`Cassandra*StoreIntegrationTest` (integration):** inject the output port interface via Spring (`@Autowired`), run against real Cassandra/Qdrant/S3. Proves the adapter satisfies the port contract against real infra.
+- Never mock an input port interface to test a caller — that tests the mock, not the contract. Test the service that implements the port.
 
 ## Error Handling
 

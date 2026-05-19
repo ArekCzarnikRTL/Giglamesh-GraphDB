@@ -126,24 +126,53 @@ Some classes don't map cleanly to entities, services, or adapters. The deciding 
 ## When to Use Grouped vs. Single-Method Ports
 
 - **Grouped `<Feature>UseCases`**: CRUD-style operations that naturally belong together — find, create, update, delete. One interface, multiple methods. The service class implementing it is the natural test double boundary.
-- **Single `<Action><Feature>UseCase`**: Complex multi-step flows, orchestration logic, anything that warrants independent testability or may be split into its own service class later. One interface, one method.
+- **Single `<Action><Feature>UseCase`**: Complex multi-step flows, orchestration logic, anything that warrants independent testability or may be split into its own service class later. One interface, one uniquely named method.
 
-A feature may have both. Example for `collection`:
+A feature may have both. A `*Service` may implement several `*UseCase` interfaces because each method has a unique name.
+
+**Single-method interface rules:**
+- Use a descriptive, unique method name (not `invoke`) so a service can implement multiple interfaces without collision.
+- Use a `<Action><Feature>Command` data class only when the method would otherwise have **six or more parameters**. For fewer parameters, pass them directly.
+
+**When to split a method out of the grouped interface:** A method warrants its own interface if it has 3 or more of: (a) orchestrates multiple sub-services, (b) publishes Spring events or Kafka messages, (c) manages cascading deletes/updates, (d) parses or validates external input, (e) reads/writes multiple storage backends. Simple delegation, caching, and lookups stay grouped.
+
+Example for `collection` — mutations are complex (event publishing + cascade), reads are simple:
 ```kotlin
-// application/port/in/CollectionUseCases.kt
+// application/port/in/CollectionUseCases.kt  — reads only
 interface CollectionUseCases {
-    fun create(name: String, ...): Collection
-    fun update(id: String, ...): Collection
-    fun delete(id: String)
     fun findById(id: String): Collection?
-    fun findAll(tags: Set<String>): List<Collection>
+    fun findByName(name: String): Collection?
+    fun findAll(tags: Set<String> = emptySet()): List<Collection>
+    fun requireExists(id: String)
 }
 
-// application/port/in/PurgeCollectionUseCase.kt
-interface PurgeCollectionUseCase {
-    operator fun invoke(command: PurgeCollectionCommand): PurgeResult
+// application/port/in/CreateCollectionUseCase.kt
+interface CreateCollectionUseCase {
+    fun createCollection(name: String, description: String = "", tags: Set<String> = emptySet(), metadata: Map<String, String> = emptyMap()): Collection
+}
+
+// application/port/in/UpdateCollectionUseCase.kt
+interface UpdateCollectionUseCase {
+    fun updateCollection(id: String, name: String? = null, description: String? = null, tags: Set<String>? = null, metadata: Map<String, String>? = null): Collection
+}
+
+// application/port/in/DeleteCollectionUseCase.kt
+interface DeleteCollectionUseCase {
+    fun deleteCollection(id: String)
 }
 ```
+
+`CollectionService implements CollectionUseCases, CreateCollectionUseCase, UpdateCollectionUseCase, DeleteCollectionUseCase`.
+
+**Features with mixed design (grouped reads + separate action interfaces):**
+- `collection`: reads grouped; `create`, `update`, `delete` split
+- `librarian`: reads + `updateState` grouped; `uploadDocument`, `createChildDocument`, `deleteDocument` split
+- `ontology`: reads + `delete` + `validate` + exports grouped; `save`, `importTurtle`, `importRdfXml` split
+- `contextcore`: reads + `delete` + `tag` grouped; `build`, `import` split
+- `config`: reads + `delete` + `history` grouped; `save` split
+
+**Features with grouped-only design:**
+- `agent`, `query/*`, `skos`, `structured`, `provenance`, `rdfimport`, `storage`
 
 ## Migration Plan
 
