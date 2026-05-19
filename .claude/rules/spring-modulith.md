@@ -4,21 +4,14 @@ scope: backend
 layer: architecture
 priority: high
 appliesTo: spring-modulith
-description: Regeln für Feature-Pakete, Modulgrenzen und Encapsulation im Modulith.
+description: Feature-package boundaries and cross-module access rules.
 ---
 
 # Spring Modulith Rules
 
-- Jedes Feature liegt unter `com.agentwork.graphmesh.<feature>`.
-- Die bestehenden Feature-Pakete sind **flach** organisiert (z. B. `collection/`, `extraction/`, `pipeline/`, `rdf/`, `storage/`). Halte dich an diesen Ist-Zustand und fuege keine neuen `api/application/domain/infrastructure`-Subpackages ein, solange das Feature dies nicht zwingend erfordert.
-- Wenn ein Feature gross genug wird, duerfen Subpackages eingefuehrt werden; uebliche Namen:
-    - `api` (REST/GraphQL, DTOs)
-    - `application` (Use Cases, Orchestrierung)
-    - `domain` (Entities, Value Objects, Domain Events, Ports)
-    - `infrastructure` (Adapter, Persistence, Messaging, Config)
-- Schichten-Trennung (Controller/Application/Domain/Infrastructure) gilt logisch, auch wenn physisch alles im Feature-Root liegt (siehe `backend-coding.md`).
-- Cross-Feature-Zugriffe:
-    - Nur ueber explizite Service-Schnittstellen des jeweiligen Features, keine direkten Zugriffe auf interne Klassen anderer Features.
-- Ein Feature haengt nicht von Infrastruktur-/Persistenzklassen anderer Features ab.
-- Neue Features:
-    - Immer als neues Package `com.agentwork.graphmesh.<featureName>` anlegen, in bestehender flacher Struktur.
+- Each feature lives under `com.agentwork.graphmesh.<feature>`. New features always get a new package here.
+- No new Gradle submodules — one Spring Modulith JAR.
+- Every feature must follow the hexagonal layout in `backend-coding.md`. Introduce subpackages when moving files, not speculatively.
+- **Cross-feature access:** only via the target feature's `application/port/in/` interfaces. No direct access to foreign `domain/`, `adapter/`, or concrete service class.
+- **Global `api/` (transitional):** controllers depend on `port/in/` interfaces only; move into `adapter/in/` in PR4.
+- **Shared domain:** multi-feature types go in `com.agentwork.graphmesh.common.domain` — see `backend-coding.md`.
